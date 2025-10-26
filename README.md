@@ -66,6 +66,7 @@ AI_RAG/
 ```
 
 # AI RAG Assistant
+# Build AI RAG Assistant Using LangChain and LLM
 
 Project skeleton for Quest Analytics retrieval-augmented generation assistant. Fill in the placeholders as components are implemented.
 
