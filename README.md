@@ -69,9 +69,39 @@ AI_RAG/
 
 Project skeleton for Quest Analytics retrieval-augmented generation assistant. Fill in the placeholders as components are implemented.
 
+## Getting Started
+
+### 1. Prerequisites
+- Python 3.11+
+- Local [Ollama](https://ollama.com/) instance with an installed chat + embedding model (e.g. `ollama pull llama3`)
+- OpenSearch cluster (self-hosted or managed) reachable from your machine
+
+### 2. Environment Setup
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+Copy the template and update the settings for your environment:
+```bash
+cp .env.example .env
+```
+Key variables:
+- `OPENSEARCH_HOST`, `OPENSEARCH_USERNAME`, `OPENSEARCH_PASSWORD`, `OPENSEARCH_INDEX`
+- `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`
+- `EMBEDDING_MODEL_NAME` (defaults to `all-MiniLM-L6-v2`)
+
+### 4. Start Services
+- Ensure OpenSearch is running and reachable.
+- Start Ollama: `ollama serve`
+- (Optional) load the chosen model into memory: `ollama run <model>`
+
 ## Usage
 
-Once dependencies and services are configured, ingest PDFs from the CLI:
+Once dependencies and services are configured, ingest PDFs from the CLI to populate the index:
 
 ```bash
 source venv/bin/activate
@@ -87,3 +117,15 @@ python scripts/eval_retrieval.py data/samples/queries.jsonl --top-k 5
 ```
 
 The JSON/JSONL file should include each question alongside expected snippets or keywords used to check whether the retrieved passages are relevant.
+
+Run unit tests to validate ingestion and retriever utilities:
+
+```bash
+pytest
+```
+
+Launch the Gradio assistant after ingestion:
+
+```bash
+python deployment/app_gradio.py
+```
