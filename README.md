@@ -100,6 +100,13 @@ Key variables:
 - Start Ollama: `ollama serve`
 - (Optional) load the chosen model into memory: `ollama run <model>`
 
+### 5. Smoke Test the Pipeline
+Verify connectivity, ingestion, retrieval, and LLM output in one go:
+
+```bash
+python scripts/smoke_test.py --pdf ~/Desktop/pdf/Attention_Is_All_You_Need.pdf --question "How does attention work?"
+```
+
 ## Usage
 
 Once dependencies and services are configured, ingest PDFs from the CLI to populate the index:
@@ -118,6 +125,7 @@ python scripts/eval_retrieval.py data/samples/queries.jsonl --top-k 5
 ```
 
 The JSON/JSONL file should include each question alongside expected snippets or keywords used to check whether the retrieved passages are relevant.
+See `data/samples/queries.jsonl` for a template.
 
 Run unit tests to validate ingestion and retriever utilities:
 

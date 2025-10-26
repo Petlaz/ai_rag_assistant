@@ -13,6 +13,7 @@ from rag_pipeline.ingestion.pdf_ocr_pipeline import (
 
 
 def test_normalize_text_removes_extra_whitespace():
+    """Ensure normalize_text collapses newlines and extra spaces."""
     dirty = "Line one.\n\n   Line    two.  "
     assert normalize_text(dirty) == "Line one. Line two."
 
@@ -26,6 +27,7 @@ def test_normalize_text_removes_extra_whitespace():
     ],
 )
 def test_chunk_text_respects_size_and_overlap(chunk_size, overlap, expected_lengths):
+    """Verify chunk_text honours chunk_size/overlap settings."""
     text = " ".join(str(i) for i in range(10))
     chunks = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
     assert len(chunks) == len(expected_lengths)
@@ -34,6 +36,7 @@ def test_chunk_text_respects_size_and_overlap(chunk_size, overlap, expected_leng
 
 
 def test_build_document_chunks_attaches_metadata(tmp_path: Path):
+    """Check build_document_chunks attaches metadata and page numbers."""
     page_text = ["First page content.", "Second page content."]
     metadata = {"title": "Test PDF"}
     chunks = build_document_chunks(

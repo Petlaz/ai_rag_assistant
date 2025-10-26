@@ -124,6 +124,8 @@ def evaluate_queries(
 
 
 def main(argv: Optional[Iterable[str]] = None) -> None:
+    """CLI entry point for evaluating retrieval metrics."""
+
     parser = argparse.ArgumentParser(description="Evaluate retrieval quality.")
     parser.add_argument("dataset", type=Path, help="Path to JSON or JSONL query set.")
     parser.add_argument(

@@ -66,8 +66,14 @@ def ingest_files(files: List[str], state: AssistantState) -> Tuple[str, Assistan
         return "No file uploaded yet.", state
 
     messages: List[str] = []
-    for file_path in files:
+    progress = gr.Progress(track_tqdm=True)
+
+    for idx, file_path in enumerate(files, start=1):
         path = Path(file_path)
+        progress(
+            (idx - 1) / max(len(files), 1),
+            desc=f"Ingesting {path.name}",
+        )
         try:
             ingest_and_index_document(
                 path=path,
@@ -75,13 +81,15 @@ def ingest_files(files: List[str], state: AssistantState) -> Tuple[str, Assistan
                 opensearch_client=state.deps.opensearch_client,
                 index_name=state.deps.index_name,
             )
-            messages.append(f"Ingestion succeeded for {path.name}.")
+            messages.append(f"✅ Ingestion succeeded for {path.name}.")
         except NotImplementedError as error:
             messages.append(
-                f"Ingestion not implemented yet for {path.name}: {str(error)}"
+                f"⚠️ Ingestion not implemented yet for {path.name}: {str(error)}"
             )
         except Exception as exc:  # pragma: no cover - defensive logging only
-            messages.append(f"Failed to ingest {path.name}: {exc}")
+            messages.append(f"❌ Failed to ingest {path.name}: {exc}")
+
+    progress(1.0, desc="Ingestion complete")
     return "\n".join(messages), state
 
 
@@ -90,7 +98,7 @@ def answer_question(
     history: List[Tuple[str, str]],
     state: AssistantState,
 ) -> Tuple[List[Tuple[str, str]], AssistantState]:
-    """Generate a response by delegating to the hybrid retriever + LLM."""
+    """Retrieve context, craft prompts, invoke the LLM, and display citations."""
 
     try:
         documents = state.deps.retriever.retrieve(query=query, top_k=5)
@@ -108,11 +116,13 @@ def answer_question(
         return updated_history, state
 
     context_blocks = []
+    citations = []
     for idx, doc in enumerate(documents, start=1):
         metadata = doc.metadata or {}
         pages = metadata.get("page_numbers") or []
         pages_str = ", ".join(str(num) for num in pages) if pages else "N/A"
         title = metadata.get("title") or "Unknown source"
+        citations.append(f"[Doc {idx}] {title} (pages {pages_str})")
         context_blocks.append(
             f"[Doc {idx}] Title: {title} | Pages: {pages_str}\n{doc.text}"
         )
@@ -135,16 +145,19 @@ def answer_question(
         return updated_history, state
 
     try:
-        response = state.deps.chat_adapter.invoke_messages(messages)
+        answer = state.deps.chat_adapter.invoke_messages(messages)
     except NotImplementedError as error:
-        response = (
+        answer = (
             "LLM integration not available yet. "
             f"Please configure Ollama. Detail: {error}"
         )
     except Exception as exc:  # pragma: no cover - surface runtime failures
-        response = f"Failed to generate answer via Ollama: {exc}"
+        answer = f"Failed to generate answer via Ollama: {exc}"
 
-    updated_history = history + [(query, response)]
+    if citations:
+        answer = answer + "\n\nSources:\n" + "\n".join(citations)
+
+    updated_history = history + [(query, answer)]
     return updated_history, state
 
 

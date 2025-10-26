@@ -1,0 +1,2 @@
+{"question": "What is the core idea behind attention mechanisms?", "keywords": ["attention", "transformer"], "expected_answer_snippet": "attention"}
+{"question": "How does BERT pre-training work?", "keywords": ["masked", "language modeling"], "expected_answer_snippet": "masked language modeling"}

@@ -46,7 +46,7 @@ def _ensure_client(index_name: str):
 
 
 def ingest_paths(paths: Iterable[Path], index_name: str) -> None:
-    """Ingest the provided PDF paths into OpenSearch."""
+    """Ingest each provided PDF path into OpenSearch for retrieval."""
 
     embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
     embedding_model = SentenceTransformerEmbeddings(model_name=embedding_model_name)
@@ -69,6 +69,8 @@ def ingest_paths(paths: Iterable[Path], index_name: str) -> None:
 
 
 def main(argv: Optional[Iterable[str]] = None) -> None:
+    """Parse CLI arguments and kick off ingestion for provided PDFs."""
+
     parser = argparse.ArgumentParser(description="Ingest PDFs into OpenSearch.")
     parser.add_argument(
         "paths",

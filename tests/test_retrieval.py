@@ -51,6 +51,7 @@ def build_hits() -> Dict[str, Any]:
 
 
 def test_retrieve_returns_documents_with_metadata():
+    """Ensure retrieve returns documents enriched with metadata."""
     client = DummySearchClient(build_hits())
     retriever = HybridRetriever(
         client=client,
@@ -68,6 +69,7 @@ def test_retrieve_returns_documents_with_metadata():
 
 
 def test_retrieve_as_dicts_formats_langchain_documents():
+    """Ensure retrieve_as_dicts returns LangChain-style dictionaries."""
     client = DummySearchClient(build_hits())
     retriever = HybridRetriever(
         client=client,
