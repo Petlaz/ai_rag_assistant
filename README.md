@@ -129,3 +129,12 @@ Launch the Gradio assistant after ingestion:
 ```bash
 python deployment/app_gradio.py
 ```
+
+## Deployment Notes
+
+- **Containerization**: Build separate containers for the Gradio app and ingestion worker using the Dockerfiles under `infra/docker/`. Provide OpenSearch/Ollama endpoints via environment variables or secrets managers.
+- **OpenSearch**: Use managed OpenSearch Service/Elasticsearch with index lifecycle policies, snapshot backups, and access controls (VPC, IP allowlists, or API gateways).
+- **Ollama**: Host Ollama on GPU-enabled instances or swap in a managed LLM endpoint if latency/throughput requirements exceed local hardware capabilities.
+- **Monitoring & Logging**: Ship application logs to a centralized system (e.g., OpenSearch Dashboards, ELK, or Datadog), instrument key metrics (ingestion latency, retrieval success rate, LLM response time), and configure alerts.
+- **Scaling**: Run ingestion as a queue-driven worker (e.g., Celery/RQ) for large document batches; deploy Gradio behind a reverse proxy/load balancer with sticky sessions if using stateful chat history.
+- **Security**: Enforce authentication on the UI/API (OAuth or SSO), encrypt data at rest (OpenSearch, object storage) and in transit (HTTPS), and implement rate limiting/guardrails for LLM prompts.
