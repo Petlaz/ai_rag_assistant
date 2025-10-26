@@ -1,0 +1,33 @@
+{
+  "settings": {
+    "index": {
+      "knn": true
+    }
+  },
+  "mappings": {
+    "properties": {
+      "text": {
+        "type": "text"
+      },
+      "title": {
+        "type": "keyword"
+      },
+      "page_numbers": {
+        "type": "integer"
+      },
+      "metadata": {
+        "type": "object",
+        "enabled": true
+      },
+      "embedding": {
+        "type": "knn_vector",
+        "dimension": 1536,
+        "method": {
+          "name": "hnsw",
+          "engine": "nmslib",
+          "space_type": "cosinesimil"
+        }
+      }
+    }
+  }
+}

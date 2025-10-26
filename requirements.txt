@@ -1,0 +1,7 @@
+# Placeholder requirements for AI RAG assistant.
+langchain
+opensearch-py
+sentence-transformers
+pydantic
+gradio
+pypdf

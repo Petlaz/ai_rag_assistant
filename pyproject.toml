@@ -1,0 +1,9 @@
+[tool.poetry]
+name = "ai_rag"
+version = "0.1.0"
+description = "Quest Analytics RAG assistant"
+authors = ["Quest Analytics Team <research@quest-analytics.example>"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
