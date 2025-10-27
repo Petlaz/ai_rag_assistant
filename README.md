@@ -74,7 +74,8 @@ Project skeleton for Quest Analytics retrieval-augmented generation assistant. F
 
 ### 0. Clone the Repository
 ```bash
-git clone https://github.com/Petlaz/ai_rag_assistant.git
+git clone
+https://github.com/Petlaz/ai_rag_assistant.git
 cd ai_rag_assistant
 ```
 
