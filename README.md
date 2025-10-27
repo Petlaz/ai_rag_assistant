@@ -72,6 +72,12 @@ Project skeleton for Quest Analytics retrieval-augmented generation assistant. F
 
 ## Getting Started
 
+### 0. Clone the Repository
+```bash
+git clone https://github.com/Petlaz/ai_rag_assistant.git
+cd ai_rag_assistant
+```
+
 ### 1. Prerequisites
 - Python 3.11+
 - Local [Ollama](https://ollama.com/) instance with an installed chat + embedding model (e.g. `ollama pull mistral`)
