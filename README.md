@@ -74,8 +74,10 @@ Project skeleton for Quest Analytics retrieval-augmented generation assistant. F
 
 ### 1. Prerequisites
 - Python 3.11+
-- Local [Ollama](https://ollama.com/) instance with an installed chat + embedding model (e.g. `ollama pull llama3`)
+- Local [Ollama](https://ollama.com/) instance with an installed chat + embedding model (e.g. `ollama pull mistral`)
 - OpenSearch cluster (self-hosted or managed) reachable from your machine
+
+> **Ollama configuration:** the default model is `mistral`, which runs comfortably on macOS with the Ollama daemon. On machines with ≤ 8 GB RAM, avoid heavier variants such as `llama3`; instead prefer `mistral` or `gemma3:1b` for reliable local deployments. If the primary model fails to load, the pipeline automatically falls back to `gemma3:1b` (override with `OLLAMA_FALLBACK_MODEL`).
 
 ### 2. Environment Setup
 ```bash
@@ -98,24 +100,24 @@ Key variables:
 ### 4. Start Services
 - Ensure OpenSearch is running and reachable.
 - Start Ollama: `ollama serve`
-- (Optional) load the chosen model into memory: `ollama run <model>`
+- Pull a lightweight model (recommended): `ollama pull mistral`
+- (Optional) warm the model: `ollama run mistral "hello"`
 
 ### 5. Smoke Test the Pipeline
 Verify connectivity, ingestion, retrieval, and LLM output in one go:
 
 ```bash
-python scripts/smoke_test.py --pdf ~/Desktop/pdf/Attention_Is_All_You_Need.pdf --question "How does attention work?"
+python scripts/smoke_test.py --pdf ~/Desktop/pdf/Attention_Is_All_You_Need.pdf --question "How does attention work?" --model mistral --ollama-timeout 120
 ```
+If you see an error about the Ollama model runner stopping, the selected model likely exceeds your available memory. Pull a lighter model such as `mistral` or `llama3:8b` and rerun the command with `--model` pointing at it. On slow machines, you can also increase `--ollama-timeout` (defaults to `OLLAMA_TIMEOUT` in `.env`).
 
 ## Usage
-
 Once dependencies and services are configured, ingest PDFs from the CLI to populate the index:
 
 ```bash
 source venv/bin/activate
 python scripts/run_ingestion.py ~/Desktop/pdf/*.pdf --index quest-research
 ```
-
 The script ensures the OpenSearch index defined in `rag_pipeline/indexing/schema.json` exists, embeds each chunk with the configured sentence-transformer model, and stores everything so the Gradio chat can answer retrieval-augmented questions.
 
 Evaluate retrieval quality with a labelled query set:
@@ -140,7 +142,6 @@ python deployment/app_gradio.py
 ```
 
 ## Deployment Notes
-
 - **Containerization**: Build separate containers for the Gradio app and ingestion worker using the Dockerfiles under `infra/docker/`. Provide OpenSearch/Ollama endpoints via environment variables or secrets managers.
 - **OpenSearch**: Use managed OpenSearch Service/Elasticsearch with index lifecycle policies, snapshot backups, and access controls (VPC, IP allowlists, or API gateways).
 - **Ollama**: Host Ollama on GPU-enabled instances or swap in a managed LLM endpoint if latency/throughput requirements exceed local hardware capabilities.

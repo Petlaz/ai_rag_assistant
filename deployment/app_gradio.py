@@ -146,6 +146,12 @@ def answer_question(
 
     try:
         answer = state.deps.chat_adapter.invoke_messages(messages)
+    except RuntimeError as error:
+        answer = (
+            "LLM request failed. The selected Ollama model may be too large for this machine. "
+            "Try pulling a smaller model such as 'mistral' or 'llama3:8b'.\n\n"
+            f"Details: {error}"
+        )
     except NotImplementedError as error:
         answer = (
             "LLM integration not available yet. "

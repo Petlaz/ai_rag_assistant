@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -23,7 +24,13 @@ class OllamaChatAdapter:
     ) -> "OllamaChatAdapter":
         """Convenience constructor for callers that only have env vars."""
 
-        config = OllamaConfig(base_url=base_url, model=model, timeout=timeout)
+        fallback = os.getenv("OLLAMA_FALLBACK_MODEL", "gemma3:1b") or None
+        config = OllamaConfig(
+            base_url=base_url,
+            model=model,
+            timeout=timeout,
+            fallback_model=fallback,
+        )
         return cls(client=OllamaClient(config))
 
     def invoke_messages(
@@ -34,3 +41,4 @@ class OllamaChatAdapter:
         """Send a pre-built message list to the Ollama client."""
 
         return self.client.generate(messages=messages, stream=False, options=options)
+

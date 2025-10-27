@@ -5,9 +5,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
+
+from dotenv import load_dotenv
+
+# Ensure project root import path when executed as a script.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 from rag_pipeline.embeddings.sentence_transformer import (
     SentenceTransformerEmbeddings,
