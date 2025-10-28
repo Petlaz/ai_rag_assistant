@@ -1,15 +1,14 @@
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
 ENV PYTHONPATH=/app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    poppler-utils \
-    tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
@@ -17,7 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-ENV OPENSEARCH_HOST=http://opensearch:9200 \
-    OPENSEARCH_INDEX=quest-research
+ENV LANDING_PORT=3000
 
-CMD ["python", "scripts/ingest_watch.py"]
+EXPOSE 3000
+
+CMD ["python", "-m", "landing.main"]

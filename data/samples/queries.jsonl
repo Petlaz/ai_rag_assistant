@@ -1,2 +1,5 @@
 {"question": "What is the core idea behind attention mechanisms?", "keywords": ["attention", "transformer"], "expected_answer_snippet": "attention"}
 {"question": "How does BERT pre-training work?", "keywords": ["masked", "language modeling"], "expected_answer_snippet": "masked language modeling"}
+{"question": "Why are Transformers faster to train than RNNs?", "keywords": ["parallel", "training"], "expected_answer_snippet": "parallel"}
+{"question": "Which benchmark shows the Transformer's English-to-German result?", "keywords": ["English-to-German", "BLEU"], "expected_answer_snippet": "28.4"}
+{"question": "What positional information technique do Transformers use?", "keywords": ["positional encoding"], "expected_answer_snippet": "position"}

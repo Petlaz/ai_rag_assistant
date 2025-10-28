@@ -21,10 +21,15 @@ class OllamaChatAdapter:
         base_url: str,
         model: str,
         timeout: float = 30.0,
+        fallback_model: Optional[str] = None,
     ) -> "OllamaChatAdapter":
         """Convenience constructor for callers that only have env vars."""
 
-        fallback = os.getenv("OLLAMA_FALLBACK_MODEL", "gemma3:1b") or None
+        fallback = (
+            fallback_model
+            if fallback_model is not None
+            else os.getenv("OLLAMA_FALLBACK_MODEL", "gemma3:1b") or None
+        )
         config = OllamaConfig(
             base_url=base_url,
             model=model,
@@ -41,4 +46,3 @@ class OllamaChatAdapter:
         """Send a pre-built message list to the Ollama client."""
 
         return self.client.generate(messages=messages, stream=False, options=options)
-

@@ -1,0 +1,21 @@
+# Prevent large/local-only artifacts from entering the Docker build context
+.git
+.git/*
+venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+__pycache__
+**/__pycache__
+*.py[cod]
+*.so
+.DS_Store
+.env
+.env.*
+.ipynb_checkpoints
+notebooks
+docs
+notes
+data/raw
+data/processed
+data/tmp

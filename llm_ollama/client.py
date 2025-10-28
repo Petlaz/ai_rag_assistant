@@ -2,10 +2,30 @@
 
 from __future__ import annotations
 
+import json
+import logging
+import time
 from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
 import requests
+
+
+logger = logging.getLogger(__name__)
+
+
+class ModelNotFoundError(RuntimeError):
+    """Raised when the requested Ollama model cannot be located."""
+
+
+@dataclass
+class OllamaHealth:
+    """Represents the outcome of a lightweight Ollama health probe."""
+
+    healthy: bool
+    status_code: Optional[int]
+    latency_ms: Optional[float]
+    error: Optional[str] = None
 
 
 @dataclass
@@ -38,23 +58,40 @@ class OllamaClient:
                     "Ollama request failed with HTTP 500. The selected model may exceed available "
                     "system memory. Try pulling a smaller model such as 'mistral' or 'llama3:8b'."
                 ) from exc
+            if status == 404:
+                raise ModelNotFoundError(
+                    f"Ollama endpoint {endpoint} returned HTTP 404."
+                ) from exc
             raise RuntimeError(f"Ollama request to {endpoint} failed: {exc}") from exc
         except requests.RequestException as exc:
             raise RuntimeError(f"Ollama request to {endpoint} failed: {exc}") from exc
         return response.json()
 
-    def health_check(self) -> bool:
-        """Ping the Ollama server; return True when reachable."""
+    def health_check(self) -> OllamaHealth:
+        """Ping the Ollama server; return structured health metadata."""
 
+        start = time.perf_counter()
         try:
             response = requests.get(
                 f"{self.config.base_url.rstrip('/')}/api/tags",
                 timeout=self.config.timeout,
             )
+            latency_ms = (time.perf_counter() - start) * 1000.0
             response.raise_for_status()
-            return True
-        except requests.RequestException:
-            return False
+            return OllamaHealth(
+                healthy=True,
+                status_code=response.status_code,
+                latency_ms=latency_ms,
+            )
+        except requests.RequestException as exc:
+            latency_ms = (time.perf_counter() - start) * 1000.0
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            return OllamaHealth(
+                healthy=False,
+                status_code=status_code,
+                latency_ms=latency_ms,
+                error=str(exc),
+            )
 
     def generate(
         self,
@@ -64,15 +101,7 @@ class OllamaClient:
     ) -> str:
         """Invoke Ollama's chat endpoint and concatenate the response."""
 
-        models_to_try = [self.config.model]
-        fallback = self.config.fallback_model
-        if fallback and fallback not in models_to_try:
-            models_to_try.append(fallback)
-
-        last_error: Optional[RuntimeError] = None
-        response: Optional[dict] = None
-
-        for idx, model_name in enumerate(models_to_try):
+        def _invoke(model_name: str, allow_pull: bool = True) -> dict:
             payload = {
                 "model": model_name,
                 "messages": messages,
@@ -80,24 +109,52 @@ class OllamaClient:
             }
             if options:
                 payload["options"] = options
-
             try:
-                response = self._post("/api/chat", payload)
-                break
-            except RuntimeError as exc:
-                last_error = exc
-                is_last_attempt = idx == len(models_to_try) - 1
-                if is_last_attempt:
+                return self._post("/api/chat", payload)
+            except ModelNotFoundError as not_found:
+                if not allow_pull:
                     raise
-                print(
-                    f"[warn] Ollama model '{model_name}' failed ({exc}). "
-                    f"Falling back to '{models_to_try[idx + 1]}'."
-                )
-                continue
+                if model_name == "mistral":
+                    logger.warning(
+                        "mistral manifest missing — attempting auto-pull before fallback."
+                    )
+                else:
+                    logger.warning(
+                        "Ollama model '%s' missing — attempting auto-pull before fallback.",
+                        model_name,
+                    )
+                try:
+                    self._pull_model(model_name)
+                except Exception as pull_exc:
+                    logger.error(
+                        "Auto-pull for model '%s' failed: %s",
+                        model_name,
+                        pull_exc,
+                    )
+                    raise not_found from pull_exc
+                return _invoke(model_name, allow_pull=False)
 
-        if response is None:
-            # Should only happen if every attempt raised and last attempt raised
-            raise last_error  # type: ignore[misc]
+        primary_model = self.config.model
+        fallback_model = (
+            self.config.fallback_model
+            if self.config.fallback_model and self.config.fallback_model != primary_model
+            else None
+        )
+
+        try:
+            response = _invoke(primary_model)
+        except RuntimeError as exc:
+            if not fallback_model:
+                raise
+            logger.warning(
+                "Primary Ollama model '%s' failed (%s). Trying fallback '%s'.",
+                primary_model,
+                exc,
+                fallback_model,
+            )
+            response = _invoke(fallback_model)
+            # Promote fallback to become the active model for subsequent calls.
+            self.config.model = fallback_model
 
         if stream:
             raise NotImplementedError("Streaming responses are not handled yet.")
@@ -123,3 +180,30 @@ class OllamaClient:
                 raise ValueError("Ollama embedding response missing 'embedding' key.")
             vectors.append(embedding)
         return vectors
+
+    def _pull_model(self, model_name: str) -> None:
+        """Attempt to pull a model via the Ollama HTTP API."""
+
+        url = f"{self.config.base_url.rstrip('/')}/api/pull"
+        timeout = max(self.config.timeout, 120.0)
+        with requests.post(
+            url,
+            json={"model": model_name},
+            timeout=timeout,
+            stream=True,
+        ) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                try:
+                    data = json.loads(line.decode("utf-8"))
+                except json.JSONDecodeError:
+                    continue
+                if data.get("error"):
+                    raise RuntimeError(data["error"])
+                status = data.get("status", "").lower()
+                if status in {"success", "exists", "already exists"}:
+                    logger.info("Auto-pull for model '%s' completed.", model_name)
+                    return
+        raise RuntimeError(f"Ollama pull for model '{model_name}' did not complete successfully.")

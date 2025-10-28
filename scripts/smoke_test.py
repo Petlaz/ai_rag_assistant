@@ -64,6 +64,7 @@ def ensure_opensearch(index_name: str):
 def ensure_chat_adapter(
     model_override: Optional[str] = None,
     timeout_override: Optional[float] = None,
+    fallback_override: Optional[str] = None,
 ) -> OllamaChatAdapter:
     """Instantiate the Ollama chat adapter using environment configuration."""
 
@@ -72,7 +73,13 @@ def ensure_chat_adapter(
     if not base_url or not model:
         raise RuntimeError("OLLAMA_BASE_URL and OLLAMA_MODEL must be configured.")
     timeout = timeout_override or float(os.getenv("OLLAMA_TIMEOUT", "30"))
-    return OllamaChatAdapter.from_env(base_url=base_url, model=model, timeout=timeout)
+    fallback = fallback_override or os.getenv("OLLAMA_FALLBACK_MODEL")
+    return OllamaChatAdapter.from_env(
+        base_url=base_url,
+        model=model,
+        timeout=timeout,
+        fallback_model=fallback,
+    )
 
 
 def smoke_test(
@@ -81,6 +88,7 @@ def smoke_test(
     index_name: str,
     model_override: Optional[str],
     timeout_override: Optional[float],
+    fallback_override: Optional[str],
 ) -> None:
     """Run ingestion + retrieval + LLM generation to validate dependencies."""
 
@@ -91,6 +99,7 @@ def smoke_test(
     chat_adapter = ensure_chat_adapter(
         model_override=model_override,
         timeout_override=timeout_override,
+        fallback_override=fallback_override,
     )
 
     retriever = HybridRetriever(
@@ -152,6 +161,11 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         type=float,
         help="Override OLLAMA_TIMEOUT (seconds) for this run",
     )
+    parser.add_argument(
+        "--fallback-model",
+        type=str,
+        help="Override OLLAMA_FALLBACK_MODEL for this run",
+    )
     args = parser.parse_args(argv)
 
     smoke_test(
@@ -160,6 +174,7 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         index_name=args.index,
         model_override=args.model,
         timeout_override=args.ollama_timeout,
+        fallback_override=args.fallback_model,
     )
 
 

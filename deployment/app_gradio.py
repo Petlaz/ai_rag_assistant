@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+import copy
 import json
+import logging
 import os
+import random
+import statistics
+import sys
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import gradio as gr
 import yaml
+
+# Ensure project root is on sys.path when running outside Docker
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from rag_pipeline.ingestion.pipeline import ingest_and_index_document
 from rag_pipeline.retrieval.retriever import HybridRetriever
@@ -19,6 +31,22 @@ from rag_pipeline.embeddings.sentence_transformer import (
 )
 from rag_pipeline.indexing.opensearch_client import OpenSearchConfig, create_client, ensure_index
 from llm_ollama.adapters import OllamaChatAdapter
+
+
+logger = logging.getLogger(__name__)
+
+ANALYTICS_ENABLED = os.getenv("ENABLE_ANALYTICS", "false").lower() in {"1", "true", "yes"}
+HEALTH_TIMER_INTERVAL = 32.0
+HEALTH_LATENCY_BASELINE_MS = 400.0
+HEALTH_LATENCY_THRESHOLD_MULTIPLIER = 1.5
+HEALTH_LATENCY_MIN_AMBER_MS = 1500.0
+HEALTH_MAX_LATENCIES = 10
+HEALTH_RED_BACKOFF_SECONDS = (60, 120)  # min/max jitter window when red persists
+HEALTH_DEFAULT_INTERVAL_SECONDS = (30, 45)
+HEALTH_RED_TOAST_MESSAGE = (
+    "Ollama is currently unreachable. You can continue to ask questions, "
+    "but responses may fail until the connection recovers."
+)
 
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "prompts" / "research_qa_prompt.yaml"
@@ -36,13 +64,197 @@ class AssistantDependencies:
     index_name: str
     chat_adapter: Any
 
+    def __deepcopy__(self, memo):
+        """Return self because dependencies manage live connections."""
+        memo[id(self)] = self
+        return self
 
-@dataclass
+
 class AssistantState:
     """Simple container passed between Gradio callbacks."""
 
-    deps: AssistantDependencies
-    prompt_template: Dict[str, Any]
+    def __init__(self, deps: AssistantDependencies, prompt_template: Dict[str, Any]):
+        self.deps = deps
+        self.prompt_template = prompt_template
+
+    def __deepcopy__(self, memo):
+        """Custom deepcopy that keeps live dependencies intact."""
+        if id(self) in memo:
+            return memo[id(self)]
+
+        cloned = AssistantState(
+            deps=self.deps,
+            prompt_template=copy.deepcopy(self.prompt_template, memo),
+        )
+        memo[id(self)] = cloned
+        return cloned
+
+
+def current_model_name(state: AssistantState) -> str:
+    """Return the model currently configured on the chat adapter."""
+
+    try:
+        return getattr(state.deps.chat_adapter.client.config, "model", "unknown") or "unknown"
+    except AttributeError:
+        return "unknown"
+
+
+def render_model_status(model_name: str, status: str, latency_ms: Optional[float]) -> str:
+    """Construct HTML snippet with colored status dot and model label."""
+
+    color_map = {
+        "green": "#22c55e",
+        "amber": "#facc15",
+        "red": "#ef4444",
+        "unknown": "#94a3b8",
+    }
+    tooltip_map = {
+        "green": "Ollama healthy",
+        "amber": "Ollama responding slowly",
+        "red": "Ollama unreachable",
+        "unknown": "Ollama status unknown",
+    }
+
+    status_key = status if status in color_map else "unknown"
+    color = color_map[status_key]
+    tooltip = tooltip_map[status_key]
+    latency_text = f"{latency_ms:.0f} ms" if latency_ms is not None else ""
+
+    return (
+        "<div style=\"display:flex;align-items:center;gap:0.55rem;font-size:0.95rem;\">"
+        f"<span title=\"{tooltip}\" style=\"width:9px;height:9px;border-radius:9999px;"
+        f"background:{color};display:inline-block;box-shadow:0 0 0 2px rgba(255,255,255,0.6);\"></span>"
+        f"<span><strong>Model:</strong> {model_name}</span>"
+        + (f"<span style=\"color:#64748b;font-size:0.82rem;margin-left:0.5rem;\">{latency_text}</span>" if latency_text else "")
+        + "</div>"
+    )
+
+
+def initial_health_state(model_name: str) -> Dict[str, Any]:
+    """Bootstrap the health-state dictionary for Gradio interactions."""
+
+    now = time.time()
+    return {
+        "model": model_name,
+        "status": "unknown",
+        "status_since": now,
+        "last_checked": None,
+        "last_latency": None,
+        "latencies": [],
+        "next_allowed": 0.0,
+        "consecutive_failures": 0,
+        "toast_shown": False,
+    }
+
+
+def _choose_interval(status: str, status_since: float) -> float:
+    """Pick the next poll interval with jitter based on current health."""
+
+    now = time.time()
+    if status == "red" and (now - status_since) >= 120:
+        return random.uniform(*HEALTH_RED_BACKOFF_SECONDS)
+    return random.uniform(*HEALTH_DEFAULT_INTERVAL_SECONDS)
+
+
+def _median_latency(latencies: List[float]) -> float:
+    if not latencies:
+        return HEALTH_LATENCY_BASELINE_MS
+    return statistics.median(latencies)
+
+
+def _log_health_transition(previous: str, current: str, latency_ms: Optional[float]) -> None:
+    if not ANALYTICS_ENABLED:
+        return
+    logger.info(
+        "health_status_change",
+        extra={
+            "from": previous,
+            "to": current,
+            "latency_ms": None if latency_ms is None else round(latency_ms, 2),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+
+def run_health_check(
+    state: AssistantState,
+    health_state: Optional[Dict[str, Any]],
+    *,
+    force: bool = False,
+) -> Tuple[Dict[str, Any], str]:
+    """Poll Ollama and update cached health information."""
+
+    model_name = current_model_name(state)
+    if not health_state or health_state.get("model") != model_name:
+        health_state = initial_health_state(model_name)
+    else:
+        health_state = dict(health_state)
+
+    now = time.time()
+    if not force and health_state.get("next_allowed", 0.0) > now:
+        html = render_model_status(
+            model_name,
+            health_state.get("status", "unknown"),
+            health_state.get("last_latency"),
+        )
+        return health_state, html
+
+    deps = getattr(state, "deps", None)
+    adapter = getattr(deps, "chat_adapter", None)
+    health_result = None
+    status = "red"
+    latency_ms = None
+
+    if adapter is None:
+        status = "red"
+    else:
+        try:
+            health_result = adapter.client.health_check()
+            latency_ms = health_result.latency_ms
+            if health_result.healthy:
+                median_latency = _median_latency(health_state.get("latencies", []))
+                threshold = max(HEALTH_LATENCY_MIN_AMBER_MS, median_latency * HEALTH_LATENCY_THRESHOLD_MULTIPLIER)
+                status = "amber" if (latency_ms or 0) > threshold else "green"
+            else:
+                status = "red"
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.debug("Ollama health check failed: %s", exc)
+            status = "red"
+
+    previous_status = health_state.get("status", "unknown")
+    if status != previous_status:
+        _log_health_transition(previous_status, status, latency_ms)
+        health_state["status"] = status
+        health_state["status_since"] = now
+        if status != "red":
+            health_state["toast_shown"] = False
+
+    health_state["model"] = model_name
+    health_state["last_checked"] = now
+    health_state["last_latency"] = latency_ms
+
+    if status == "red":
+        health_state["consecutive_failures"] = health_state.get("consecutive_failures", 0) + 1
+    else:
+        health_state["consecutive_failures"] = 0
+        if latency_ms is not None:
+            latencies = list(health_state.get("latencies", []))
+            latencies.append(latency_ms)
+            health_state["latencies"] = latencies[-HEALTH_MAX_LATENCIES:]
+
+    interval = _choose_interval(status, health_state.get("status_since", now))
+    health_state["next_allowed"] = now + interval
+
+    html = render_model_status(model_name, status, latency_ms)
+    return health_state, html
+
+
+def timer_health_check(state: AssistantState, health_state: Dict[str, Any]):
+    return run_health_check(state, health_state, force=False)
+
+
+def immediate_health_check(state: AssistantState, health_state: Dict[str, Any]):
+    return run_health_check(state, health_state, force=True)
 
 
 def load_prompt_templates(path: Path) -> Dict[str, Any]:
@@ -101,7 +313,7 @@ def answer_question(
     """Retrieve context, craft prompts, invoke the LLM, and display citations."""
 
     try:
-        documents = state.deps.retriever.retrieve(query=query, top_k=5)
+        documents = state.deps.retriever.retrieve(query=query, top_k=3)
     except NotImplementedError as error:
         assistant_reply = (
             "Retrieval is not configured yet. "
@@ -167,10 +379,77 @@ def answer_question(
     return updated_history, state
 
 
+def messages_to_pairs(messages: List[Dict[str, Any]]) -> List[Tuple[str, str]]:
+    """Convert Chatbot message history into user/assistant pairs."""
+
+    pairs: List[Tuple[str, str]] = []
+    pending_user: Optional[str] = None
+
+    for message in messages:
+        if not isinstance(message, dict):
+            continue
+        role = message.get("role")
+        content = str(message.get("content", ""))
+        if role == "user":
+            pending_user = content
+        elif role == "assistant" and pending_user is not None:
+            pairs.append((pending_user, content))
+            pending_user = None
+
+    return pairs
+
+
+def pairs_to_messages(pairs: List[Tuple[str, str]]) -> List[Dict[str, str]]:
+    """Convert internal user/assistant pairs back to Chatbot messages."""
+
+    messages: List[Dict[str, str]] = []
+    for user_text, assistant_text in pairs:
+        messages.append({"role": "user", "content": user_text})
+        messages.append({"role": "assistant", "content": assistant_text})
+    return messages
+
+
+def handle_question(
+    query: str,
+    history: List[Dict[str, Any]],
+    state: AssistantState,
+    health_state: Dict[str, Any],
+) -> Tuple[List[Dict[str, str]], AssistantState, Dict[str, Any], str]:
+    """Wrap question answering to refresh health metadata and status UI."""
+
+    if health_state.get("status") == "red" and not health_state.get("toast_shown"):
+        gr.Warning(HEALTH_RED_TOAST_MESSAGE)
+        health_state = dict(health_state)
+        health_state["toast_shown"] = True
+
+    pairs = messages_to_pairs(history)
+
+    updated_pairs, state = answer_question(query, pairs, state)
+    health_state, status_html = immediate_health_check(state, health_state)
+    messages = pairs_to_messages(updated_pairs)
+    return messages, state, health_state, status_html
+
+
+def apply_llm_settings_with_health(
+    primary_model: str,
+    fallback_model: str,
+    timeout_seconds: float,
+    state: AssistantState,
+    health_state: Dict[str, Any],
+) -> Tuple[AssistantState, str, Dict[str, Any], str]:
+    """Apply LLM overrides then refresh health state/UI."""
+
+    state, message = update_llm_settings(primary_model, fallback_model, timeout_seconds, state)
+    health_state = initial_health_state(current_model_name(state))
+    health_state, status_html = immediate_health_check(state, health_state)
+    return state, message, health_state, status_html
+
+
 def build_interface(state: AssistantState) -> gr.Blocks:
     """Construct the Gradio layout used for both ingestion and chat."""
 
     guardrail_config = load_guardrails(GUARDRAILS_PATH)
+    current_model = current_model_name(state)
 
     with gr.Blocks(title="Quest Analytics AI RAG Assistant") as demo:
         gr.Markdown(
@@ -180,7 +459,11 @@ def build_interface(state: AssistantState) -> gr.Blocks:
             """
         )
 
+        with gr.Row():
+            model_status_html = gr.HTML(render_model_status(current_model, "unknown", None))
+
         assistant_state = gr.State(state)
+        health_state = gr.State(initial_health_state(current_model))
 
         with gr.Tab("Upload PDFs"):
             file_uploader = gr.File(
@@ -200,7 +483,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
             )
 
         with gr.Tab("Chat"):
-            chat = gr.Chatbot(label="QuestQuery Chat")
+            chat = gr.Chatbot(label="QuestQuery Chat", type="messages")
             question_box = gr.Textbox(
                 label="Ask a question about the ingested documents",
                 placeholder="e.g. Summarize the attention mechanism.",
@@ -208,16 +491,68 @@ def build_interface(state: AssistantState) -> gr.Blocks:
             submit_btn = gr.Button("Ask")
 
             submit_btn.click(
-                fn=answer_question,
-                inputs=[question_box, chat, assistant_state],
-                outputs=[chat, assistant_state],
+                fn=handle_question,
+                inputs=[question_box, chat, assistant_state, health_state],
+                outputs=[chat, assistant_state, health_state, model_status_html],
             )
+
+            with gr.Accordion("LLM Settings", open=False):
+                primary_model_input = gr.Textbox(
+                    value=current_model,
+                    label="Primary Ollama model",
+                    placeholder="e.g. mistral",
+                )
+                fallback_model_input = gr.Textbox(
+                    value=os.getenv("OLLAMA_FALLBACK_MODEL", "phi3:mini"),
+                    label="Fallback model (optional)",
+                    placeholder="e.g. gemma3:1b",
+                )
+                timeout_slider = gr.Slider(
+                    minimum=30,
+                    maximum=240,
+                    step=10,
+                    value=float(os.getenv("OLLAMA_TIMEOUT", "120")),
+                    label="LLM timeout (seconds)",
+                )
+                apply_llm_btn = gr.Button("Apply LLM settings")
+                llm_status = gr.Markdown(
+                    value=(
+                        f"Using `{os.getenv('OLLAMA_MODEL','mistral')}` with fallback "
+                        f"`{os.getenv('OLLAMA_FALLBACK_MODEL','gemma3:1b') or 'disabled'}` "
+                        f"(timeout {os.getenv('OLLAMA_TIMEOUT','120')} s)."
+                    )
+                )
+
+                apply_llm_btn.click(
+                    fn=apply_llm_settings_with_health,
+                    inputs=[
+                        primary_model_input,
+                        fallback_model_input,
+                        timeout_slider,
+                        assistant_state,
+                        health_state,
+                    ],
+                    outputs=[assistant_state, llm_status, health_state, model_status_html],
+                )
 
         with gr.Accordion("Prompt Template", open=False):
             gr.JSON(state.prompt_template)
 
         with gr.Accordion("Guardrails", open=False):
             gr.JSON(guardrail_config)
+
+        demo.load(
+            fn=immediate_health_check,
+            inputs=[assistant_state, health_state],
+            outputs=[health_state, model_status_html],
+        )
+
+        health_timer = gr.Timer(value=HEALTH_TIMER_INTERVAL)
+        health_timer.tick(
+            fn=timer_health_check,
+            inputs=[assistant_state, health_state],
+            outputs=[health_state, model_status_html],
+        )
 
     return demo
 
@@ -249,6 +584,7 @@ def load_dependencies() -> AssistantDependencies:
     tls_verify = tls_verify_env not in {"false", "0"}
     ollama_base_url = os.getenv("OLLAMA_BASE_URL")
     ollama_model = os.getenv("OLLAMA_MODEL")
+    ollama_fallback = os.getenv("OLLAMA_FALLBACK_MODEL")
 
     try:
         embedding_backend = SentenceTransformerEmbeddings(model_name=embedding_model_name)
@@ -283,6 +619,7 @@ def load_dependencies() -> AssistantDependencies:
                 base_url=ollama_base_url,
                 model=ollama_model,
                 timeout=float(os.getenv("OLLAMA_TIMEOUT", "30")),
+                fallback_model=ollama_fallback,
             )
         else:
             raise ValueError("OLLAMA_BASE_URL and OLLAMA_MODEL must be configured.")
@@ -354,6 +691,56 @@ def load_dependencies() -> AssistantDependencies:
     )
 
 
+def update_llm_settings(
+    primary_model: str,
+    fallback_model: str,
+    timeout_seconds: float,
+    state: AssistantState,
+) -> Tuple[AssistantState, str]:
+    """Rebuild the chat adapter with new Ollama settings."""
+
+    primary = (primary_model or "").strip()
+    fallback = (fallback_model or "").strip()
+    timeout = float(timeout_seconds or 0)
+
+    if timeout <= 0:
+        return state, "❌ Timeout must be greater than zero."
+
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    current_primary = (
+        getattr(getattr(state.deps.chat_adapter, "client", None), "config", None).model
+        if hasattr(state.deps.chat_adapter, "client")
+        else os.getenv("OLLAMA_MODEL", "mistral")
+    )
+
+    target_primary = primary or current_primary
+
+    try:
+        adapter = OllamaChatAdapter.from_env(
+            base_url=base_url,
+            model=target_primary,
+            timeout=timeout,
+            fallback_model=fallback or None,
+        )
+        state.deps.chat_adapter = adapter
+
+        os.environ["OLLAMA_MODEL"] = target_primary
+        os.environ["OLLAMA_TIMEOUT"] = str(int(timeout))
+        if fallback:
+            os.environ["OLLAMA_FALLBACK_MODEL"] = fallback
+        elif "OLLAMA_FALLBACK_MODEL" in os.environ:
+            del os.environ["OLLAMA_FALLBACK_MODEL"]
+
+        message = (
+            f"✅ LLM settings updated → primary: `{target_primary}`, "
+            f"fallback: `{fallback or 'disabled'}`, timeout: {int(timeout)}s."
+        )
+    except Exception as exc:  # pragma: no cover - defensive log only
+        message = f"❌ Failed to update LLM settings: {exc}"
+
+    return state, message
+
+
 def main() -> None:
     """Entry point used by `python deployment/app_gradio.py`."""
 
@@ -361,7 +748,12 @@ def main() -> None:
     prompts = load_prompt_templates(PROMPT_PATH)
     state = AssistantState(deps=dependencies, prompt_template=prompts)
     app = build_interface(state)
-    app.launch()
+    share_env = os.getenv("GRADIO_SHARE_LINK", "false").lower()
+    app.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
+        share=share_env in {"1", "true", "yes"},
+    )
 
 
 if __name__ == "__main__":

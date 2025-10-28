@@ -4,6 +4,10 @@ AI_RAG/
 │   ├── app_gradio.py            [Application Layer] Connects UI with retrieval + LLM pipelines
 │   ├── ui_assets/               [Application Layer] Static styling assets for the assistant
 │   └── __init__.py
+├── landing/                     [Application Layer] FastAPI landing page with launch button + analytics
+│   ├── main.py                  [Application Layer] Serves the landing page and logs button clicks
+│   ├── templates/               [Application Layer] Jinja templates for the branded UI
+│   └── __init__.py
 ├── rag_pipeline/
 │   ├── ingestion/               [Domain Layer] OCR, parsing, metadata enrichment routines
 │   │   ├── pdf_ocr_pipeline.py  [Domain Layer] Document-to-text pipeline with fallback OCR
@@ -52,6 +56,7 @@ AI_RAG/
 │   ├── docker/
 │   │   ├── Dockerfile.app       [Containerization] Gradio/LangChain runtime image
 │   │   ├── Dockerfile.worker    [Containerization] Ingestion worker with OCR deps
+│   │   ├── Dockerfile.landing   [Containerization] FastAPI landing page image
 │   │   └── docker-compose.dev.yml [Containerization] Local multi-service orchestration
 │   ├── terraform/               [Infrastructure Layer] Future IaC for cloud resources
 │   └── k8s/                     [Infrastructure Layer] Helm/manifests for production deploy
@@ -81,10 +86,10 @@ cd ai_rag_assistant
 
 ### 1. Prerequisites
 - Python 3.11+
-- Local [Ollama](https://ollama.com/) instance with an installed chat + embedding model (e.g. `ollama pull mistral`)
-- OpenSearch cluster (self-hosted or managed) reachable from your machine
+- Local [Ollama](https://ollama.com/) daemon (the compose file starts one for you). Pull at least one lightweight chat model, e.g. `ollama pull gemma3:1b`, and an optional fallback such as `ollama pull phi3:mini`.
+- OpenSearch cluster (the dev compose file launches a single-node instance).
 
-> **Ollama configuration:** the default model is `mistral`, which runs comfortably on macOS with the Ollama daemon. On machines with ≤ 8 GB RAM, avoid heavier variants such as `llama3`; instead prefer `mistral` or `gemma3:1b` for reliable local deployments. If the primary model fails to load, the pipeline automatically falls back to `gemma3:1b` (override with `OLLAMA_FALLBACK_MODEL`).
+> **Ollama configuration:** the stack defaults to `gemma3:1b`, which fits within ~1 GiB of RAM and is reliable on laptops. If you later switch to a larger model, update `OLLAMA_MODEL` and ensure your machine has sufficient memory; the UI badge will turn amber/red if Ollama slows or becomes unreachable.
 
 ### 2. Environment Setup
 ```bash
@@ -104,19 +109,44 @@ Key variables:
 - `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`
 - `EMBEDDING_MODEL_NAME` (defaults to `all-MiniLM-L6-v2`)
 
-### 4. Start Services
+### 4. Launch the App
+
+**Docker Compose (recommended for local dev):**
+
+```bash
+docker compose -f infra/docker/docker-compose.dev.yml up --build landing rag-app
+```
+
+This spins up OpenSearch, Ollama, the Gradio assistant, and the landing page. Visit [http://localhost:3000](http://localhost:3000) and click **🚀 Launch App** to open the assistant in a new tab (served from [http://localhost:7860](http://localhost:7860)).
+
+Stop everything with:
+
+```bash
+docker compose -f infra/docker/docker-compose.dev.yml down
+```
+
+**Manual run (if you prefer your own OpenSearch/Ollama):**
 - Ensure OpenSearch is running and reachable.
 - Start Ollama: `ollama serve`
-- Pull a lightweight model (recommended): `ollama pull mistral`
-- (Optional) warm the model: `ollama run mistral "hello"`
+- Pull lightweight models: `ollama pull gemma3:1b` (primary) and `ollama pull phi3:mini` (fallback)
+- (Optional) warm the model: `ollama run gemma3:1b "hello"`
+- Launch Gradio directly: `python deployment/app_gradio.py`
+
+## 🧭 Deployment Roadmap
+
+For cloud deployment strategies, scaling considerations, and future infrastructure plans, see [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md).
+
+Additional roadmap documents live under [`docs/roadmap/`](docs/roadmap/), including:
+- [`OVERVIEW.md`](docs/roadmap/OVERVIEW.md) — high-level initiatives and status.
+- [`2025_Q4.md`](docs/roadmap/2025_Q4.md) — current quarter goals and milestones.
 
 ### 5. Smoke Test the Pipeline
 Verify connectivity, ingestion, retrieval, and LLM output in one go:
 
 ```bash
-python scripts/smoke_test.py --pdf ~/Desktop/pdf/Attention_Is_All_You_Need.pdf --question "How does attention work?" --model mistral --ollama-timeout 120
+python scripts/smoke_test.py --pdf ~/Desktop/pdf/Attention_Is_All_You_Need.pdf --question "How does attention work?" --model gemma3:1b --ollama-timeout 240
 ```
-If you see an error about the Ollama model runner stopping, the selected model likely exceeds your available memory. Pull a lighter model such as `mistral` or `llama3:8b` and rerun the command with `--model` pointing at it. On slow machines, you can also increase `--ollama-timeout` (defaults to `OLLAMA_TIMEOUT` in `.env`).
+If you see an error about the Ollama model runner stopping, the selected model likely exceeds your available memory. Pull a lighter model such as `gemma3:1b` (or another compact variant) and rerun the command with `--model` pointing at it. On slow machines, you can also increase `--ollama-timeout` (defaults to `OLLAMA_TIMEOUT` in `.env`).
 
 ## Usage
 Once dependencies and services are configured, ingest PDFs from the CLI to populate the index:
@@ -134,7 +164,7 @@ python scripts/eval_retrieval.py data/samples/queries.jsonl --top-k 5
 ```
 
 The JSON/JSONL file should include each question alongside expected snippets or keywords used to check whether the retrieved passages are relevant.
-See `data/samples/queries.jsonl` for a template.
+See `data/samples/queries.jsonl` for a template—sample entries cover attention concepts, BLEU scores, and positional encoding.
 
 Run unit tests to validate ingestion and retriever utilities:
 
@@ -148,8 +178,17 @@ Launch the Gradio assistant after ingestion:
 python deployment/app_gradio.py
 ```
 
+### Model Status & Fallback UX
+- A status dot beside the “Model” label reflects Ollama health at a glance: green (healthy), amber (slow/degraded), and red (unreachable).
+- When the primary model fails, the dot updates immediately after the fallback promotion so you always see which model is active.
+- Health checks never block chat; if Ollama is red you can keep sending messages, and the UI surfaces a non-blocking warning toast once per failure window.
+
 ## Deployment Notes
 - **Containerization**: Build separate containers for the Gradio app and ingestion worker using the Dockerfiles under `infra/docker/`. Provide OpenSearch/Ollama endpoints via environment variables or secrets managers.
+- **Quickstart**: For local testing run `docker compose -f infra/docker/docker-compose.dev.yml up --build` to launch OpenSearch, an Ollama daemon, the Gradio app, and a polling ingestion worker.
+  - The landing page is exposed on `http://localhost:3000` with a one-click “Launch App” button (reads `APP_URL` to route traffic to the Gradio instance). Toggle analytics via `ENABLE_ANALYTICS`, `ANALYTICS_PROVIDER`, and `ANALYTICS_ID`.
+  - Pull desired models inside the Ollama container: `docker exec -it ollama ollama pull gemma3:1b` (primary) and `docker exec -it ollama ollama pull phi3:mini` (fallback)
+  - Drop PDFs into `data/raw/` (mounted into the worker at `/data/raw`) and they will be ingested automatically.
 - **OpenSearch**: Use managed OpenSearch Service/Elasticsearch with index lifecycle policies, snapshot backups, and access controls (VPC, IP allowlists, or API gateways).
 - **Ollama**: Host Ollama on GPU-enabled instances or swap in a managed LLM endpoint if latency/throughput requirements exceed local hardware capabilities.
 - **Monitoring & Logging**: Ship application logs to a centralized system (e.g., OpenSearch Dashboards, ELK, or Datadog), instrument key metrics (ingestion latency, retrieval success rate, LLM response time), and configure alerts.

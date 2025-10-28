@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quest Analytics RAG Assistant (Prototype)</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ctext y='83' font-size='90'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --accent: #facc15;
+        --background: #f9fafb;
+        --text: #0f172a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background-color: var(--background);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .banner {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.85), rgba(250, 204, 21, 0.85));
+        padding: 3.5rem 1.5rem 2.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .banner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 55%),
+          radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.3), transparent 45%);
+        pointer-events: none;
+      }
+
+      .banner-content {
+        position: relative;
+        z-index: 1;
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3rem);
+        letter-spacing: 0.03em;
+        color: #0f172a;
+        text-shadow: 0 1px 12px rgba(248, 250, 252, 0.55);
+      }
+
+      p.subtitle {
+        margin: 1rem auto 0;
+        max-width: 520px;
+        font-size: clamp(1rem, 2vw, 1.25rem);
+        color: #111827;
+        line-height: 1.6;
+      }
+
+      main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.5rem 1.5rem;
+      }
+
+      .card {
+        background: #ffffff;
+        box-shadow: 0 25px 45px -20px rgba(15, 23, 42, 0.25);
+        border-radius: 1.25rem;
+        padding: 2.75rem 3rem;
+        width: min(520px, 100%);
+        text-align: center;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+      }
+
+      .card h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1.5rem;
+        color: var(--primary);
+      }
+
+      .card p {
+        margin: 0 0 1.75rem;
+        color: #475569;
+        line-height: 1.7;
+      }
+
+      .launch-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 0.9rem 1.75rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #f8fafc;
+        background: var(--primary);
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 14px 30px -15px var(--primary);
+      }
+
+      .launch-button:hover:not(:disabled) {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 18px 36px -18px var(--primary);
+      }
+
+      .launch-button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      .launch-button:disabled {
+        cursor: progress;
+        opacity: 0.85;
+      }
+
+      .spinner {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 9999px;
+        border-width: 3px;
+        border-style: solid;
+        border-color: rgba(255, 255, 255, 0.45);
+        border-top-color: #ffffff;
+        animation: spin 0.9s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      footer {
+        text-align: center;
+        padding: 1.5rem;
+        font-size: 0.95rem;
+        color: #475569;
+      }
+
+      footer span {
+        color: var(--primary);
+        font-weight: 600;
+      }
+
+      @media (max-width: 640px) {
+        .card {
+          padding: 2.25rem 2rem;
+        }
+      }
+    </style>
+    {% if enable_analytics and analytics_provider == "plausible" and analytics_id %}
+    <script
+      defer
+      data-domain="{{ analytics_id }}"
+      src="https://plausible.io/js/script.js"
+    ></script>
+    {% elif enable_analytics and analytics_provider == "google" and analytics_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "{{ analytics_id }}");
+    </script>
+    {% endif %}
+  </head>
+  <body>
+    <div class="banner">
+      <div class="banner-content">
+        <h1>Quest Analytics RAG Assistant (Prototype)</h1>
+        <p class="subtitle">
+          Upload a PDF, wait for ingestion, and then ask research questions.
+        </p>
+      </div>
+    </div>
+    <main>
+      <div class="card">
+        <h2>Ready for exploration?</h2>
+        <p>
+          Launch the assistant, drop in your research documents, and receive grounded answers with
+          citations in seconds.
+        </p>
+        <button class="launch-button" id="launch-btn">
+          <span aria-hidden="true">🚀</span>
+          <span id="launch-text">Launch App</span>
+          <span class="spinner" id="launch-spinner" style="display: none"></span>
+        </button>
+      </div>
+    </main>
+    <footer>
+      © 2025 <span>Peter Obi</span> — Quest Analytics | Built with ❤️ using Gradio &amp; Ollama
+    </footer>
+
+    <script>
+      const appUrl = "{{ app_url }}";
+      const enableAnalytics = {{ "true" if enable_analytics else "false" }};
+
+      const launchButton = document.getElementById("launch-btn");
+      const launchText = document.getElementById("launch-text");
+      const launchSpinner = document.getElementById("launch-spinner");
+
+      async function logLaunch() {
+        if (enableAnalytics) {
+          return;
+        }
+        try {
+          await fetch("/analytics/log", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "LaunchAppClicked",
+            }),
+          });
+        } catch (error) {
+          console.warn("Analytics logging failed:", error);
+        }
+      }
+
+      launchButton.addEventListener("click", async () => {
+        launchButton.disabled = true;
+        launchText.textContent = "Launching…";
+        launchSpinner.style.display = "inline-block";
+
+        window.open(appUrl, "_blank", "noopener");
+        await logLaunch();
+
+        setTimeout(() => {
+          launchButton.disabled = false;
+          launchText.textContent = "Launch App";
+          launchSpinner.style.display = "none";
+        }, 1200);
+      });
+    </script>
+  </body>
+</html>
