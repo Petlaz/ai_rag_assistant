@@ -1,39 +1,115 @@
 # 🐛 AWS Deployment Troubleshooting Guide
-*Solutions for common issues during your first AWS RAG deployment*
+*Solutions for common issues across all deployment modes (Ultra-Budget, Balanced, Full)*
+
+---
+
+## 🎯 Mode-Specific Troubleshooting
+
+### 💰 Ultra-Budget Mode Issues
+
+#### SQLite Vector Search Problems
+```bash
+# Check Lambda function logs
+aws logs tail /aws/lambda/rag-assistant-ultra-query --follow
+
+# Common issues:
+# 1. SQLite database not persisting (expected - uses /tmp)
+# 2. Vector search too slow (optimize embedding size)
+# 3. Out of memory (reduce batch size)
+
+# Test SQLite functionality locally
+python -c "
+import sqlite3
+conn = sqlite3.connect('/tmp/test.db')
+cursor = conn.cursor()
+cursor.execute('SELECT sqlite_version()')
+print('SQLite version:', cursor.fetchone()[0])
+"
+```
+
+#### Lambda Function URL Issues
+```bash
+# Check Function URL configuration
+aws lambda get-function-url-config \
+  --function-name rag-assistant-ultra-query
+
+# Common CORS issues - verify headers:
+curl -H "Origin: http://localhost:7860" \
+     -H "Access-Control-Request-Method: POST" \
+     -H "Access-Control-Request-Headers: Content-Type" \
+     -X OPTIONS \
+     https://your-function-url.lambda-url.region.on.aws/
+```
+
+### ⚖️ Balanced Mode Issues
+
+#### Pinecone Connection Problems
+```bash
+# Test Pinecone connectivity
+python -c "
+import pinecone
+import os
+pinecone.init(api_key=os.environ['PINECONE_API_KEY'])
+print('Pinecone indexes:', pinecone.list_indexes())
+"
+
+# Check index stats
+python -c "
+import pinecone
+index = pinecone.Index('rag-assistant')
+print('Index stats:', index.describe_index_stats())
+"
+```
+
+### 🚀 Full Mode Issues  
+
+#### OpenSearch Serverless Problems
+```bash
+# Check collection status
+aws opensearchserverless batch-get-collection \
+  --names rag-assistant-collection
+
+# Test connectivity
+curl -X GET "https://your-collection-endpoint.us-east-1.aoss.amazonaws.com/_cluster/health" \
+     --aws-sigv4 "aws:amz:us-east-1:aoss" \
+     --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY"
+```
 
 ---
 
 ## 🚨 Quick Diagnosis Commands
 
-### Check Overall Health
+### Universal Health Checks (All Modes)
 ```bash
 # Verify AWS CLI configuration
 aws sts get-caller-identity
 
-# Check active region
+# Check active region  
 aws configure get region
 
-# Verify student credits
+# Verify student credits remaining
 aws billing get-cost-and-usage \
   --time-period Start=2026-01-01,End=2026-01-31 \
   --granularity MONTHLY \
   --metrics BlendedCost
+
+# Check deployment mode
+./scripts/deploy-student-stack.sh --mode=ultra-budget --budget=20 --dry-run
 ```
 
-### Service-Specific Health Checks
+### Mode-Specific Health Checks
 ```bash
-# CloudFormation stack status
-aws cloudformation describe-stacks \
-  --stack-name rag-assistant-student \
-  --query 'Stacks[0].StackStatus'
+# Ultra-Budget Mode
+aws lambda get-function-url-config --function-name rag-assistant-ultra-query
+aws lambda invoke --function-name rag-assistant-ultra-query /tmp/response.json
 
-# Lambda function status
-aws lambda get-function \
-  --function-name rag-assistant-student-query-processor
+# Balanced Mode  
+aws apigateway get-rest-apis --query 'items[?name==`rag-assistant-balanced`]'
+aws lambda get-function --function-name rag-assistant-balanced-query
 
-# OpenSearch collection health
-aws opensearchserverless batch-get-collection \
-  --names rag-assistant-collection
+# Full Mode
+aws cloudformation describe-stacks --stack-name rag-assistant-full
+aws opensearchserverless batch-get-collection --names rag-assistant-collection
 ```
 
 ---

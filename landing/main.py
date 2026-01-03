@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 import csv
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, AsyncGenerator, Dict
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -19,20 +20,18 @@ LANDING_PORT = int(os.getenv("LANDING_PORT", "3000"))
 ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", "false").lower() in {"1", "true", "yes"}
 ANALYTICS_PROVIDER = os.getenv("ANALYTICS_PROVIDER", "plausible").lower()
 ANALYTICS_ID = os.getenv("ANALYTICS_ID", "")
-ANALYTICS_CSV_PATH = Path(os.getenv("ANALYTICS_CSV_PATH", "/data/analytics.csv"))
+ANALYTICS_CSV_PATH = Path(os.getenv("ANALYTICS_CSV_PATH", "data/analytics.csv"))
 ANALYTICS_MAX_BYTES = 5 * 1024 * 1024  # 5 MB rotation threshold
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
-app = FastAPI(title="Quest Analytics RAG Assistant Landing Page")
 _analytics_lock = asyncio.Lock()
 
 
 def _ensure_analytics_file() -> None:
     """Ensure analytics CSV exists with header row."""
 
-    if ENABLE_ANALYTICS:
+    if not ENABLE_ANALYTICS:
         return
     ANALYTICS_CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not ANALYTICS_CSV_PATH.exists():
@@ -54,13 +53,24 @@ def _rotate_if_needed() -> None:
     _ensure_analytics_file()
 
 
-@app.on_event("startup")
-async def on_startup() -> None:
-    """Prepare analytics file and print helpful banner."""
-
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """FastAPI lifespan event handler."""
+    # Startup
     _ensure_analytics_file()
     print(f"🚀 Landing page running at: http://0.0.0.0:{LANDING_PORT}")
     print(f"🌐 Gradio app available at: {APP_URL}")
+    
+    yield
+    
+    # Shutdown (if needed in the future)
+    pass
+
+
+app = FastAPI(
+    title="Quest Analytics RAG Assistant Landing Page",
+    lifespan=lifespan
+)
 
 
 @app.get("/", response_class=HTMLResponse)

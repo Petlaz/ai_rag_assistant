@@ -1,5 +1,29 @@
 # 🏗️ AWS Infrastructure Setup Guide
-*Step-by-step AWS account preparation for RAG Assistant deployment*
+*Step-by-step AWS account preparation for RAG Assistant deployment with three cost-optimized modes*
+
+---
+
+## 🎯 Choose Your Deployment Mode First
+
+Before setting up infrastructure, decide which deployment mode fits your needs and budget:
+
+### 💰 Ultra-Budget Mode ($8-18/month)
+**Best for:** Students, learning, demos
+- **Requirements:** Basic AWS account, ~$20 monthly budget
+- **Services:** Lambda + Function URLs + S3 + DynamoDB + SQLite
+- **Setup time:** ~30 minutes
+
+### ⚖️ Balanced Mode ($15-35/month)  
+**Best for:** Small production apps, portfolio projects
+- **Requirements:** AWS account + external vector DB
+- **Services:** API Gateway + Lambda + S3 + DynamoDB + Pinecone/Chroma
+- **Setup time:** ~45 minutes
+
+### 🚀 Full Mode ($25-68/month)
+**Best for:** Production apps, showcasing to employers
+- **Requirements:** AWS account with higher limits
+- **Services:** Full AWS stack with OpenSearch + CloudFront
+- **Setup time:** ~60 minutes
 
 ---
 
@@ -7,19 +31,52 @@
 
 ### AWS Account Setup
 - [ ] Create AWS account (use student email for credits)
-- [ ] Activate [AWS Educate](https://aws.amazon.com/education/awseducate/) or [AWS Academy](https://aws.amazon.com/training/awsacademy/)
-- [ ] Verify student credits are applied ($100+ recommended)
-- [ ] Set up billing alerts at $25, $40, $50
+- [ ] Activate [AWS Educate](https://aws.amazon.com/education/awseducate/) ($100-200 credits)
+- [ ] Apply for [GitHub Student Pack](https://education.github.com/pack) (additional AWS credits)
+- [ ] Verify student credits are applied
+- [ ] Set up billing alerts based on your mode:
+  - Ultra-budget: $15, $20, $25
+  - Balanced: $25, $35, $45
+  - Full: $50, $65, $80
 
-### Local Development Environment
+### Local Development Environment  
 - [ ] Install [AWS CLI v2](https://aws.amazon.com/cli/)
 - [ ] Configure AWS credentials (`aws configure`)
-- [ ] Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) (optional)
-- [ ] Verify Docker is running
+- [ ] Install [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) (Full mode only)
+- [ ] Verify Docker is running (if using local testing)
 
 ---
 
-## 🔑 AWS Account Configuration
+## � Quick Deployment Commands
+
+Once your AWS account is configured, deploy your chosen mode:
+
+### Ultra-Budget Deployment
+```bash
+cd /path/to/AI_RAG
+./scripts/deploy-student-stack.sh --mode=ultra-budget --budget=20
+```
+
+### Balanced Deployment  
+```bash
+cd /path/to/AI_RAG
+./scripts/deploy-student-stack.sh --mode=balanced --budget=40
+```
+
+### Full Deployment
+```bash
+cd /path/to/AI_RAG
+./scripts/deploy-student-stack.sh --mode=full --budget=70
+```
+
+### Get Help
+```bash
+./scripts/deploy-student-stack.sh --help
+```
+
+---
+
+## �🔑 AWS Account Configuration
 
 ### 1. Create IAM User for Deployment
 ```bash

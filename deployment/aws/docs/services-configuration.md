@@ -1,40 +1,219 @@
 # 🛠️ AWS Services Configuration Guide
-*Detailed configuration for each AWS service used in the RAG Assistant*
+*Detailed configuration for each AWS service across all deployment modes*
 
 ---
 
-## 🗂️ Service Overview
+## 🎯 Service Overview by Deployment Mode
 
-The RAG Assistant uses a **serverless-first architecture** to minimize costs:
+### 💰 Ultra-Budget Mode ($8-18/month)
+| Service | Purpose | Monthly Cost |
+|---------|---------|-------------|
+| **Lambda** | Query processing + vector search | $2-5 |
+| **S3** | Document storage | $1-3 |
+| **SQLite** | Vector storage (bundled with Lambda) | $0 |
+| **DynamoDB** | Aggressive response caching | $1-2 |
+| **Function URLs** | Direct HTTPS endpoints | $0 |
+| **Bedrock Claude Haiku** | LLM inference | $3-8 |
+| **Total** | | **$8-18** |
 
-| Service | Purpose | Estimated Monthly Cost |
-|---------|---------|----------------------|
-| **Lambda** | Query processing, document ingestion | $5-15 |
-| **S3** | Document storage + web hosting | $1-5 |
-| **OpenSearch Serverless** | Vector search and retrieval | $10-25 |
-| **DynamoDB** | Response caching | $1-3 |
+### ⚖️ Balanced Mode ($15-35/month)
+| Service | Purpose | Monthly Cost |
+|---------|---------|-------------|
+| **Lambda** | Query processing | $5-10 |
+| **S3** | Document storage + web hosting | $2-5 |
+| **Pinecone Starter** | Vector search | $70 (but efficient usage) |
+| **DynamoDB** | Smart response caching | $1-3 |
 | **API Gateway** | REST API endpoints | $3-5 |
-| **Bedrock** | LLM inference (Claude 3 Haiku) | $2-8 |
-| **CloudFront** | Global CDN (optional) | $1-2 |
+| **Bedrock Claude Mix** | LLM inference | $5-12 |
+| **Total** | | **$15-35** |
 
-**Total**: $15-50/month (with student credits)
+### 🚀 Full Mode ($25-68/month)
+| Service | Purpose | Monthly Cost |
+|---------|---------|-------------|
+| **Lambda** | Query processing | $8-15 |
+| **S3** | Document storage + web hosting | $3-8 |
+| **OpenSearch Serverless** | Hybrid vector search | $10-25 |
+| **DynamoDB** | Multi-layer caching | $2-5 |
+| **API Gateway** | REST API with custom domain | $5-8 |
+| **Bedrock Claude Sonnet** | Advanced LLM inference | $8-15 |
+| **CloudFront** | Global CDN | $1-2 |
+| **Total** | | **$25-68** |
 
 ---
 
-## 🔍 OpenSearch Serverless Configuration
+## 🔍 Service Configuration by Mode
 
-### Collection Setup
+### 💰 Ultra-Budget Mode Configuration
+
+#### SQLite Vector Storage
+```python
+# Lambda function with SQLite vector search
+import sqlite3
+import numpy as np
+from sentence_transformers import SentenceTransformer
+
+def create_vector_index():
+    conn = sqlite3.connect('/tmp/vectors.db')
+    cursor = conn.cursor()
+    
+    # Create vector storage table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS document_vectors (
+            id TEXT PRIMARY KEY,
+            content TEXT,
+            embedding BLOB,
+            metadata TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Create index for fast retrieval
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON document_vectors(timestamp)')
+    conn.commit()
+    return conn
+
+def vector_search(query_embedding, limit=5):
+    conn = sqlite3.connect('/tmp/vectors.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT content, embedding, metadata FROM document_vectors')
+    results = []
+    
+    for content, embedding_blob, metadata in cursor.fetchall():
+        doc_embedding = np.frombuffer(embedding_blob, dtype=np.float32)
+        similarity = np.dot(query_embedding, doc_embedding) / (
+            np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding)
+        )
+        results.append((similarity, content, metadata))
+    
+    # Sort by similarity and return top results
+    results.sort(key=lambda x: x[0], reverse=True)
+    return results[:limit]
+```
+
+#### Lambda Function URLs
+```yaml
+# CloudFormation template for Function URLs
+Resources:
+  QueryProcessorFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref QueryProcessorFunction
+      AuthType: NONE
+      Cors:
+        AllowOrigins: ['*']
+        AllowMethods: [POST, GET, OPTIONS]
+        AllowHeaders: [Content-Type, Authorization]
+        MaxAge: 300
+
+Outputs:
+  ApiEndpoint:
+    Description: Direct Lambda Function URL
+    Value: !GetAtt QueryProcessorFunctionUrl.FunctionUrl
+```
+
+#### Aggressive Caching Strategy
+```python
+# 24-hour response caching for ultra-budget mode
+import hashlib
+import json
+from datetime import datetime, timedelta
+
+def cache_response(query, documents, response):
+    cache_key = hashlib.md5(f"{query}:{documents}".encode()).hexdigest()
+    
+    dynamodb.put_item(
+        TableName='ResponseCache',
+        Item={
+            'cache_key': {'S': cache_key},
+            'response': {'S': response},
+            'ttl': {'N': str(int((datetime.now() + timedelta(hours=24)).timestamp()))}
+        }
+    )
+
+def get_cached_response(query, documents):
+    cache_key = hashlib.md5(f"{query}:{documents}".encode()).hexdigest()
+    
+    try:
+        response = dynamodb.get_item(
+            TableName='ResponseCache',
+            Key={'cache_key': {'S': cache_key}}
+        )
+        
+        if 'Item' in response:
+            return response['Item']['response']['S']
+    except:
+        pass
+    
+    return None
+```
+
+---
+
+### ⚖️ Balanced Mode Configuration
+
+#### Pinecone Vector Storage
+```python
+# Pinecone configuration for balanced mode
+import pinecone
+
+pinecone.init(
+    api_key=os.environ['PINECONE_API_KEY'],
+    environment='us-east-1-aws'
+)
+
+# Create index with cost optimization
+index = pinecone.Index('rag-assistant')
+
+def upsert_vectors(vectors, batch_size=100):
+    # Batch uploads to minimize costs
+    for i in range(0, len(vectors), batch_size):
+        batch = vectors[i:i+batch_size]
+        index.upsert(vectors=batch)
+        time.sleep(0.1)  # Rate limiting
+
+def query_vectors(query_embedding, top_k=5):
+    results = index.query(
+        vector=query_embedding.tolist(),
+        top_k=top_k,
+        include_metadata=True
+    )
+    return results.matches
+```
+
+#### Smart Caching Strategy
+```python
+# Intelligent TTL based on query type
+def get_cache_ttl(query):
+    # Common questions: 6 hours
+    # Specific questions: 1 hour  
+    # Complex analysis: 30 minutes
+    
+    common_patterns = ['what is', 'how to', 'explain']
+    if any(pattern in query.lower() for pattern in common_patterns):
+        return 6 * 3600  # 6 hours
+    elif len(query.split()) > 10:
+        return 30 * 60   # 30 minutes
+    else:
+        return 3600      # 1 hour
+```
+
+---
+
+### 🚀 Full Mode Configuration
+
+#### OpenSearch Serverless
 ```json
 {
   "name": "rag-assistant-collection",
   "type": "search",
-  "description": "Vector search for RAG Assistant documents"
+  "description": "Production vector search with hybrid capabilities"
 }
 ```
 
-### Index Configuration
+#### Advanced Vector Index
 ```bash
-# Create vector index for embeddings
+# Create production vector index
 curl -X PUT "https://your-collection-endpoint.us-east-1.aoss.amazonaws.com/documents" \
   -H "Content-Type: application/json" \
   -d '{

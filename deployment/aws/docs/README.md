@@ -1,6 +1,33 @@
 # 📚 AWS Deployment Documentation
 
-*Comprehensive guides for deploying your first RAG Assistant to AWS*
+*Comprehensive guides for deploying your RAG Assistant to AWS with three cost-optimized deployment modes*
+
+---
+
+## 🎯 Choose Your Deployment Mode
+
+We offer **three deployment modes** optimized for different budgets and use cases:
+
+### 💰 Ultra-Budget Mode ($8-18/month)
+**Perfect for:** Students, learning, demos, portfolio projects
+- SQLite vector storage (no external DB costs)
+- Lambda Function URLs (no API Gateway costs)  
+- 24-hour aggressive caching
+- Automatic document cleanup
+
+### ⚖️ Balanced Mode ($15-35/month)
+**Perfect for:** Small production apps, internship projects
+- Pinecone or Chroma vector storage
+- API Gateway + Lambda
+- Smart caching strategy
+- Intelligent cost optimization
+
+### 🚀 Full Mode ($25-68/month)
+**Perfect for:** Production apps, showcasing to employers
+- OpenSearch Serverless
+- Full hybrid search capabilities
+- Advanced monitoring and analytics
+- High availability setup
 
 ---
 
@@ -10,8 +37,9 @@ This folder contains **everything you need** for a successful AWS deployment, sp
 
 ### 🚀 Start Here
 1. **[Infrastructure Setup](infrastructure-setup.md)** - AWS account preparation and prerequisites
-2. **[Services Configuration](services-configuration.md)** - Detailed configuration for each AWS service
+2. **[Services Configuration](services-configuration.md)** - Detailed configuration for all deployment modes
 3. **[Troubleshooting Guide](troubleshooting.md)** - Solutions for common deployment issues
+4. **[Cost Optimization Guide](../COST_OPTIMIZATION.md)** - Student-specific cost strategies
 
 ---
 
@@ -135,11 +163,39 @@ aws ce get-cost-and-usage --time-period Start=2026-01-01,End=2026-01-31 --granul
 
 ---
 
+## 🚀 Quick Start Commands
+
+### Deploy Ultra-Budget Mode ($8-18/month)
+```bash
+cd /path/to/AI_RAG  
+./scripts/deploy-student-stack.sh --mode=ultra-budget --budget=20
+```
+
+### Deploy Balanced Mode ($15-35/month) 
+```bash
+cd /path/to/AI_RAG
+./scripts/deploy-student-stack.sh --mode=balanced --budget=40
+```
+
+### Deploy Full Mode ($25-68/month)
+```bash
+cd /path/to/AI_RAG
+./scripts/deploy-student-stack.sh --mode=full --budget=70
+```
+
+### Get Help
+```bash
+./scripts/deploy-student-stack.sh --help
+```
+
+---
+
 ## 🚀 Ready to Deploy?
 
 1. **Complete prerequisite checklist** in [Infrastructure Setup](infrastructure-setup.md)
-2. **Run deployment script** from [parent README](../README.md)
-3. **Monitor and optimize** using these guides
-4. **Showcase your cloud skills** to potential employers!
+2. **Choose your deployment mode** based on your budget
+3. **Run the deployment script** with your chosen mode
+4. **Monitor and optimize** using these guides
+5. **Showcase your cloud skills** to potential employers!
 
 **Remember:** Every successful cloud engineer started with their first deployment. You're about to join that community! 🌟

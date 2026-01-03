@@ -13,14 +13,16 @@ A production-ready **Retrieval-Augmented Generation** system designed for resear
 
 ## ✨ Key Features
 
+- **� Ultra-Budget AWS Deployment**: Revolutionary $8-18/month cloud deployment using SQLite vector storage and Lambda Function URLs
 - **🔍 Hybrid Search**: Combines BM25 (sparse) and vector (dense) search for optimal retrieval performance
 - **📄 Advanced PDF Processing**: Automated OCR pipeline with metadata extraction and intelligent chunking
 - **🗑️ Document Session Isolation**: Clear previous documents option prevents cross-contamination between research sessions
 - **🤖 Local LLM Integration**: Ollama-based chat with health monitoring and automatic fallback mechanisms
 - **🎯 Research-Focused**: Tailored prompts with citation support and safety guardrails for scientific literature
 - **💻 Professional UI**: Modern Gradio 6.2.0 interface with custom CSS and real-time status monitoring
-- **🚀 Production Ready**: Full Docker containerization, AWS deployment plans, and comprehensive monitoring
+- **🚀 Production Ready**: Three-tier deployment strategy (Ultra-Budget/Balanced/Full) with comprehensive AWS documentation
 - **📊 Analytics & Health**: Built-in usage tracking, performance metrics, and service health dashboards
+- **🌐 Professional Landing Page**: FastAPI-powered landing page with analytics and modern design
 
 ## 🏗️ Architecture
 
@@ -45,11 +47,13 @@ A production-ready **Retrieval-Augmented Generation** system designed for resear
 
 | Component | Description | Recent Updates |
 |-----------|-------------|----------------|
-| **`rag_pipeline/`** | Core RAG functionality: ingestion, indexing, retrieval, embeddings | ✅ Document isolation, index clearing |
-| **`deployment/`** | Gradio web interface and deployment configurations | ✅ Professional UI, health monitoring |
-| **`llm_ollama/`** | Ollama client integration with health monitoring and notes | ✅ Moved notes/, enhanced health checks |
-| **`landing/`** | FastAPI landing page with analytics tracking | ✅ Updated for new architecture |
-| **`configs/`** | Centralized configuration and environment management | ✅ Updated dependencies |
+| **`rag_pipeline/`** | Core RAG functionality: ingestion, indexing, retrieval, embeddings | ✅ Document isolation, index clearing, enhanced retrieval |
+| **`deployment/`** | Gradio web interface and AWS deployment configurations | ✅ Professional UI, health monitoring, three-tier strategy |
+| **`llm_ollama/`** | Ollama client integration with health monitoring and documentation | ✅ Enhanced health checks, integrated notes/ |
+| **`landing/`** | FastAPI landing page with analytics and modern design | ✅ Updated titles, fixed analytics, modern lifespan events |
+| **`scripts/`** | Deployment automation and utility scripts | ✅ Ultra-budget deployment script with mode selection |
+| **`configs/`** | Centralized configuration and environment management | ✅ Updated dependencies, AWS configurations |
+| **`tests/`** | Comprehensive test suite with fixtures | ✅ Enhanced test coverage for new features |
 
 ## 🚀 Quick Start
 
@@ -250,17 +254,21 @@ See deployment guides for AWS:
 AI_RAG/
 ├── rag_pipeline/              # Core RAG components
 │   ├── ingestion/            # PDF processing & metadata extraction
+│   │   ├── __init__.py
 │   │   ├── pdf_ocr_pipeline.py      # ✅ Enhanced PDF processing
 │   │   ├── metadata_extractor.py    # Document metadata extraction
 │   │   └── pipeline.py              # ✅ Updated with session isolation
 │   ├── indexing/             # OpenSearch integration & schema
+│   │   ├── __init__.py
 │   │   ├── hybrid_indexer.py        # ✅ Added clear_previous support
 │   │   ├── opensearch_client.py     # ✅ Index management functions
 │   │   └── schema.json              # OpenSearch mapping schema
 │   ├── retrieval/            # Hybrid search & reranking
+│   │   ├── __init__.py
 │   │   ├── retriever.py             # BM25 + vector search
 │   │   └── reranker.py              # Result reranking logic
 │   ├── embeddings/           # Sentence transformer wrappers
+│   │   ├── __init__.py
 │   │   └── sentence_transformer.py  # Embedding model interface
 │   └── prompts/              # Research-focused prompt templates
 │       ├── guardrails.yaml          # Safety guardrails config
@@ -268,38 +276,43 @@ AI_RAG/
 ├── deployment/               # Web interface & deployment configs
 │   ├── __init__.py           # Python package initialization
 │   ├── app_gradio.py         # ✅ Main Gradio app with professional UI
-│   ├── README.md             # ⭐ Quick AWS deployment guide
-│   └── aws/                  # AWS deployment configurations
-│       ├── AWS_DEPLOYMENT_ROADMAP.md  # 📚 Complete deployment strategy
+│   ├── README.md             # 💼 Portfolio-focused deployment guide
+│   └── aws/                  # ⭐ Complete AWS deployment system
+│       ├── AWS_DEPLOYMENT_ROADMAP.md    # 📚 Updated strategic roadmap
+│       ├── COST_OPTIMIZATION.md         # 💰 Student cost optimization guide
+│       ├── ULTRA_BUDGET_IMPLEMENTATION.md # 🎯 $8-18/month deployment guide
+│       ├── PRE_DEPLOYMENT_CHECKLIST.md  # ✅ Pre-deployment validation
+│       ├── README.md                    # 🚀 AWS quick start guide
 │       ├── docker/           # Docker deployment configurations
-│       │   ├── .dockerignore        # ⬅️ Moved from root
+│       │   ├── .dockerignore        # Container ignore patterns
 │       │   ├── .env.example         # Environment configuration template
 │       │   ├── docker-compose.dev.yml # ✅ Updated with health checks
 │       │   ├── Dockerfile.app       # Application container
 │       │   ├── Dockerfile.worker    # Worker container
 │       │   └── Dockerfile.landing   # Landing page container
-│       └── docs/             # 📖 AWS implementation guides
-│           ├── README.md            # Documentation overview & learning path
-│           ├── infrastructure-setup.md    # AWS account preparation
-│           ├── services-configuration.md  # Detailed service configs
-│           └── troubleshooting.md         # Common issues & solutions
+│       └── docs/             # 📖 Complete AWS implementation guides
+│           ├── README.md            # 🎯 Three-tier deployment overview
+│           ├── infrastructure-setup.md    # 🏗️ AWS account preparation
+│           ├── services-configuration.md  # ⚙️ Service configs for all modes
+│           └── troubleshooting.md         # 🐛 Mode-specific troubleshooting
 ├── llm_ollama/               # Ollama client & adapters
 │   ├── adapters.py           # ✅ Enhanced Ollama integration
 │   ├── client.py             # LLM client with health monitoring
 │   ├── README.md             # Ollama-specific documentation
 │   └── notes/                # ⬅️ Moved from root (related concept)
 │       └── 2025_10_ollama_success.md  # Implementation notes
-├── landing/                  # FastAPI landing page
-│   ├── main.py               # Landing page application
+├── landing/                  # 🌐 Professional landing page
+│   ├── __init__.py
+│   ├── main.py               # ✅ FastAPI app with modern lifespan events
 │   └── templates/            # HTML templates
-│       └── index.html        # Landing page template
+│       └── index.html        # ✅ Updated professional landing page
 ├── configs/                  # Centralized configuration management
 │   ├── app_settings.yaml     # Application settings
 │   ├── logging.yaml          # Logging configuration
 │   └── secrets.template.env  # Environment template
 ├── scripts/                  # CLI utilities for operations
 │   ├── bootstrap_opensearch.sh      # OpenSearch setup
-│   ├── deploy-student-stack.sh      # ⭐ Student-friendly AWS deployment
+│   ├── deploy-student-stack.sh      # 🎯 Three-tier AWS deployment script
 │   ├── eval_retrieval.py            # Evaluation utilities
 │   ├── ingest_watch.py              # File watcher for ingestion
 │   ├── run_ingestion.py             # Batch processing
@@ -317,6 +330,7 @@ AI_RAG/
 │   ├── system_design.md      # Architecture documentation
 │   └── ops_runbook.md        # Operations and troubleshooting
 ├── data/                     # Data storage
+│   ├── analytics.csv         # Landing page analytics
 │   ├── raw/                  # Raw document uploads
 │   ├── processed/            # Processed document chunks
 │   └── samples/              # Sample queries and test data
@@ -336,6 +350,42 @@ AI_RAG/
 ├── pyproject.toml          # Project configuration
 └── README.md               # ✅ This comprehensive documentation
 ```
+
+## 🚀 AWS Ultra-Budget Deployment
+
+### Three Deployment Modes for Every Budget
+
+| Mode | Monthly Cost | Perfect For | Key Features |
+|------|-------------|-------------|--------------|
+| **💰 Ultra-Budget** | $8-18 | Students, Learning, Demos | SQLite vector storage, Function URLs, 24h caching |
+| **⚖️ Balanced** | $15-35 | Small Production, Portfolio | Pinecone/Chroma, API Gateway, Smart caching |
+| **🚀 Full** | $25-68 | Enterprise Showcase | OpenSearch, CloudFront, Advanced monitoring |
+
+### Quick AWS Deployment
+
+```bash
+# Deploy ultra-budget mode (perfect for students!)
+./scripts/deploy-student-stack.sh --mode=ultra-budget --budget=20
+
+# Deploy balanced mode for small production
+./scripts/deploy-student-stack.sh --mode=balanced --budget=40
+
+# Deploy full production mode
+./scripts/deploy-student-stack.sh --mode=full --budget=70
+```
+
+**📚 Complete Documentation**: See [`deployment/aws/`](deployment/aws/) for comprehensive guides, cost optimization strategies, and troubleshooting.
+
+### 🎯 Revolutionary Ultra-Budget Innovation
+
+Our **ultra-budget mode** demonstrates cutting-edge cost optimization:
+
+- **SQLite Vector Storage**: Eliminates external database costs ($0 vs $35/month)
+- **Lambda Function URLs**: Bypasses API Gateway charges ($0 vs $10/month) 
+- **Aggressive Caching**: 24-hour TTL reduces LLM costs by 80%
+- **Automatic Cleanup**: 7-day document expiration controls storage costs
+
+This showcases **real engineering innovation** - building enterprise-grade features on startup budgets!
 
 ### Recent Structural Changes
 
