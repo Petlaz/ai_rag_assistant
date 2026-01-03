@@ -21,12 +21,14 @@ COPY . /app
 
 ENV OPENSEARCH_HOST=http://opensearch:9200 \
     OPENSEARCH_INDEX=quest-research \
+    OPENSEARCH_TLS_VERIFY=false \
     OLLAMA_BASE_URL=http://ollama:11434 \
-    OLLAMA_MODEL=mistral \
-    OLLAMA_FALLBACK_MODEL=gemma3:1b \
-    OLLAMA_TIMEOUT=120 \
+    OLLAMA_MODEL=gemma3:1b \
+    OLLAMA_FALLBACK_MODEL=phi3:mini \
+    OLLAMA_TIMEOUT=240 \
     GRADIO_SERVER_PORT=7860 \
-    GRADIO_SHARE_LINK=false
+    GRADIO_SHARE_LINK=false \
+    EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
 
 EXPOSE 7860
 

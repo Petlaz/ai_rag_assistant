@@ -68,3 +68,28 @@ def bulk_index_documents(
 
     actions = ({"_index": index_name, **doc} for doc in documents)
     opensearch_bulk(client, actions)
+
+
+def clear_index_documents(client: Any, index_name: str) -> None:
+    """Clear all documents from the index while keeping the index structure."""
+    
+    if not client.indices.exists(index=index_name):
+        return  # Index doesn't exist, nothing to clear
+    
+    try:
+        # Use delete by query to remove all documents
+        client.delete_by_query(
+            index=index_name,
+            body={"query": {"match_all": {}}},
+            refresh=True  # Refresh after deletion
+        )
+    except Exception as exc:
+        # Fallback: delete and recreate index if delete_by_query fails
+        try:
+            mapping = client.indices.get_mapping(index=index_name)
+            client.indices.delete(index=index_name)
+            if mapping and index_name in mapping:
+                client.indices.create(index=index_name, body=mapping[index_name])
+        except Exception:
+            # If all else fails, just proceed - the index will be recreated on next insert
+            pass

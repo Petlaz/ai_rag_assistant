@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, List, Protocol
 
-from .opensearch_client import bulk_index_documents
+from .opensearch_client import bulk_index_documents, clear_index_documents
 from ..ingestion.pdf_ocr_pipeline import DocumentChunk
 
 
@@ -48,8 +48,16 @@ def index_chunks(
     index_name: str,
     chunks: Iterable[DocumentChunk],
     embedding_model: EmbeddingModel,
+    clear_previous: bool = False,
 ) -> None:
-    """Embed the chunks and dispatch them to OpenSearch via the bulk API."""
+    """Embed the chunks and dispatch them to OpenSearch via the bulk API.
+    
+    Args:
+        clear_previous: If True, clear all previous documents from the index before adding new ones.
+    """
+    
+    if clear_previous:
+        clear_index_documents(client, index_name)
 
     texts = [chunk.text for chunk in chunks]
     embeddings = embedding_model.embed_documents(texts)

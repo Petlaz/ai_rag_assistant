@@ -100,34 +100,92 @@ def current_model_name(state: AssistantState) -> str:
 
 
 def render_model_status(model_name: str, status: str, latency_ms: Optional[float]) -> str:
-    """Construct HTML snippet with colored status dot and model label."""
+    """Construct professional HTML status card with colored indicator and model info."""
 
     color_map = {
-        "green": "#22c55e",
-        "amber": "#facc15",
-        "red": "#ef4444",
-        "unknown": "#94a3b8",
+        "green": "#10b981",  # emerald-500
+        "amber": "#f59e0b",  # amber-500
+        "red": "#ef4444",    # red-500
+        "unknown": "#6b7280", # gray-500
     }
-    tooltip_map = {
-        "green": "Ollama healthy",
-        "amber": "Ollama responding slowly",
-        "red": "Ollama unreachable",
-        "unknown": "Ollama status unknown",
+    
+    bg_color_map = {
+        "green": "#d1fae5",  # emerald-100
+        "amber": "#fef3c7",  # amber-100
+        "red": "#fee2e2",    # red-100
+        "unknown": "#f3f4f6", # gray-100
+    }
+    
+    icon_map = {
+        "green": "🟢",
+        "amber": "🟡", 
+        "red": "🔴",
+        "unknown": "⚪",
+    }
+    
+    status_text_map = {
+        "green": "Healthy",
+        "amber": "Slow Response",
+        "red": "Unreachable",
+        "unknown": "Checking...",
     }
 
     status_key = status if status in color_map else "unknown"
     color = color_map[status_key]
-    tooltip = tooltip_map[status_key]
-    latency_text = f"{latency_ms:.0f} ms" if latency_ms is not None else ""
+    bg_color = bg_color_map[status_key]
+    icon = icon_map[status_key]
+    status_text = status_text_map[status_key]
+    latency_text = f" • {latency_ms:.0f}ms" if latency_ms is not None else ""
 
-    return (
-        "<div style=\"display:flex;align-items:center;gap:0.55rem;font-size:0.95rem;\">"
-        f"<span title=\"{tooltip}\" style=\"width:9px;height:9px;border-radius:9999px;"
-        f"background:{color};display:inline-block;box-shadow:0 0 0 2px rgba(255,255,255,0.6);\"></span>"
-        f"<span><strong>Model:</strong> {model_name}</span>"
-        + (f"<span style=\"color:#64748b;font-size:0.82rem;margin-left:0.5rem;\">{latency_text}</span>" if latency_text else "")
-        + "</div>"
-    )
+    return f"""
+    <div style="
+        background: {bg_color};
+        border: 1px solid {color}40;
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    ">
+        <div style="
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: {color};
+            box-shadow: 0 0 0 3px {bg_color};
+            animation: pulse 2s infinite;
+        "></div>
+        <div style="flex: 1;">
+            <div style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 2px;
+            ">
+                {icon} LLM Status: <span style="color: {color};">{status_text}</span>
+            </div>
+            <div style="
+                font-size: 12px;
+                color: #6b7280;
+            ">
+                Model: <code style="
+                    background: #f9fafb;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 11px;
+                ">{model_name}</code>{latency_text}
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes pulse {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.5; }}
+        }}
+    </style>
+    """
 
 
 def initial_health_state(model_name: str) -> Dict[str, Any]:
@@ -271,14 +329,21 @@ def load_guardrails(path: Path) -> Dict[str, Any]:
         return yaml.safe_load(handle)
 
 
-def ingest_files(files: List[str], state: AssistantState) -> Tuple[str, AssistantState]:
-    """Handle PDF uploads by running the ingestion + indexing pipeline."""
+def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) -> Tuple[str, AssistantState]:
+    """Handle PDF uploads by running the ingestion + indexing pipeline.
+    
+    Args:
+        clear_previous: If True, clear all previous documents before adding new ones.
+    """
 
     if not files:
         return "No file uploaded yet.", state
 
     messages: List[str] = []
     progress = gr.Progress(track_tqdm=True)
+    
+    if clear_previous and files:
+        messages.append("🗑️ Clearing previous documents from index...")
 
     for idx, file_path in enumerate(files, start=1):
         path = Path(file_path)
@@ -287,12 +352,17 @@ def ingest_files(files: List[str], state: AssistantState) -> Tuple[str, Assistan
             desc=f"Ingesting {path.name}",
         )
         try:
+            # Clear previous documents only for the first file in the batch
+            should_clear = clear_previous and idx == 1
             ingest_and_index_document(
                 path=path,
                 embedding_model=state.deps.embedding_model,
                 opensearch_client=state.deps.opensearch_client,
                 index_name=state.deps.index_name,
+                clear_previous=should_clear,
             )
+            if should_clear:
+                messages.append("✨ Index cleared successfully.")
             messages.append(f"✅ Ingestion succeeded for {path.name}.")
         except NotImplementedError as error:
             messages.append(
@@ -451,96 +521,261 @@ def build_interface(state: AssistantState) -> gr.Blocks:
     guardrail_config = load_guardrails(GUARDRAILS_PATH)
     current_model = current_model_name(state)
 
-    with gr.Blocks(title="Quest Analytics AI RAG Assistant") as demo:
-        gr.Markdown(
-            """
-            ## Quest Analytics RAG Assistant (Prototype)
-            Upload a PDF, wait for ingestion, and then ask research questions.
-            """
-        )
+    # Custom CSS for professional styling
+    custom_css = """
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .status-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    .upload-section {
+        background: #ffffff;
+        border: 2px dashed #e9ecef;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .upload-section:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    .chat-container {
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .question-input {
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+    .question-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 25px;
+        color: white;
+        padding: 12px 30px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .accordion-header {
+        background: #f8f9fa;
+        border-radius: 5px;
+        padding: 10px;
+        font-weight: 600;
+    }
+    """
 
+    with gr.Blocks(title="Quest Analytics AI RAG Assistant", css=custom_css, theme=gr.themes.Soft()) as demo:
+        # Professional Header
         with gr.Row():
-            model_status_html = gr.HTML(render_model_status(current_model, "unknown", None))
+            gr.HTML("""
+                <div class="main-header">
+                    <h1 style="margin: 0; font-size: 2.5em; font-weight: 300;">🔬 Quest Analytics</h1>
+                    <h2 style="margin: 0.5rem 0 0 0; font-size: 1.2em; opacity: 0.9;">AI-Powered Research Assistant</h2>
+                    <p style="margin: 0.8rem 0 0 0; opacity: 0.8;">Intelligent document analysis with hybrid search and LLM capabilities</p>
+                </div>
+            """)
+
+        # Status Bar
+        with gr.Row():
+            with gr.Column(scale=1):
+                model_status_html = gr.HTML(
+                    value=render_model_status(current_model, "unknown", None),
+                    elem_classes=["status-card"]
+                )
 
         assistant_state = gr.State(state)
         health_state = gr.State(initial_health_state(current_model))
 
-        with gr.Tab("Upload PDFs"):
-            file_uploader = gr.File(
-                label="Upload scientific PDFs",
-                file_types=[".pdf"],
-                file_count="multiple",
-                type="filepath",
-            )
-            ingestion_status = gr.Textbox(
-                label="Ingestion Status",
-                placeholder="Awaiting uploads...",
-            )
-            file_uploader.upload(
-                fn=ingest_files,
-                inputs=[file_uploader, assistant_state],
-                outputs=[ingestion_status, assistant_state],
-            )
+        with gr.Tabs() as tabs:
+            with gr.Tab("📄 Document Ingestion", id="upload_tab") as upload_tab:
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown("""
+                            ### 📚 Upload Research Documents
+                            Upload PDF documents to build your knowledge base. Our system will process and index them for intelligent searching.
+                        """)
+                        
+                        file_uploader = gr.File(
+                            label="📎 Select PDF Files",
+                            file_types=[".pdf"],
+                            file_count="multiple",
+                            type="filepath",
+                            elem_classes=["upload-section"],
+                            height=200
+                        )
+                        
+                        clear_previous_checkbox = gr.Checkbox(
+                            label="🗑️ Clear Previous Documents",
+                            value=True,
+                            info="Remove all previously uploaded documents before adding new ones (recommended for new research sessions)"
+                        )
+                        
+                        ingestion_status = gr.Textbox(
+                            label="📊 Processing Status",
+                            placeholder="Ready to process documents...",
+                            interactive=False,
+                            lines=4,
+                            max_lines=8
+                        )
 
-        with gr.Tab("Chat"):
-            chat = gr.Chatbot(label="QuestQuery Chat", type="messages")
-            question_box = gr.Textbox(
-                label="Ask a question about the ingested documents",
-                placeholder="e.g. Summarize the attention mechanism.",
-            )
-            submit_btn = gr.Button("Ask")
-
-            submit_btn.click(
-                fn=handle_question,
-                inputs=[question_box, chat, assistant_state, health_state],
-                outputs=[chat, assistant_state, health_state, model_status_html],
-            )
-
-            with gr.Accordion("LLM Settings", open=False):
-                primary_model_input = gr.Textbox(
-                    value=current_model,
-                    label="Primary Ollama model",
-                    placeholder="e.g. mistral",
-                )
-                fallback_model_input = gr.Textbox(
-                    value=os.getenv("OLLAMA_FALLBACK_MODEL", "phi3:mini"),
-                    label="Fallback model (optional)",
-                    placeholder="e.g. gemma3:1b",
-                )
-                timeout_slider = gr.Slider(
-                    minimum=30,
-                    maximum=240,
-                    step=10,
-                    value=float(os.getenv("OLLAMA_TIMEOUT", "120")),
-                    label="LLM timeout (seconds)",
-                )
-                apply_llm_btn = gr.Button("Apply LLM settings")
-                llm_status = gr.Markdown(
-                    value=(
-                        f"Using `{os.getenv('OLLAMA_MODEL','mistral')}` with fallback "
-                        f"`{os.getenv('OLLAMA_FALLBACK_MODEL','gemma3:1b') or 'disabled'}` "
-                        f"(timeout {os.getenv('OLLAMA_TIMEOUT','120')} s)."
-                    )
+                file_uploader.upload(
+                    fn=ingest_files,
+                    inputs=[file_uploader, clear_previous_checkbox, assistant_state],
+                    outputs=[ingestion_status, assistant_state],
                 )
 
-                apply_llm_btn.click(
-                    fn=apply_llm_settings_with_health,
-                    inputs=[
-                        primary_model_input,
-                        fallback_model_input,
-                        timeout_slider,
-                        assistant_state,
-                        health_state,
-                    ],
-                    outputs=[assistant_state, llm_status, health_state, model_status_html],
+            with gr.Tab("💬 Research Chat", id="chat_tab") as chat_tab:
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown("""
+                            ### 🤖 Ask Research Questions
+                            Chat with your documents using natural language. Get precise answers with source citations.
+                        """)
+                        
+                        chat = gr.Chatbot(
+                            label="Research Assistant",
+                            height=500,
+                            elem_classes=["chat-container"],
+                            avatar_images=(None, "🔬")
+                        )
+                        
+                        with gr.Row():
+                            with gr.Column(scale=4):
+                                question_box = gr.Textbox(
+                                    label="",
+                                    placeholder="💡 Ask about research findings, methodologies, or specific concepts...",
+                                    elem_classes=["question-input"],
+                                    lines=1,
+                                    max_lines=3
+                                )
+                            with gr.Column(scale=1, min_width=100):
+                                submit_btn = gr.Button(
+                                    "🚀 Ask",
+                                    variant="primary",
+                                    elem_classes=["submit-btn"],
+                                    size="lg"
+                                )
+
+                submit_btn.click(
+                    fn=handle_question,
+                    inputs=[question_box, chat, assistant_state, health_state],
+                    outputs=[chat, assistant_state, health_state, model_status_html],
+                )
+                
+                question_box.submit(
+                    fn=handle_question,
+                    inputs=[question_box, chat, assistant_state, health_state],
+                    outputs=[chat, assistant_state, health_state, model_status_html],
                 )
 
-        with gr.Accordion("Prompt Template", open=False):
-            gr.JSON(state.prompt_template)
+            with gr.Tab("⚙️ Configuration", id="settings_tab") as settings_tab:
+                with gr.Row():
+                    with gr.Column():
+                        gr.Markdown("### 🤖 Language Model Settings")
+                        
+                        with gr.Group():
+                            primary_model_input = gr.Textbox(
+                                value=current_model,
+                                label="Primary Ollama Model",
+                                placeholder="e.g., mistral, llama3:8b",
+                                info="Main model for answering questions"
+                            )
+                            fallback_model_input = gr.Textbox(
+                                value=os.getenv("OLLAMA_FALLBACK_MODEL", "phi3:mini"),
+                                label="Fallback Model (Optional)",
+                                placeholder="e.g., gemma3:1b, phi3:mini",
+                                info="Backup model if primary fails"
+                            )
+                            timeout_slider = gr.Slider(
+                                minimum=30,
+                                maximum=240,
+                                step=10,
+                                value=float(os.getenv("OLLAMA_TIMEOUT", "120")),
+                                label="⏱️ Request Timeout (seconds)",
+                                info="Maximum time to wait for model response"
+                            )
+                            
+                            apply_llm_btn = gr.Button(
+                                "✅ Apply Settings",
+                                variant="primary",
+                                size="lg"
+                            )
+                            
+                            llm_status = gr.Markdown(
+                                value=(
+                                    f"**Current Configuration:**\n"
+                                    f"- Primary Model: `{os.getenv('OLLAMA_MODEL','mistral')}`\n"
+                                    f"- Fallback Model: `{os.getenv('OLLAMA_FALLBACK_MODEL','gemma3:1b') or 'disabled'}`\n"
+                                    f"- Timeout: `{os.getenv('OLLAMA_TIMEOUT','120')} seconds`"
+                                )
+                            )
 
-        with gr.Accordion("Guardrails", open=False):
-            gr.JSON(guardrail_config)
+                        apply_llm_btn.click(
+                            fn=apply_llm_settings_with_health,
+                            inputs=[
+                                primary_model_input,
+                                fallback_model_input,
+                                timeout_slider,
+                                assistant_state,
+                                health_state,
+                            ],
+                            outputs=[assistant_state, llm_status, health_state, model_status_html],
+                        )
 
+                    with gr.Column():
+                        with gr.Accordion("📋 System Information", open=False):
+                            gr.Markdown("""
+                                **Embedding Model:** `all-MiniLM-L6-v2`  
+                                **Search Engine:** OpenSearch (Hybrid BM25 + Vector)  
+                                **Framework:** LangChain + Gradio  
+                                **Version:** 1.2.0  
+                            """)
+                        
+                        with gr.Accordion("🛡️ Safety Guidelines", open=False):
+                            gr.JSON(guardrail_config, label="Active Guardrails")
+                        
+                        with gr.Accordion("🎯 Prompt Configuration", open=False):
+                            gr.JSON(state.prompt_template, label="Research QA Template")
+
+        # Initialize health check on page load
+        demo.load(
+            fn=immediate_health_check,
+            inputs=[assistant_state, health_state],
+            outputs=[health_state, model_status_html],
+        )
+
+        # Periodic health monitoring
+        health_timer = gr.Timer(value=HEALTH_TIMER_INTERVAL)
+        health_timer.tick(
+            fn=timer_health_check,
+            inputs=[assistant_state, health_state],
+            outputs=[health_state, model_status_html],
+        )
         demo.load(
             fn=immediate_health_check,
             inputs=[assistant_state, health_state],
@@ -752,7 +987,7 @@ def main() -> None:
     app.launch(
         server_name="0.0.0.0",
         server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
-        share=share_env in {"1", "true", "yes"},
+        share=share_env in {"1", "true", "yes"}
     )
 
 

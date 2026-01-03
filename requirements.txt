@@ -1,8 +1,46 @@
-# Placeholder requirements for AI RAG assistant.
-langchain
-opensearch-py
-sentence-transformers
-pydantic
-gradio
-pypdf
-python-dotenv
+# Core RAG Pipeline Dependencies
+langchain>=1.2.0,<1.3.0
+langchain-community>=0.4.1,<0.5.0
+langchain-core>=1.2.5,<1.3.0
+opensearch-py>=2.4.0,<3.0.0
+sentence-transformers>=2.2.0,<3.0.0
+transformers>=4.35.0,<5.0.0
+
+# Web Interface & API
+gradio>=6.2.0,<6.3.0
+fastapi>=0.104.0,<1.0.0
+uvicorn[standard]>=0.24.0,<1.0.0
+jinja2>=3.1.0,<4.0.0
+
+# Document Processing
+pypdf>=3.17.0,<4.0.0
+pytesseract>=0.3.10,<1.0.0
+Pillow>=10.0.0,<11.0.0
+python-magic>=0.4.27
+
+# Data Validation & Configuration
+pydantic>=2.5.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+pyyaml>=6.0.1,<7.0.0
+
+# HTTP & Networking
+requests>=2.31.0,<3.0.0
+httpx>=0.25.0,<1.0.0
+
+# Scientific Computing
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+
+# Utilities
+tqdm>=4.66.0,<5.0.0
+click>=8.1.0,<9.0.0
+
+# Testing & Development
+pytest>=7.4.0,<8.0.0
+pytest-asyncio>=0.21.0,<1.0.0
+black>=23.9.0,<24.0.0
+flake8>=6.0.0,<7.0.0
+
+# Optional: GPU acceleration (uncomment if using CUDA)
+# torch>=2.1.0,<3.0.0
+# torchvision>=0.16.0,<1.0.0

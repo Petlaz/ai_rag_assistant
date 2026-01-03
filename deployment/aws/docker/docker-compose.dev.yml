@@ -1,9 +1,10 @@
 services:
   opensearch:
-    image: opensearchproject/opensearch:2.11.1
+    image: opensearchproject/opensearch:2.18.0
     environment:
       discovery.type: single-node
       plugins.security.disabled: "true"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "TempPassword123!"
     ports:
       - "9200:9200"
       - "9600:9600"
@@ -23,34 +24,51 @@ services:
       - ${HOME}/.ollama:/root/.ollama
     security_opt:
       - seccomp:unconfined
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   rag-app:
     build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile.app
+      context: ../../..
+      dockerfile: deployment/aws/docker/Dockerfile.app
     ports:
       - "7860:7860"
     depends_on:
-      - opensearch
-      - ollama
+      opensearch:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     environment:
       OPENSEARCH_HOST: http://opensearch:9200
       OPENSEARCH_INDEX: quest-research
+      OPENSEARCH_TLS_VERIFY: "false"
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma3:1b}
-      OLLAMA_FALLBACK_MODEL: ${OLLAMA_FALLBACK_MODEL:-}
-      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-120}
+      OLLAMA_FALLBACK_MODEL: ${OLLAMA_FALLBACK_MODEL:-phi3:mini}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-240}
       GRADIO_SERVER_PORT: 7860
+      EMBEDDING_MODEL_NAME: all-MiniLM-L6-v2
     volumes:
-      - ../..:/app
+      - ../../..:/app
     command: ["python", "deployment/app_gradio.py"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
 
   rag-worker:
     build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile.worker
+      context: ../../..
+      dockerfile: deployment/aws/docker/Dockerfile.worker
     depends_on:
-      - opensearch
+      opensearch:
+        condition: service_healthy
     environment:
       OPENSEARCH_HOST: http://opensearch:9200
       OPENSEARCH_INDEX: quest-research
@@ -58,14 +76,14 @@ services:
       INGESTION_INPUT_DIR: /data/raw
       INGESTION_POLL_INTERVAL: 30
     volumes:
-      - ../..:/app
-      - ./../../data/raw:/data/raw
+      - ../../..:/app
+      - ../../../data/raw:/data/raw
     command: ["python", "scripts/ingest_watch.py", "--directory", "/data/raw"]
 
   landing:
     build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile.landing
+      context: ../../..
+      dockerfile: deployment/aws/docker/Dockerfile.landing
     ports:
       - "3000:3000"
     environment:
@@ -74,6 +92,6 @@ services:
       ANALYTICS_PROVIDER: ${ANALYTICS_PROVIDER:-plausible}
       ANALYTICS_ID: ${ANALYTICS_ID:-}
     volumes:
-      - ../..:/app
-      - ../../data:/data
+      - ../../..:/app
+      - ../../../data:/data
     command: ["python", "-m", "landing.main"]

@@ -18,8 +18,13 @@ def ingest_and_index_document(
     title: Optional[str] = None,
     authors: Optional[str] = None,
     published_date: Optional[str] = None,
+    clear_previous: bool = False,
 ) -> None:
-    """Orchestrate the full flow from PDF ingestion to OpenSearch indexing."""
+    """Orchestrate the full flow from PDF ingestion to OpenSearch indexing.
+    
+    Args:
+        clear_previous: If True, clear all previous documents from the index before adding new ones.
+    """
 
     chunks = ingest_pdf(path=path, title=title)
 
@@ -35,4 +40,5 @@ def ingest_and_index_document(
         index_name=index_name,
         chunks=chunks,
         embedding_model=embedding_model,
+        clear_previous=clear_previous,
     )
