@@ -1,4 +1,0 @@
-# Placeholder for structured logging configuration.
-version: 1
-handlers: {}
-loggers: {}
