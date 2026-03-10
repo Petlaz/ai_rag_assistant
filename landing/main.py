@@ -58,8 +58,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """FastAPI lifespan event handler."""
     # Startup
     _ensure_analytics_file()
-    print(f"🚀 Landing page running at: http://0.0.0.0:{LANDING_PORT}")
-    print(f"🌐 Gradio app available at: {APP_URL}")
+    print(f"Landing page running at: http://0.0.0.0:{LANDING_PORT}")
+    print(f"Gradio app available at: {APP_URL}")
     
     yield
     

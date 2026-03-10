@@ -1,10 +1,10 @@
-# 🎓 Ultra-Budget AWS RAG Deployment - Complete Implementation
+# Ultra-Budget AWS RAG Deployment - Complete Implementation
 
 ## What We've Built
 
 Your AWS RAG Assistant now supports **three deployment modes** optimized for different budgets and use cases:
 
-### 💰 Ultra-Budget Mode ($8-18/month)
+### Ultra-Budget Mode ($8-18/month)
 Perfect for students, learning, and demos:
 
 ```bash
@@ -12,20 +12,20 @@ Perfect for students, learning, and demos:
 ```
 
 **Key Features**:
-- ✅ **SQLite Vector Storage** - No external vector DB costs
-- ✅ **Lambda Function URLs** - No API Gateway costs  
-- ✅ **Aggressive Caching** - 24-hour response TTL
-- ✅ **Document Cleanup** - Automatic 7-day expiration
-- ✅ **Cost Monitoring** - Built-in budget alerts
+- **SQLite Vector Storage** - No external vector DB costs
+- **Lambda Function URLs** - No API Gateway costs  
+- **Aggressive Caching** - 24-hour response TTL
+- **Document Cleanup** - Automatic 7-day expiration
+- **Cost Monitoring** - Built-in budget alerts
 
-### ⚖️ Balanced Mode ($15-35/month)
+### Balanced Mode ($15-35/month)
 For small production use and internship projects:
 
 ```bash
 ./scripts/deploy-student-stack.sh --mode=balanced --budget=40
 ```
 
-### 🚀 Full Mode ($25-68/month)
+### Full Mode ($25-68/month)
 Complete production deployment with all features:
 
 ```bash
@@ -70,21 +70,21 @@ Complete production deployment with all features:
 ## Files Created/Modified
 
 ### Deployment Infrastructure
-- ✅ [`scripts/deploy-student-stack.sh`](scripts/deploy-student-stack.sh) - Main deployment script with 3 modes
-- ✅ [`deployment/aws/COST_OPTIMIZATION.md`](deployment/aws/COST_OPTIMIZATION.md) - Student cost guide
-- ✅ CloudFormation template with conditional resources
-- ✅ Lambda functions with SQLite support
+- [`scripts/deploy-student-stack.sh`](scripts/deploy-student-stack.sh) - Main deployment script with 3 modes
+- [`deployment/aws/COST_OPTIMIZATION.md`](deployment/aws/COST_OPTIMIZATION.md) - Student cost guide
+- CloudFormation template with conditional resources
+- Lambda functions with SQLite support
 
 ### Documentation
-- ✅ [`deployment/aws/docs/README.md`](deployment/aws/docs/README.md) - Complete deployment guide
-- ✅ [`deployment/aws/docs/infrastructure-setup.md`](deployment/aws/docs/infrastructure-setup.md) - AWS setup steps
-- ✅ [`deployment/aws/docs/services-configuration.md`](deployment/aws/docs/services-configuration.md) - Service config
-- ✅ [`deployment/aws/docs/troubleshooting.md`](deployment/aws/docs/troubleshooting.md) - Common issues
+- [`deployment/aws/docs/README.md`](deployment/aws/docs/README.md) - Complete deployment guide
+- [`deployment/aws/docs/infrastructure-setup.md`](deployment/aws/docs/infrastructure-setup.md) - AWS setup steps
+- [`deployment/aws/docs/services-configuration.md`](deployment/aws/docs/services-configuration.md) - Service config
+- [`deployment/aws/docs/troubleshooting.md`](deployment/aws/docs/troubleshooting.md) - Common issues
 
 ### Core Application
-- ✅ [`deployment/app_gradio.py`](deployment/app_gradio.py) - Professional UI with session isolation
-- ✅ [`rag_pipeline/`](rag_pipeline/) - Updated with clear_previous functionality
-- ✅ [`requirements.txt`](requirements.txt) - All dependencies with proper versions
+- [`deployment/app_gradio.py`](deployment/app_gradio.py) - Professional UI with session isolation
+- [`rag_pipeline/`](rag_pipeline/) - Updated with clear_previous functionality
+- [`requirements.txt`](requirements.txt) - All dependencies with proper versions
 
 ## Command Reference
 
@@ -136,17 +136,17 @@ cd /Users/peter/AI_ML_Projects/AI_RAG
 
 ## Student Success Tips
 
-### 💡 Maximize Free Tier
+### Maximize Free Tier
 - Apply for **AWS Educate** credits ($100-200)
 - Use **GitHub Student Pack** for additional credits
 - Stay within free tier limits where possible
 
-### 📊 Cost Control
+### Cost Control
 - Set aggressive budget alerts (80% threshold)
 - Use ultra-budget mode for learning/demos
 - Upgrade only when income allows
 
-### 🚀 Career Benefits
+### Career Benefits
 - Show cost-consciousness to employers
 - Demonstrate cloud architecture skills
 - Build portfolio with real AWS infrastructure

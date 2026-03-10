@@ -1,11 +1,11 @@
-# 🛠️ AWS Services Configuration Guide
+# AWS Services Configuration Guide
 *Detailed configuration for each AWS service across all deployment modes*
 
 ---
 
-## 🎯 Service Overview by Deployment Mode
+## Service Overview by Deployment Mode
 
-### 💰 Ultra-Budget Mode ($8-18/month)
+### Ultra-Budget Mode ($8-18/month)
 | Service | Purpose | Monthly Cost |
 |---------|---------|-------------|
 | **Lambda** | Query processing + vector search | $2-5 |
@@ -16,7 +16,7 @@
 | **Bedrock Claude Haiku** | LLM inference | $3-8 |
 | **Total** | | **$8-18** |
 
-### ⚖️ Balanced Mode ($15-35/month)
+### Balanced Mode ($15-35/month)
 | Service | Purpose | Monthly Cost |
 |---------|---------|-------------|
 | **Lambda** | Query processing | $5-10 |
@@ -27,7 +27,7 @@
 | **Bedrock Claude Mix** | LLM inference | $5-12 |
 | **Total** | | **$15-35** |
 
-### 🚀 Full Mode ($25-68/month)
+### Full Mode ($25-68/month)
 | Service | Purpose | Monthly Cost |
 |---------|---------|-------------|
 | **Lambda** | Query processing | $8-15 |
@@ -41,9 +41,9 @@
 
 ---
 
-## 🔍 Service Configuration by Mode
+## Service Configuration by Mode
 
-### 💰 Ultra-Budget Mode Configuration
+### Ultra-Budget Mode Configuration
 
 #### SQLite Vector Storage
 ```python
@@ -150,7 +150,7 @@ def get_cached_response(query, documents):
 
 ---
 
-### ⚖️ Balanced Mode Configuration
+### Balanced Mode Configuration
 
 #### Pinecone Vector Storage
 ```python
@@ -200,7 +200,7 @@ def get_cache_ttl(query):
 
 ---
 
-### 🚀 Full Mode Configuration
+### Full Mode Configuration
 
 #### OpenSearch Serverless
 ```json
@@ -263,7 +263,7 @@ curl -X PUT "https://your-collection-endpoint.us-east-1.aoss.amazonaws.com/docum
 
 ---
 
-## ⚡ AWS Lambda Configuration
+## AWS Lambda Configuration
 
 ### Function Settings
 
@@ -323,7 +323,7 @@ def lambda_handler(event, context):
 
 ---
 
-## 🎯 Amazon Bedrock Configuration
+## Amazon Bedrock Configuration
 
 ### Model Selection Strategy
 ```python
@@ -369,7 +369,7 @@ def optimize_bedrock_request(prompt: str) -> dict:
 
 ---
 
-## 🗄️ DynamoDB Caching Strategy
+## DynamoDB Caching Strategy
 
 ### Table Configuration
 ```yaml
@@ -424,7 +424,7 @@ def get_cached_response(query: str) -> str:
 
 ---
 
-## 🌐 API Gateway Configuration
+## API Gateway Configuration
 
 ### REST API Setup
 ```yaml
@@ -473,7 +473,7 @@ CORS Configuration:
 
 ---
 
-## 📦 S3 Storage Configuration
+## S3 Storage Configuration
 
 ### Bucket Setup
 ```yaml
@@ -530,7 +530,7 @@ def setup_s3_lifecycle():
 
 ---
 
-## 📊 CloudWatch Monitoring
+## CloudWatch Monitoring
 
 ### Essential Metrics
 ```yaml
@@ -578,7 +578,7 @@ Bedrock Metrics:
 
 ---
 
-## 🔧 Environment-Specific Configurations
+## Environment-Specific Configurations
 
 ### Development Environment
 ```yaml
@@ -600,7 +600,7 @@ Monitoring: Comprehensive dashboards + alarms
 
 ---
 
-## ⚠️ Service-Specific Gotchas
+## Service-Specific Gotchas
 
 ### OpenSearch Serverless
 - **Cold Start**: First query may take 10-30 seconds
@@ -619,7 +619,7 @@ Monitoring: Comprehensive dashboards + alarms
 
 ---
 
-## 📈 Scaling Considerations
+## Scaling Considerations
 
 ### Traffic Growth Thresholds
 ```yaml
@@ -638,4 +638,4 @@ High Traffic (> 10K requests/day):
   - Advanced caching strategies
 ```
 
-This configuration guide covers all the AWS services in detail. Ready to configure your first cloud deployment! 🚀
+This configuration guide covers all the AWS services in detail. Ready to configure your first cloud deployment!

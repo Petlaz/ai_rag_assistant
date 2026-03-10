@@ -1,11 +1,11 @@
-# 🐛 AWS Deployment Troubleshooting Guide
+# AWS Deployment Troubleshooting Guide
 *Solutions for common issues across all deployment modes (Ultra-Budget, Balanced, Full)*
 
 ---
 
-## 🎯 Mode-Specific Troubleshooting
+## Mode-Specific Troubleshooting
 
-### 💰 Ultra-Budget Mode Issues
+### Ultra-Budget Mode Issues
 
 #### SQLite Vector Search Problems
 ```bash
@@ -41,7 +41,7 @@ curl -H "Origin: http://localhost:7860" \
      https://your-function-url.lambda-url.region.on.aws/
 ```
 
-### ⚖️ Balanced Mode Issues
+### Balanced Mode Issues
 
 #### Pinecone Connection Problems
 ```bash
@@ -61,7 +61,7 @@ print('Index stats:', index.describe_index_stats())
 "
 ```
 
-### 🚀 Full Mode Issues  
+### Full Mode Issues  
 
 #### OpenSearch Serverless Problems
 ```bash
@@ -77,7 +77,7 @@ curl -X GET "https://your-collection-endpoint.us-east-1.aoss.amazonaws.com/_clus
 
 ---
 
-## 🚨 Quick Diagnosis Commands
+## Quick Diagnosis Commands
 
 ### Universal Health Checks (All Modes)
 ```bash
@@ -114,7 +114,7 @@ aws opensearchserverless batch-get-collection --names rag-assistant-collection
 
 ---
 
-## 🔴 Critical Deployment Issues
+## Critical Deployment Issues
 
 ### Issue 1: CloudFormation Stack Fails to Create
 
@@ -216,7 +216,7 @@ aws lambda update-function-configuration \
 
 ---
 
-## 🟡 Common Service Issues
+## Common Service Issues
 
 ### OpenSearch Serverless Issues
 
@@ -329,7 +329,7 @@ aws s3 mb s3://rag-documents-${ACCOUNT_ID} --region us-east-1
 
 ---
 
-## 💸 Cost-Related Issues
+## Cost-Related Issues
 
 ### Issue: Unexpected High Bills
 
@@ -380,7 +380,7 @@ aws s3 rb s3://bucket-name
 
 ---
 
-## 🔧 Performance Issues
+## Performance Issues
 
 ### Issue: Slow Query Response Times
 
@@ -422,7 +422,7 @@ def cache_response(query_hash, response):
 
 ---
 
-## 🛡️ Security Issues
+## Security Issues
 
 ### Issue: API Gateway Open to Internet
 
@@ -467,7 +467,7 @@ aws s3api put-public-access-block \
 
 ---
 
-## 📱 Web Interface Issues
+## Web Interface Issues
 
 ### Issue: Static Website Not Loading
 
@@ -499,14 +499,14 @@ aws s3api put-bucket-policy --bucket rag-web-bucket --policy '{
 
 ---
 
-## 🆘 Emergency Procedures
+## Emergency Procedures
 
 ### Complete Cleanup (if costs get out of hand)
 ```bash
 #!/bin/bash
 # emergency-cleanup.sh - Use only if costs are spiraling
 
-echo "🚨 EMERGENCY CLEANUP - This will delete EVERYTHING"
+echo "EMERGENCY CLEANUP - This will delete EVERYTHING"
 read -p "Are you sure? Type 'DELETE' to continue: " confirm
 
 if [ "$confirm" != "DELETE" ]; then
@@ -524,7 +524,7 @@ aws cloudformation wait stack-delete-complete --stack-name rag-assistant-student
 aws s3 rm s3://rag-documents-* --recursive
 aws s3 rb s3://rag-documents-*
 
-echo "✅ Emergency cleanup complete"
+echo "Emergency cleanup complete"
 ```
 
 ### Rollback to Previous State
@@ -538,7 +538,7 @@ aws cloudformation continue-update-rollback --stack-name rag-assistant-student
 
 ---
 
-## 📞 Getting Help
+## Getting Help
 
 ### AWS Support Channels
 - **AWS Support**: Basic tier included (technical support for billing/account)
@@ -569,4 +569,4 @@ aws service-quotas list-service-quotas --service-code lambda
 
 ---
 
-**Remember**: Every cloud engineer faces these issues when starting out. The key is systematic debugging and learning from each problem. You've got this! 🚀**
+**Remember**: Every cloud engineer faces these issues when starting out. The key is systematic debugging and learning from each problem. You've got this!

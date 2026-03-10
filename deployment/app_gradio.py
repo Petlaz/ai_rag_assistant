@@ -343,7 +343,7 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
     progress = gr.Progress(track_tqdm=True)
     
     if clear_previous and files:
-        messages.append("🗑️ Clearing previous documents from index...")
+        messages.append("Clearing previous documents from index...")
 
     for idx, file_path in enumerate(files, start=1):
         path = Path(file_path)
@@ -362,14 +362,14 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
                 clear_previous=should_clear,
             )
             if should_clear:
-                messages.append("✨ Index cleared successfully.")
-            messages.append(f"✅ Ingestion succeeded for {path.name}.")
+                messages.append("Index cleared successfully.")
+            messages.append(f"Ingestion succeeded for {path.name}.")
         except NotImplementedError as error:
             messages.append(
-                f"⚠️ Ingestion not implemented yet for {path.name}: {str(error)}"
+                f"Warning: Ingestion not implemented yet for {path.name}: {str(error)}"
             )
         except Exception as exc:  # pragma: no cover - defensive logging only
-            messages.append(f"❌ Failed to ingest {path.name}: {exc}")
+            messages.append(f"ERROR: Failed to ingest {path.name}: {exc}")
 
     progress(1.0, desc="Ingestion complete")
     return "\n".join(messages), state
@@ -440,7 +440,7 @@ def answer_question(
             f"Please configure Ollama. Detail: {error}"
         )
     except Exception as exc:  # pragma: no cover - surface runtime failures
-        answer = f"Failed to generate answer via Ollama: {exc}"
+        answer = f"Failed to create answer via Ollama: {exc}"
 
     if citations:
         answer = answer + "\n\nSources:\n" + "\n".join(citations)
@@ -594,7 +594,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
         with gr.Row():
             gr.HTML("""
                 <div class="main-header">
-                    <h1 style="margin: 0; font-size: 2.5em; font-weight: 300;">🔬 Quest Analytics</h1>
+                    <h1 style="margin: 0; font-size: 2.5em; font-weight: 300;">Quest Analytics</h1>
                     <h2 style="margin: 0.5rem 0 0 0; font-size: 1.2em; opacity: 0.9;">AI-Powered Research Assistant</h2>
                     <p style="margin: 0.8rem 0 0 0; opacity: 0.8;">Intelligent document analysis with hybrid search and LLM capabilities</p>
                 </div>
@@ -612,16 +612,16 @@ def build_interface(state: AssistantState) -> gr.Blocks:
         health_state = gr.State(initial_health_state(current_model))
 
         with gr.Tabs() as tabs:
-            with gr.Tab("📄 Document Ingestion", id="upload_tab") as upload_tab:
+            with gr.Tab("Document Ingestion", id="upload_tab") as upload_tab:
                 with gr.Row():
                     with gr.Column(scale=1):
                         gr.Markdown("""
-                            ### 📚 Upload Research Documents
+                            ### Upload Research Documents
                             Upload PDF documents to build your knowledge base. Our system will process and index them for intelligent searching.
                         """)
                         
                         file_uploader = gr.File(
-                            label="📎 Select PDF Files",
+                            label="Select PDF Files",
                             file_types=[".pdf"],
                             file_count="multiple",
                             type="filepath",
@@ -630,13 +630,13 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                         )
                         
                         clear_previous_checkbox = gr.Checkbox(
-                            label="🗑️ Clear Previous Documents",
+                            label="Clear Previous Documents",
                             value=True,
                             info="Remove all previously uploaded documents before adding new ones (recommended for new research sessions)"
                         )
                         
                         ingestion_status = gr.Textbox(
-                            label="📊 Processing Status",
+                            label="Processing Status",
                             placeholder="Ready to process documents...",
                             interactive=False,
                             lines=4,
@@ -649,11 +649,11 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                     outputs=[ingestion_status, assistant_state],
                 )
 
-            with gr.Tab("💬 Research Chat", id="chat_tab") as chat_tab:
+            with gr.Tab("Research Chat", id="chat_tab") as chat_tab:
                 with gr.Row():
                     with gr.Column(scale=1):
                         gr.Markdown("""
-                            ### 🤖 Ask Research Questions
+                            ### Ask Research Questions
                             Chat with your documents using natural language. Get precise answers with source citations.
                         """)
                         
@@ -661,21 +661,21 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                             label="Research Assistant",
                             height=500,
                             elem_classes=["chat-container"],
-                            avatar_images=(None, "🔬")
+                            avatar_images=(None, None)
                         )
                         
                         with gr.Row():
                             with gr.Column(scale=4):
                                 question_box = gr.Textbox(
                                     label="",
-                                    placeholder="💡 Ask about research findings, methodologies, or specific concepts...",
+                                    placeholder="Ask about research findings, methodologies, or specific concepts...",
                                     elem_classes=["question-input"],
                                     lines=1,
                                     max_lines=3
                                 )
                             with gr.Column(scale=1, min_width=100):
                                 submit_btn = gr.Button(
-                                    "🚀 Ask",
+                                    "Ask",
                                     variant="primary",
                                     elem_classes=["submit-btn"],
                                     size="lg"
@@ -693,10 +693,10 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                     outputs=[chat, assistant_state, health_state, model_status_html],
                 )
 
-            with gr.Tab("⚙️ Configuration", id="settings_tab") as settings_tab:
+            with gr.Tab("Configuration", id="settings_tab") as settings_tab:
                 with gr.Row():
                     with gr.Column():
-                        gr.Markdown("### 🤖 Language Model Settings")
+                        gr.Markdown("### Language Model Settings")
                         
                         with gr.Group():
                             primary_model_input = gr.Textbox(
@@ -716,12 +716,12 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                                 maximum=240,
                                 step=10,
                                 value=float(os.getenv("OLLAMA_TIMEOUT", "120")),
-                                label="⏱️ Request Timeout (seconds)",
+                                label="Request Timeout (seconds)",
                                 info="Maximum time to wait for model response"
                             )
                             
                             apply_llm_btn = gr.Button(
-                                "✅ Apply Settings",
+                                "Apply Settings",
                                 variant="primary",
                                 size="lg"
                             )
@@ -748,7 +748,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                         )
 
                     with gr.Column():
-                        with gr.Accordion("📋 System Information", open=False):
+                        with gr.Accordion("System Information", open=False):
                             gr.Markdown("""
                                 **Embedding Model:** `all-MiniLM-L6-v2`  
                                 **Search Engine:** OpenSearch (Hybrid BM25 + Vector)  
@@ -756,10 +756,10 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                                 **Version:** 1.2.0  
                             """)
                         
-                        with gr.Accordion("🛡️ Safety Guidelines", open=False):
+                        with gr.Accordion("Safety Guidelines", open=False):
                             gr.JSON(guardrail_config, label="Active Guardrails")
                         
-                        with gr.Accordion("🎯 Prompt Configuration", open=False):
+                        with gr.Accordion("Prompt Configuration", open=False):
                             gr.JSON(state.prompt_template, label="Research QA Template")
 
         # Initialize health check on page load
@@ -939,7 +939,7 @@ def update_llm_settings(
     timeout = float(timeout_seconds or 0)
 
     if timeout <= 0:
-        return state, "❌ Timeout must be greater than zero."
+        return state, "ERROR: Timeout must be greater than zero."
 
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     current_primary = (
@@ -967,11 +967,11 @@ def update_llm_settings(
             del os.environ["OLLAMA_FALLBACK_MODEL"]
 
         message = (
-            f"✅ LLM settings updated → primary: `{target_primary}`, "
+            f"LLM settings updated → primary: `{target_primary}`, "
             f"fallback: `{fallback or 'disabled'}`, timeout: {int(timeout)}s."
         )
     except Exception as exc:  # pragma: no cover - defensive log only
-        message = f"❌ Failed to update LLM settings: {exc}"
+        message = f"ERROR: Failed to update LLM settings: {exc}"
 
     return state, message
 

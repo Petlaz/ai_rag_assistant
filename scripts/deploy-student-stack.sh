@@ -42,19 +42,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 print_step() {
-    echo -e "${BLUE}🚀 $1${NC}"
+    echo -e "${BLUE}STEP: $1${NC}"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}SUCCESS: $1${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}WARNING: $1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}ERROR: $1${NC}"
 }
 
 # Check prerequisites
@@ -92,7 +92,7 @@ estimate_costs() {
         "ultra-budget")
             cat << EOF
 
-💰 ULTRA-BUDGET DEPLOYMENT COSTS:
+ULTRA-BUDGET DEPLOYMENT COSTS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Core Services (Always On):
@@ -108,7 +108,7 @@ Pay-Per-Use Services:
 TOTAL ESTIMATED: \$8-18/month
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 ULTRA-BUDGET FEATURES:
+ULTRA-BUDGET FEATURES:
 • SQLite vector storage (no OpenSearch costs)
 • Lambda Function URLs (no API Gateway costs)
 • Aggressive response caching (reduce Bedrock calls)
@@ -119,7 +119,7 @@ EOF
         "balanced")
             cat << EOF
 
-💰 BALANCED DEPLOYMENT COSTS:
+BALANCED DEPLOYMENT COSTS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Core Services:
@@ -140,7 +140,7 @@ EOF
         *)
             cat << EOF
 
-💰 FULL DEPLOYMENT COSTS:
+FULL DEPLOYMENT COSTS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Core Services:
@@ -947,19 +947,19 @@ create_web_interface() {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Quest Analytics RAG Assistant</h1>
+            <h1>Quest Analytics RAG Assistant</h1>
             <p>Student-Optimized AWS Deployment • Cost: $15-50/month</p>
         </div>
         
         <div class="main">
             <div class="upload-section">
-                <h3 class="section-title">📄 Upload Documents</h3>
+                <h3 class="section-title">Upload Documents</h3>
                 <input type="file" id="fileInput" accept=".pdf" multiple>
                 <button onclick="uploadFile()">Upload PDF</button>
             </div>
             
             <div class="query-section">
-                <h3 class="section-title">💬 Ask Questions</h3>
+                <h3 class="section-title">Ask Questions</h3>
                 <input type="text" id="queryInput" placeholder="Ask a question about your documents...">
                 <button onclick="askQuestion()">Ask Question</button>
             </div>
@@ -972,7 +972,7 @@ create_web_interface() {
             <div id="response" class="response" style="display: none;"></div>
             
             <div class="cost-info">
-                💰 <strong>Cost Optimization:</strong> This deployment uses AWS Bedrock Claude 3 Haiku ($0.25/1M tokens) 
+                <strong>Cost Optimization:</strong> This deployment uses AWS Bedrock Claude 3 Haiku ($0.25/1M tokens) 
                 with intelligent caching to minimize costs. Responses are cached for 1 hour to avoid duplicate charges.
             </div>
         </div>
@@ -1163,30 +1163,30 @@ get_deployment_info() {
     
     cat << EOF
 
-🎉 DEPLOYMENT SUCCESSFUL!
+DEPLOYMENT SUCCESSFUL!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📱 Web Interface: $WEB_URL
-🔗 API Endpoint:  $API_URL
-💰 Estimated Cost: $ESTIMATED_COST/month
-📊 Cost Monitor:  https://console.aws.amazon.com/billing/home
-📈 CloudWatch:    https://console.aws.amazon.com/cloudwatch/home?region=$REGION
+Web Interface: $WEB_URL
+API Endpoint:  $API_URL
+Estimated Cost: $ESTIMATED_COST/month
+Cost Monitor:  https://console.aws.amazon.com/billing/home
+CloudWatch:    https://console.aws.amazon.com/cloudwatch/home?region=$REGION
 
-📝 DEPLOYMENT MODE: $DEPLOYMENT_MODE
+DEPLOYMENT MODE: $DEPLOYMENT_MODE
 EOF
 
     case $DEPLOYMENT_MODE in
         "ultra-budget")
             cat << EOF
 
-💡 ULTRA-BUDGET OPTIMIZATIONS ACTIVE:
+ULTRA-BUDGET OPTIMIZATIONS ACTIVE:
 • Using SQLite for vector storage (no OpenSearch costs)
 • Lambda Function URLs (no API Gateway costs) 
 • Aggressive 24-hour response caching
 • Claude 3 Haiku only (cheapest model)
 • Reduced Lambda memory allocation
 
-🎓 PERFECT FOR:
+PERFECT FOR:
 • Job interview demonstrations
 • Portfolio projects
 • Learning cloud architecture
@@ -1196,13 +1196,13 @@ EOF
         "balanced")
             cat << EOF
 
-⚖️ BALANCED MODE FEATURES:
+BALANCED MODE FEATURES:
 • Pinecone free tier for vector search
 • API Gateway with rate limiting
 • 1-hour response caching
 • Cost-optimized model routing
 
-🚀 IDEAL FOR:
+IDEAL FOR:
 • Small production workloads
 • Client demonstrations
 • Growth-ready architecture
@@ -1217,7 +1217,7 @@ EOF
 • Multi-model routing capability
 • Enterprise monitoring
 
-💼 DESIGNED FOR:
+DESIGNED FOR:
 • Production applications
 • Enterprise demonstrations
 • Full-scale deployments
@@ -1227,26 +1227,26 @@ EOF
 
     cat << EOF
 
-📝 NEXT STEPS:
+NEXT STEPS:
 1. Visit your web interface and test document upload
 2. Set up AWS Budgets alerts for cost control  
 3. Monitor usage in CloudWatch dashboards
 4. Update the web interface with your actual API URL
 
-💡 COST OPTIMIZATION REMINDERS:
+COST OPTIMIZATION REMINDERS:
 • Monitor costs daily for first week
 • Use cached responses when possible
 • Set up billing alerts at 80% of budget
 • Consider upgrading when you land a job!
 
-🎓 PORTFOLIO TIPS:
+PORTFOLIO TIPS:
 • Document your architecture decisions
 • Create a demo video for job interviews
 • Track cost optimizations achieved
 • Showcase serverless best practices
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 Ready to impress employers with your cloud skills! 🚀
+Ready to impress employers with your cloud skills!
 EOF
 }
 
@@ -1263,7 +1263,7 @@ trap cleanup EXIT
 
 # Main deployment flow
 main() {
-    echo "🎓 AWS RAG Assistant - Student Deployment Script"
+    echo "AWS RAG Assistant - Student Deployment Script"
     echo "================================================"
     echo "Deployment Mode: $DEPLOYMENT_MODE"
     echo "Target Budget: \$${BUDGET_LIMIT}/month"
@@ -1292,7 +1292,7 @@ main() {
 # Show help information
 show_help() {
     cat << EOF
-🎓 AWS RAG Assistant Deployment Script
+AWS RAG Assistant Deployment Script
 
 USAGE:
     ./deploy-student-stack.sh [OPTIONS]
@@ -1343,7 +1343,7 @@ while [[ $# -gt 0 ]]; do
                 ultra-budget|balanced|full)
                     ;;
                 *)
-                    echo "❌ Invalid deployment mode: $DEPLOYMENT_MODE"
+                    echo "ERROR: Invalid deployment mode: $DEPLOYMENT_MODE"
                     echo "Valid modes: ultra-budget, balanced, full"
                     exit 1
                     ;;
@@ -1353,7 +1353,7 @@ while [[ $# -gt 0 ]]; do
         --budget=*)
             BUDGET_LIMIT="${1#*=}"
             if ! [[ "$BUDGET_LIMIT" =~ ^[0-9]+$ ]]; then
-                echo "❌ Budget must be a number"
+                echo "ERROR: Budget must be a number"
                 exit 1
             fi
             shift
@@ -1367,7 +1367,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "❌ Unknown option: $1"
+            echo "ERROR: Unknown option: $1"
             echo "Use --help for usage information"
             exit 1
             ;;
@@ -1378,17 +1378,17 @@ done
 case $DEPLOYMENT_MODE in
     ultra-budget)
         if [ "$BUDGET_LIMIT" -gt 20 ]; then
-            echo "💡 Note: Ultra-budget mode costs $8-18/month. Your budget of \$$BUDGET_LIMIT is generous!"
+            echo "Note: Ultra-budget mode costs $8-18/month. Your budget of \$$BUDGET_LIMIT is generous!"
         fi
         ;;
     balanced)
         if [ "$BUDGET_LIMIT" -lt 15 ]; then
-            echo "⚠️  Warning: Balanced mode typically costs $15-35/month. Consider ultra-budget mode."
+            echo "Warning: Balanced mode typically costs $15-35/month. Consider ultra-budget mode."
         fi
         ;;
     full)
         if [ "$BUDGET_LIMIT" -lt 25 ]; then
-            echo "⚠️  Warning: Full mode typically costs $25-68/month. Consider balanced or ultra-budget mode."
+            echo "Warning: Full mode typically costs $25-68/month. Consider balanced or ultra-budget mode."
         fi
         ;;
 esac

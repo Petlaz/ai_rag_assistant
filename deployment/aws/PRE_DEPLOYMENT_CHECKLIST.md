@@ -1,9 +1,9 @@
-# ✅ Pre-Deployment Checklist
+# Pre-Deployment Checklist
 *Complete these steps before running your AWS deployment*
 
 ---
 
-## 🎯 Quick Status Check
+## Quick Status Check
 
 Run this command to see what's ready:
 ```bash
@@ -11,11 +11,11 @@ cd /Users/peter/AI_ML_Projects/AI_RAG
 ./scripts/deploy-student-stack.sh --mode=ultra-budget --budget=15
 ```
 
-**Expected Error**: "AWS CLI is not installed" ✅ (We'll fix this below)
+**Expected Error**: "AWS CLI is not installed" (We'll fix this below)
 
 ---
 
-## 📋 Required Preparations
+## Required Preparations
 
 ### 1. Install AWS CLI
 ```bash
@@ -93,7 +93,7 @@ python deployment/app_gradio.py
 
 ---
 
-## 🚀 Deployment Day Checklist
+## Deployment Day Checklist
 
 ### Before Running Deployment:
 - [ ] AWS CLI installed and configured
@@ -118,7 +118,7 @@ python deployment/app_gradio.py
 
 ---
 
-## 💰 Ultra-Budget Deployment Command
+## Ultra-Budget Deployment Command
 
 Once everything is ready, run:
 ```bash
@@ -132,7 +132,7 @@ cd /Users/peter/AI_ML_Projects/AI_RAG
 
 ---
 
-## 🆘 Troubleshooting Quick Fixes
+## Troubleshooting Quick Fixes
 
 ### If AWS CLI fails:
 ```bash
@@ -170,20 +170,20 @@ aws cloudformation delete-stack --stack-name rag-assistant-ultra
 
 ---
 
-## 📊 Expected Deployment Flow
+## Expected Deployment Flow
 
-1. **Prerequisites Check** (2 min) ✅
-2. **CloudFormation Stack Creation** (5 min) 📦  
-3. **Lambda Function Deployment** (3 min) 🚀
-4. **S3 Bucket Configuration** (2 min) 📁
-5. **DynamoDB Table Setup** (1 min) 🗄️
-6. **Function URLs Configuration** (2 min) 🔗
-7. **Testing and Validation** (5 min) ✅
+1. **Prerequisites Check** (2 min)
+2. **CloudFormation Stack Creation** (5 min)
+3. **Lambda Function Deployment** (3 min)
+4. **S3 Bucket Configuration** (2 min)
+5. **DynamoDB Table Setup** (1 min)
+6. **Function URLs Configuration** (2 min)
+7. **Testing and Validation** (5 min)
 
 **Total**: ~20 minutes for ultra-budget mode
 
 ---
 
-**🎯 You're ready for deployment success!** 
+**You're ready for deployment success!** 
 
-The ultra-budget mode is perfect for demonstrating your cost optimization skills in job interviews. 💪
+The ultra-budget mode is perfect for demonstrating your cost optimization skills in job interviews.

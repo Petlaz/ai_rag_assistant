@@ -1,25 +1,25 @@
-# 🏗️ AWS Infrastructure Setup Guide
+# AWS Infrastructure Setup Guide
 *Step-by-step AWS account preparation for RAG Assistant deployment with three cost-optimized modes*
 
 ---
 
-## 🎯 Choose Your Deployment Mode First
+## Choose Your Deployment Mode First
 
 Before setting up infrastructure, decide which deployment mode fits your needs and budget:
 
-### 💰 Ultra-Budget Mode ($8-18/month)
+### Ultra-Budget Mode ($8-18/month)
 **Best for:** Students, learning, demos
 - **Requirements:** Basic AWS account, ~$20 monthly budget
 - **Services:** Lambda + Function URLs + S3 + DynamoDB + SQLite
 - **Setup time:** ~30 minutes
 
-### ⚖️ Balanced Mode ($15-35/month)  
+### Balanced Mode ($15-35/month)  
 **Best for:** Small production apps, portfolio projects
 - **Requirements:** AWS account + external vector DB
 - **Services:** API Gateway + Lambda + S3 + DynamoDB + Pinecone/Chroma
 - **Setup time:** ~45 minutes
 
-### 🚀 Full Mode ($25-68/month)
+### Full Mode ($25-68/month)
 **Best for:** Production apps, showcasing to employers
 - **Requirements:** AWS account with higher limits
 - **Services:** Full AWS stack with OpenSearch + CloudFront
@@ -27,7 +27,7 @@ Before setting up infrastructure, decide which deployment mode fits your needs a
 
 ---
 
-## 📋 Prerequisites Checklist
+## Prerequisites Checklist
 
 ### AWS Account Setup
 - [ ] Create AWS account (use student email for credits)
@@ -47,7 +47,7 @@ Before setting up infrastructure, decide which deployment mode fits your needs a
 
 ---
 
-## � Quick Deployment Commands
+## Quick Deployment Commands
 
 Once your AWS account is configured, deploy your chosen mode:
 
@@ -76,7 +76,7 @@ cd /path/to/AI_RAG
 
 ---
 
-## �🔑 AWS Account Configuration
+## AWS Account Configuration
 
 ### 1. Create IAM User for Deployment
 ```bash
@@ -116,7 +116,7 @@ aws lambda get-account-settings --region us-east-1
 
 ---
 
-## 💰 Cost Management Setup
+## Cost Management Setup
 
 ### Set Up Billing Alerts
 ```bash
@@ -186,25 +186,25 @@ aws budgets create-budget \
 
 ---
 
-## 🌍 Region Selection & Optimization
+## Region Selection & Optimization
 
 ### Recommended Region: us-east-1 (N. Virginia)
 **Why us-east-1?**
-- ✅ Lowest pricing for most services
-- ✅ All services available (Bedrock, OpenSearch Serverless)
-- ✅ Best for student deployments
-- ✅ Primary region for AWS free tier
+- Lowest pricing for most services
+- All services available (Bedrock, OpenSearch Serverless)
+- Best for student deployments
+- Primary region for AWS free tier
 
 ### Region Comparison
 | Region | Bedrock | OpenSearch | Lambda | S3 | Cost |
 |--------|---------|------------|--------|----|----- |
-| us-east-1 | ✅ | ✅ | Cheapest | Cheapest | ⭐⭐⭐ |
-| us-west-2 | ✅ | ✅ | +10% | +5% | ⭐⭐ |
-| eu-west-1 | ✅ | ✅ | +15% | +10% | ⭐ |
+| us-east-1 | Available | Available | Cheapest | Cheapest | Best |
+| us-west-2 | Available | Available | +10% | +5% | Good |
+| eu-west-1 | Available | Available | +15% | +10% | Fair |
 
 ---
 
-## 🔐 Security Best Practices
+## Security Best Practices
 
 ### IAM Policies for Student Deployment
 ```json
@@ -249,7 +249,7 @@ aws cloudtrail create-trail \
 
 ---
 
-## 🧪 Pre-Deployment Testing
+## Pre-Deployment Testing
 
 ### Verify Service Quotas
 ```bash
@@ -279,7 +279,7 @@ aws bedrock invoke-model \
 
 ---
 
-## ⚠️ Common First-Time Issues
+## Common First-Time Issues
 
 ### Issue 1: Bedrock Model Access
 **Problem**: "You don't have access to the model"
@@ -307,7 +307,7 @@ aws service-quotas request-service-quota-increase \
 
 ---
 
-## 🚀 Ready for Deployment?
+## Ready for Deployment?
 
 ### Pre-Flight Checklist
 - [ ] AWS CLI configured and tested
@@ -325,7 +325,7 @@ aws service-quotas request-service-quota-increase \
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [AWS Student Portal](https://aws.amazon.com/education/awseducate/)
 - [AWS Pricing Calculator](https://calculator.aws/)
@@ -333,4 +333,4 @@ aws service-quotas request-service-quota-increase \
 - [OpenSearch Serverless Pricing](https://aws.amazon.com/opensearch-service/pricing/)
 - [AWS Support](https://aws.amazon.com/support/) (basic tier included)
 
-**Ready to deploy your first AWS RAG Assistant? You've got this! 🚀**
+**Ready to deploy your first AWS RAG Assistant? You've got this!**

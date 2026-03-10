@@ -1,8 +1,8 @@
-# 💰 Cost Optimization Guide for Students
+# Cost Optimization Guide for Students
 
 ## Three-Tier Deployment Architecture
 
-### 🎯 Ultra-Budget Mode ($8-18/month)
+### Ultra-Budget Mode ($8-18/month)
 **Target**: Learning, demos, low-traffic personal projects
 
 **Components**:
@@ -13,19 +13,19 @@
 - **Caching**: DynamoDB with 24-hour TTL (aggressive caching)
 
 **Optimizations**:
-- ✅ No API Gateway costs
-- ✅ No OpenSearch Serverless costs
-- ✅ SQLite for small-scale vector search
-- ✅ Aggressive 24-hour response caching
-- ✅ Lambda cold start optimization
-- ✅ Automatic document cleanup after 7 days
+- No API Gateway costs
+- No OpenSearch Serverless costs
+- SQLite for small-scale vector search
+- Aggressive 24-hour response caching
+- Lambda cold start optimization
+- Automatic document cleanup after 7 days
 
 **Usage Command**:
 ```bash
 ./scripts/deploy-student-stack.sh --mode=ultra-budget --budget=20
 ```
 
-### ⚖️ Balanced Mode ($15-35/month)
+### Balanced Mode ($15-35/month)
 **Target**: Small production apps, internship projects
 
 **Components**:
@@ -36,17 +36,17 @@
 - **Caching**: DynamoDB with smart TTL
 
 **Optimizations**:
-- ✅ Smart caching (1-6 hour TTL based on query type)
-- ✅ Intelligent tiering for storage
-- ✅ Connection pooling
-- ✅ Batch processing where possible
+- Smart caching (1-6 hour TTL based on query type)
+- Intelligent tiering for storage
+- Connection pooling
+- Batch processing where possible
 
 **Usage Command**:
 ```bash
 ./scripts/deploy-student-stack.sh --mode=balanced --budget=40
 ```
 
-### 🚀 Full Mode ($25-68/month)
+### Full Mode ($25-68/month)
 **Target**: Production apps, portfolio projects for employers
 
 **Components**:
@@ -57,11 +57,11 @@
 - **Caching**: ElastiCache + DynamoDB multi-layer
 
 **Features**:
-- ✅ Full hybrid search (keyword + semantic)
-- ✅ Real-time analytics
-- ✅ Custom domain and SSL
-- ✅ Advanced monitoring and logging
-- ✅ High availability
+- Full hybrid search (keyword + semantic)
+- Real-time analytics
+- Custom domain and SSL
+- Advanced monitoring and logging
+- High availability
 
 **Usage Command**:
 ```bash
@@ -170,7 +170,7 @@ aws lambda create-function \
 ./scripts/deploy-student-stack.sh --mode=full --migrate-from=balanced
 ```
 
-## 📅 Deployment Day Cost Monitoring
+## Deployment Day Cost Monitoring
 
 ### Pre-Deployment Cost Check
 ```bash
