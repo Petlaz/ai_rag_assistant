@@ -1,7 +1,7 @@
 # Tech Stack Documentation - Quest Analytics RAG Assistant
 
 ## Overview
-This document provides a comprehensive reference of all technologies, frameworks, and tools used in the Quest Analytics RAG Assistant project.
+This document provides a comprehensive reference of all technologies, frameworks, and tools used in the Quest Analytics RAG Assistant project. Updated to reflect the current clean project architecture and deployment modes.
 
 ## Programming Languages
 
@@ -14,12 +14,16 @@ This document provides a comprehensive reference of all technologies, frameworks
 
 ## AI/ML & NLP Technologies
 
-### Language Models
+### Language Models & AI Services
 - **Ollama** (Latest)
   - Local LLM deployment and management
   - Model serving with health monitoring
-  - Support for multiple models (Gemma3:1b, Phi3:mini)
+  - Support for multiple models (Mistral, Gemma3:1b, Phi3:mini)
   - Automatic fallback mechanisms
+- **Amazon Bedrock Claude Haiku**
+  - Cloud-based LLM inference for production
+  - Cost-effective text generation
+  - Integrated with AWS ultra-budget deployment
 
 ### ML Frameworks & Libraries
 - **LangChain 1.2.0**
@@ -134,48 +138,53 @@ This document provides a comprehensive reference of all technologies, frameworks
 ### AWS Services Used
 - **AWS Lambda**
   - Serverless compute for ultra-budget deployment
-  - Function URLs for API endpoints
+  - Function URLs for direct API endpoints (no API Gateway costs)
+  - Automatic scaling and pay-per-request pricing
 - **Amazon S3**
-  - Document storage
+  - Document storage with lifecycle policies
   - Static asset hosting
+  - Automatic cleanup after 7 days (ultra-budget mode)
+- **Amazon DynamoDB**
+  - Response caching with 24-hour TTL
+  - Cost-effective NoSQL storage
+  - Automatic item expiration
+- **Amazon Bedrock**
+  - Claude Haiku LLM inference
+  - Pay-per-token pricing model
 - **AWS CloudWatch**
   - Monitoring and logging
   - Cost tracking and alerts
 - **AWS IAM**
   - Access control and security
+  - Least-privilege permissions
 
 ### Infrastructure as Code
-- **Terraform** (Planned)
+- **AWS CloudFormation** (via deployment scripts)
   - Infrastructure provisioning
   - Resource management
   - Environment consistency
 
-## Containerization & Orchestration
+## Containerization & Development
 
 ### Containerization
 - **Docker**
   - Application containerization
-  - Multi-service deployment
-  - Development environment consistency
+  - Multi-service development environment
+  - Consistent deployment across platforms
 - **Docker Compose**
   - Multi-container orchestration
   - Development stack management
-
-### Container Orchestration
-- **Kubernetes**
-  - Production container orchestration
-  - Scalable deployment management
-  - Service discovery and load balancing
+  - Service dependency management
 
 ## Development Tools
 
 ### Package Management
-- **Poetry** (Configuration present)
-  - Python dependency management
-  - Virtual environment handling
-- **pip**
+- **pip** (Primary)
   - Python package installation
-  - Requirements management
+  - Requirements management via requirements.txt
+- **pyproject.toml** (Configuration)
+  - Project metadata and configuration
+  - Build system requirements
 
 ### Code Quality
 - **Black 23.9.0**
@@ -230,19 +239,25 @@ This document provides a comprehensive reference of all technologies, frameworks
 ## Deployment Architectures
 
 ### Ultra-Budget Deployment ($8-18/month)
-- SQLite vector storage
-- AWS Lambda Function URLs
-- Aggressive caching (24-hour TTL)
-- Document cleanup (7-day expiration)
-- Cost monitoring and alerts
+**Technologies Used:**
+- SQLite vector storage (embedded in Lambda)
+- AWS Lambda with Function URLs
+- Amazon S3 with lifecycle policies
+- DynamoDB caching with 24-hour TTL
+- Bedrock Claude Haiku for LLM inference
+- Aggressive caching and cleanup automation
 
 ### Balanced Deployment ($15-35/month)
-- Managed OpenSearch cluster
-- Enhanced monitoring
-- Moderate resource allocation
+**Technologies Used:**
+- External vector database (Pinecone or Chroma)
+- AWS API Gateway + Lambda
+- Enhanced monitoring and analytics
+- Smart caching strategies
 
 ### Full Production Deployment ($25-68/month)
-- Full OpenSearch cluster
+**Technologies Used:**
+- Amazon OpenSearch Serverless
+- AWS CloudFront CDN
 - Complete monitoring suite
 - High availability configuration
 - Advanced security features
@@ -271,17 +286,19 @@ This document provides a comprehensive reference of all technologies, frameworks
 - Webhook support
 - Real-time status updates
 
-## Performance Optimizations
+## Performance Metrics
 
-### Caching
-- Response caching
-- Vector embedding caching
-- Session-based optimizations
+### Current Baseline Performance
+- **Precision@5**: 0.72 (Retrieval accuracy)
+- **MRR (Mean Reciprocal Rank)**: 0.80 (Ranking quality)  
+- **Query Response Time**: < 2 seconds (95th percentile)
+- **Ollama Health Check**: < 1 second response time
 
-### Resource Management
-- Memory-efficient processing
-- Streaming response handling
-- Connection pooling
+### Target Performance Goals
+- **Precision@5**: > 0.85 (Pre-deployment target)
+- **MRR**: > 0.90 (Ranking optimization goal)
+- **Query Response Time**: < 1.5 seconds (Performance objective)
+- **Cost per Query**: < $0.01 (Ultra-budget mode target)
 
 ---
 
@@ -289,24 +306,12 @@ This document provides a comprehensive reference of all technologies, frameworks
 
 This tech stack is designed for:
 - Python 3.11+
-- Modern web browsers
-- Linux/Unix environments
-- Container-based deployments
-
-## Future Technology Considerations
-
-### Planned Additions
-- Redis caching layer
-- Advanced reranking algorithms
-- Multi-modal document processing
-- Real-time collaboration features
-
-### Potential GPU Acceleration
-- PyTorch 2.1.0+ (Optional)
-- CUDA support for enhanced performance
-- GPU-accelerated vector operations
+- Modern web browsers (Chrome, Firefox, Safari, Edge)
+- Linux/Unix environments (macOS, Ubuntu, CentOS)
+- Container-based deployments (Docker, AWS Lambda)
+- AWS cloud infrastructure
 
 ---
 
-*Last Updated: March 2026*
+*Last Updated: January 2025*
 *Project: Quest Analytics RAG Assistant*

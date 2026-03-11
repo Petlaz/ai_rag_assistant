@@ -45,13 +45,13 @@ A production-ready **Retrieval-Augmented Generation** system designed for resear
 
 ### Core Components
 
-| Component | Description | Recent Updates |
-|-----------|-------------|----------------|
+| Component | Description | Status |
+|-----------|-------------|--------|
 | **`rag_pipeline/`** | Core RAG functionality: ingestion, indexing, retrieval, embeddings | Document isolation, index clearing, enhanced retrieval |
-| **`deployment/`** | Gradio web interface and AWS deployment configurations | Professional UI, health monitoring, three-tier strategy |
-| **`llm_ollama/`** | Ollama client integration with health monitoring and documentation | Enhanced health checks, integrated notes/ |
+| **`deployment/`** | Gradio web interface and consolidated AWS deployment guide | Professional UI, health monitoring, clean structure |
+| **`llm_ollama/`** | Ollama client integration with health monitoring and documentation | Enhanced health checks, comprehensive documentation |
 | **`landing/`** | FastAPI landing page with analytics and modern design | Updated titles, fixed analytics, modern lifespan events |
-| **`scripts/`** | Deployment automation and utility scripts | Ultra-budget deployment script with mode selection |
+| **`scripts/`** | Deployment automation and utility scripts | Ultra-budget deployment script, evaluation tools |
 | **`tests/`** | Comprehensive test suite with fixtures | Enhanced test coverage for new features |
 
 ## Quick Start
@@ -241,11 +241,10 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 ### Production Deployment
 
-See deployment guides for AWS:
-- **[Quick Deploy](deployment/README.md)**: Student-friendly one-click deployment
-- **[Complete Strategy](deployment/aws/AWS_DEPLOYMENT_ROADMAP.md)**: Comprehensive roadmap with cost optimization
+See the comprehensive deployment guide:
+- **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Complete deployment guide with three cost-optimized modes
+- **[Pre-Deployment Testing Plan](PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic 8-week optimization and testing plan
 - **Docker Compose**: Local development configurations
-- **CloudWatch** monitoring and cost control
 
 ## Project Structure
 
@@ -272,62 +271,53 @@ ai_rag_assistant/
 │   └── prompts/              # Research-focused prompt templates
 │       ├── guardrails.yaml          # Safety guardrails config
 │       └── research_qa_prompt.yaml  # QA prompt templates
-├── deployment/               # Web interface & deployment configs
+├── deployment/               # Web interface & deployment
 │   ├── __init__.py           # Python package initialization
-│   ├── app_gradio.py         # Main Gradio app with professional UI
-│   ├── README.md             # Portfolio-focused deployment guide
-│   └── aws/                  # Complete AWS deployment system
-│       ├── AWS_DEPLOYMENT_ROADMAP.md    # Updated strategic roadmap
-│       ├── COST_OPTIMIZATION.md         # Student cost optimization guide
-│       ├── ULTRA_BUDGET_IMPLEMENTATION.md # $8-18/month deployment guide
-│       ├── PRE_DEPLOYMENT_CHECKLIST.md  # Pre-deployment validation
-│       ├── README.md                    # AWS quick start guide
-│       ├── docker/           # Docker deployment configurations
-│       │   ├── .dockerignore        # Container ignore patterns
-│       │   ├── .env.example         # Environment configuration template
-│       │   ├── docker-compose.dev.yml # Updated with health checks
-│       │   ├── Dockerfile.app       # Application container
-│       │   ├── Dockerfile.worker    # Worker container
-│       │   └── Dockerfile.landing   # Landing page container
-│       └── docs/             # Complete AWS implementation guides
-│           ├── README.md            # Three-tier deployment overview
-│           ├── infrastructure-setup.md    # AWS account preparation
-│           ├── services-configuration.md  # Service configs for all modes
-│           └── troubleshooting.md         # Mode-specific troubleshooting
+│   ├── app_gradio.py         # Main Gradio application 
+│   └── aws/                  # AWS deployment system
+│       ├── AWS_DEPLOYMENT_GUIDE.md  # Consolidated deployment guide
+│       └── docker/           # Docker deployment configurations
+│           ├── docker-compose.dev.yml # Development with health checks
+│           ├── Dockerfile.app       # Application container
+│           ├── Dockerfile.worker    # Worker container
+│           └── Dockerfile.landing   # Landing page container
 ├── llm_ollama/               # Ollama client & adapters
 │   ├── adapters.py           # Enhanced Ollama integration
 │   ├── client.py             # LLM client with health monitoring
-│   ├── README.md             # Ollama-specific documentation
+│   ├── README.md             # Comprehensive Ollama documentation
 │   └── notes/                # Implementation notes
 │       └── 2025_10_ollama_success.md  # Implementation notes
 ├── landing/                  # Professional landing page
 │   ├── __init__.py
 │   ├── main.py               # FastAPI app with modern lifespan events
 │   └── templates/            # HTML templates
-│       └── index.html        # Updated professional landing page
-├── scripts/                  # CLI utilities for operations
-│   ├── bootstrap_opensearch.sh      # OpenSearch setup
-│   ├── deploy-student-stack.sh      # Three-tier AWS deployment script
-│   ├── eval_retrieval.py            # Evaluation utilities
-│   ├── ingest_watch.py              # File watcher for ingestion
-│   ├── run_ingestion.py             # Batch processing
-│   └── smoke_test.py                # End-to-end testing
+│       └── index.html        # Professional landing page
+├── scripts/                  # Operational utilities
+│   ├── eval_retrieval.py     # Retrieval quality evaluation
+│   ├── ingest_watch.py       # File watcher for ingestion
+│   ├── run_ingestion.py      # Batch processing pipeline
+│   └── smoke_test.py         # End-to-end system testing
 ├── tests/                    # Unit & integration tests
 │   ├── conftest.py           # Test configuration
-│   ├── test_app_endpoints.py    # API endpoint tests
-│   ├── test_ingestion.py        # PDF processing tests
-│   ├── test_ollama_client.py    # LLM integration tests
-│   └── test_retrieval.py        # Search functionality tests
+│   ├── test_ingestion.py     # PDF processing tests
+│   ├── test_ollama_client.py # LLM integration tests
+│   └── test_retrieval.py     # Search functionality tests
 ├── data/                     # Data storage
 │   └── samples/              # Sample queries and test data
 │       └── queries.jsonl     # Sample evaluation queries
-├── AI_ENGINEER_WORK_SAMPLE.md   # Professional work sample document
-├── CV_PROJECT_ENTRY.md          # CV project entries for job applications
-├── TECH_STACK_DOCUMENTATION.md  # Complete technology stack reference
+├── PRE_DEPLOYMENT_TESTING_PLAN.md   # 8-week optimization plan
+├── TECH_STACK_DOCUMENTATION.md      # Technology stack reference
+├── TECH_STACK_REFERENCE.md          # Technical interview reference
+├── AI_ENGINEER_WORK_SAMPLE.md       # Work sample documentation
+├── CV_PROJECT_ENTRY.md              # CV project entry
 ├── .env                      # Environment variables (local)
-├── .gitignore               # Enhanced Git ignore rules
+├── .gitignore               # Git ignore rules with privacy protection
+├── pyproject.toml           # Project configuration
+├── requirements.txt         # Python dependencies
 ├── LICENSE                  # MIT License
-├── requirements.txt         # Updated Python dependencies
+└── README.md                # This file
+```
+├── requirements.txt         # Python dependencies
 ├── pyproject.toml          # Project configuration
 └── README.md               # This comprehensive documentation
 ```
@@ -355,7 +345,7 @@ ai_rag_assistant/
 ./scripts/deploy-student-stack.sh --mode=full --budget=70
 ```
 
-**Complete Documentation**: See [`deployment/aws/`](deployment/aws/) for comprehensive guides, cost optimization strategies, and troubleshooting.
+**Complete Documentation**: See [`deployment/aws/AWS_DEPLOYMENT_GUIDE.md`](deployment/aws/AWS_DEPLOYMENT_GUIDE.md) for comprehensive deployment guide with three cost-optimized modes, troubleshooting, and cost optimization strategies.
 
 ### Revolutionary Ultra-Budget Innovation
 
@@ -367,19 +357,6 @@ Our **ultra-budget mode** demonstrates cutting-edge cost optimization:
 - **Automatic Cleanup**: 7-day document expiration controls storage costs
 
 This showcases **real engineering innovation** - building enterprise-grade features on startup budgets!
-
-### Recent Structural Changes
-
-- **Created `deployment/aws/docs/`**: Comprehensive AWS implementation guides
-- **Moved `AWS_DEPLOYMENT_ROADMAP.md`**: Now in `deployment/aws/` for better organization
-- **Enhanced AWS documentation**: 4 focused guides for first-time cloud deployment
-- **Added `scripts/deploy-student-stack.sh`**: One-click AWS deployment for students
-- **Created `deployment/README.md`**: Quick AWS deployment reference
-- **Consolidated documentation**: All AWS content now logically grouped
-- **Student-optimized**: Focus on $15-50/month cost-effective deployments
-- **Updated Dependencies**: Gradio 6.2.0, LangChain 1.2.0, OpenSearch 2.18.0
-- **Added Health Monitoring**: Real-time status checks across all services
-- **Document Session Management**: Clear previous documents functionality
 
 ## Testing
 
@@ -400,7 +377,7 @@ python scripts/smoke_test.py --pdf sample.pdf --question "test query"
 python scripts/eval_retrieval.py data/samples/queries.jsonl --top-k 5
 ```
 
-## Recent Improvements & Fixes
+## Recent Improvements & Updates
 
 ### Document Session Isolation
 - **Problem**: When uploading new PDFs, questions would return results from previously uploaded documents
@@ -466,10 +443,9 @@ docker-compose -f deployment/aws/docker/docker-compose.dev.yml logs ollama
 
 ## Documentation
 
-- **[AWS Quick Deploy](deployment/README.md)**: Student-friendly deployment guide
-- **[AWS Deployment Roadmap](deployment/aws/AWS_DEPLOYMENT_ROADMAP.md)**: Complete strategy & cost optimization
-- **[Ultra-Budget Implementation](deployment/aws/ULTRA_BUDGET_IMPLEMENTATION.md)**: $8-18/month deployment
-- **[Cost Optimization](deployment/aws/COST_OPTIMIZATION.md)**: Budget-friendly strategies
+- **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Complete deployment guide with three cost-optimized modes
+- **[Pre-Deployment Testing Plan](PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic 8-week optimization and testing methodology
+- **[Technology Stack Reference](TECH_STACK_DOCUMENTATION.md)**: Comprehensive technical documentation
 
 ## Contributing
 

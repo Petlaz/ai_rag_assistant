@@ -272,6 +272,9 @@ python scripts/select_best_config.py \
 # Install MLflow
 pip install mlflow>=2.10.0
 
+# Add to requirements.txt first:
+echo "mlflow>=2.10.0,<3.0.0" >> requirements.txt
+
 # Setup MLflow tracking
 mkdir -p mlruns
 python scripts/setup_mlflow_tracking.py \
@@ -391,11 +394,9 @@ python scripts/comprehensive_validation.py \
   --duration 2hours \
   --report results/final_validation_report.pdf
 
-# Deploy to AWS Ultra-Budget mode
-./scripts/deploy-student-stack.sh \
-  --mode=ultra-budget \
-  --budget=20 \
-  --config configs/aws_optimized_config.yaml
+# Deploy to AWS Ultra-Budget mode (use AWS_DEPLOYMENT_GUIDE.md approach)
+# Follow deployment/aws/AWS_DEPLOYMENT_GUIDE.md for manual deployment
+# OR implement deployment automation based on the consolidated guide
 ```
 
 **Expected Optimized Costs**:
@@ -447,46 +448,68 @@ python scripts/comprehensive_validation.py \
 
 ## Files to Create for This Plan
 
+**IMPORTANT**: Most testing scripts need to be implemented before starting this plan.
+
 ```bash
-# Testing scripts (check if exist, create if needed)
-touch scripts/generate_test_queries.py
-touch scripts/analyze_eval_results.py
-touch scripts/create_domain_queries.py
-touch scripts/embedding_model_comparison.py
-touch scripts/reranking_evaluation.py
-touch scripts/ab_test_retrieval.py
-touch scripts/comprehensive_validation.py
-touch scripts/prepare_aws_config.py
-touch scripts/estimate_aws_costs.py
+# Create missing directories
+mkdir -p configs results mlruns .github/workflows
 
-# MLOps scripts (NEW - for portfolio enhancement)
-touch scripts/setup_mlflow_tracking.py
-touch scripts/mlflow_model_registry.py
-touch scripts/performance_monitoring.py
-touch scripts/automated_retraining.py
+# PHASE 1: Testing scripts (NEED TO BE CREATED)
+touch scripts/generate_test_queries.py        # TODO: Implement query generation
+touch scripts/analyze_eval_results.py         # TODO: Statistics and analysis
+touch scripts/create_domain_queries.py        # TODO: Domain-specific queries
+touch scripts/domain_performance_analysis.py  # TODO: Cross-domain analysis
 
-# CI/CD configuration (NEW - shows DevOps skills)
+# PHASE 2: Model optimization (NEED TO BE CREATED)
+touch scripts/embedding_model_comparison.py   # TODO: Embedding model testing
+touch scripts/analyze_embedding_tradeoffs.py  # TODO: Performance vs cost analysis
+touch scripts/reranking_evaluation.py         # TODO: Re-ranking strategies
+touch scripts/reranking_cost_analysis.py      # TODO: Cost-benefit analysis
+
+# PHASE 3: A/B testing (NEED TO BE CREATED)
+touch scripts/ab_test_retrieval.py             # TODO: A/B testing framework
+touch scripts/statistical_analysis.py         # TODO: Statistical significance
+touch scripts/select_best_config.py           # TODO: Configuration selection
+
+# PHASE 4: MLOps scripts (NEED TO BE CREATED + MLflow dependency)
+touch scripts/setup_mlflow_tracking.py        # TODO: MLflow setup
+touch scripts/mlflow_model_registry.py        # TODO: Model registry
+touch scripts/performance_monitoring.py       # TODO: Performance monitoring
+touch scripts/automated_retraining.py         # TODO: Automated retraining
+
+# PHASE 5: Deployment (NEED TO BE CREATED)
+touch scripts/prepare_aws_config.py           # TODO: AWS config preparation
+touch scripts/create_deployment_package.py    # TODO: Deployment packaging
+touch scripts/estimate_aws_costs.py           # TODO: Cost estimation
+touch scripts/comprehensive_validation.py     # TODO: Final validation
+
+# CI/CD configuration (NEED TO BE CREATED)
 mkdir -p .github/workflows
-touch .github/workflows/ml-pipeline.yml
-touch .github/workflows/model-validation.yml
-touch .github/workflows/deploy-aws.yml
+touch .github/workflows/ml-pipeline.yml       # TODO: CI/CD pipeline
+touch .github/workflows/model-validation.yml  # TODO: Model validation
+touch .github/workflows/deploy-aws.yml        # TODO: AWS deployment
 
-# Configuration files
-mkdir -p configs
-touch configs/retrieval_variants.yaml
-touch configs/expected_usage.yaml
-touch configs/mlflow_config.yaml
-touch configs/performance_thresholds.yaml
-
-# Results directory
-mkdir -p results mlruns
+# Configuration files (NEED TO BE CREATED)
+touch configs/retrieval_variants.yaml         # TODO: A/B test configurations
+touch configs/expected_usage.yaml             # TODO: Usage patterns
+touch configs/mlflow_config.yaml              # TODO: MLflow configuration
+touch configs/performance_thresholds.yaml     # TODO: Performance thresholds
 ```
 
 ---
 
-**Next Step**: Start with Week 1 baseline testing to establish current performance benchmarks, then proceed systematically through each optimization phase.
+**Next Steps**: 
 
-**Advantages of This MLOps-Enhanced Approach**:
+**IMPLEMENTATION APPROACH**: Begin infrastructure setup and script implementation later this week (March 2026).
+
+**Implementation Sequence**:
+1. **Infrastructure Setup**: Create missing directories and script templates
+2. **Phase 1 Implementation**: Build baseline testing and evaluation scripts
+3. **Phase 2-3 Development**: Implement model optimization and A/B testing frameworks
+4. **MLOps Integration**: Set up MLflow tracking and GitHub Actions CI/CD
+5. **Testing and Deployment**: Execute full testing plan and deploy to AWS
+
+**Key Advantages of This Approach**:
 - **Technical Excellence**: Maximizes performance before deployment costs begin
 - **Professional MLOps**: Demonstrates industry-standard practices (MLflow + CI/CD)
 - **Portfolio Strength**: Shows modern ML engineering skills employers want
@@ -533,22 +556,60 @@ mkdir -p results mlruns
 
 ---
 
-## Executive Summary
+## IMPLEMENTATION ASSESSMENT 
 
-This 8-week pre-deployment testing plan provides a systematic approach to optimizing the AI RAG Assistant before AWS deployment. The plan demonstrates modern MLOps practices essential for ML engineering roles:
+### **Current Readiness Level: 25% Complete**
 
-**Key Phases**:
-- **Weeks 1-2**: Baseline establishment and scale testing
-- **Weeks 3-4**: Model optimization (embedding models, re-ranking)  
-- **Week 5**: A/B testing and configuration optimization
-- **Weeks 6-7**: MLOps integration (MLflow, GitHub Actions CI/CD)
-- **Week 8**: Final deployment and portfolio preparation
+**READY Components:**
+- Core evaluation framework (`scripts/eval_retrieval.py`)
+- Test data (`data/samples/queries.jsonl`) 
+- RAG pipeline infrastructure
+- Performance baseline metrics (Precision@5: 0.72, MRR: 0.80)
+- AWS deployment documentation (`deployment/aws/AWS_DEPLOYMENT_GUIDE.md`)
 
-**Professional Skills Demonstrated**:
+**MISSING Components (75% of plan):**
+- **30+ scripts** referenced but not implemented
+- **MLflow dependency** not in requirements.txt
+- **GitHub Actions** workflows don't exist
+- **configs/** directory structure missing
+- **Deployment automation** (referenced script was deleted)
+
+### **Recommended Implementation Strategy**
+
+#### **Option A: Full MLOps Implementation (8+ weeks) - SELECTED**
+Implement the complete plan with all missing scripts and MLOps infrastructure:
+
+```bash
+# Time estimate: 2-3 weeks to implement missing scripts
+# Total project time: 10-11 weeks including testing
+# Implementation start: Later this week (March 2026)
+```
+
+**Implementation Phases:**
+1. **Infrastructure Setup (Week 1)**: Create all missing scripts and directories
+2. **Core Testing Framework (Week 2)**: Implement baseline and evaluation scripts  
+3. **Model Optimization (Week 3-4)**: Build embedding and reranking testing
+4. **A/B Testing Framework (Week 5)**: Statistical analysis and configuration testing
+5. **MLOps Integration (Week 6-7)**: MLflow tracking and GitHub Actions CI/CD
+6. **Final Validation & Deployment (Week 8)**: Comprehensive testing and AWS deployment
+
+**Skills Demonstrated:**
 - Statistical rigor with A/B testing and significance analysis
-- MLOps practices with MLflow experiment tracking
+- MLOps practices with MLflow experiment tracking  
 - DevOps automation with GitHub Actions CI/CD
 - Cost optimization strategies for production deployment
 - Systematic performance improvement methodology
 
 **Portfolio Value**: Creates a comprehensive case study showcasing end-to-end ML system optimization, perfect for demonstrating practical skills to potential employers in Machine Learning Engineer, AI Engineer, GenAI Engineer, and Data Scientist roles.
+
+### **For Job Interviews - What's Already Showcase-Ready:**
+- **Production RAG System**: Complete working implementation
+- **AWS Deployment Strategy**: Three-tier cost optimization (ultra-budget, balanced, full)
+- **Performance Baseline**: Quantified metrics (Precision@5: 0.72, MRR: 0.80)
+- **Cost Optimization**: Ultra-budget mode ($8-18/month)
+- **Clean Architecture**: Professional codebase with comprehensive documentation
+- **Modern Tech Stack**: Gradio 6.2.0, LangChain 1.2.0, OpenSearch 2.18.0
+
+**Portfolio Impact**: Implementing the full MLOps testing plan will create a comprehensive showcase of modern ML engineering practices, perfect for demonstrating technical excellence to potential employers.
+
+**Next Steps**: Begin infrastructure setup and script implementation later this week (March 2026).
