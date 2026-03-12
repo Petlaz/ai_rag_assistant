@@ -1,0 +1,147 @@
+# Security Configuration
+# =====================
+# 
+# Comprehensive security configuration for Quest Analytics RAG Assistant
+# including API authentication, input sanitization, and rate limiting.
+
+# API Authentication Configuration
+authentication:
+  enabled: true
+  method: "api_key"  # Options: api_key, jwt, session
+  
+  # API Key Settings
+  api_key:
+    header_name: "X-API-Key"
+    require_for_endpoints: 
+      - "/api/chat"
+      - "/api/upload"
+      - "/api/health"
+    admin_endpoints:
+      - "/api/admin"
+      - "/api/metrics"
+    
+  # JWT Settings (for future enhancement)
+  jwt:
+    secret_key_env: "JWT_SECRET_KEY"
+    algorithm: "HS256"
+    expiration_hours: 24
+    
+  # Session Management
+  session:
+    secret_key_env: "SESSION_SECRET_KEY"
+    max_age_hours: 8
+    secure_cookies: true
+
+# Input Sanitization Configuration  
+input_sanitization:
+  enabled: true
+  
+  # Query sanitization
+  query_validation:
+    max_length: 2000
+    min_length: 3
+    allowed_chars: "alphanumeric_spaces_punctuation"
+    block_patterns:
+      - "javascript:"
+      - "data:"
+      - "<script"
+      - "onclick"
+      - "onerror"
+      - "eval\\("
+      - "exec\\("
+    
+  # File upload validation
+  file_upload:
+    max_file_size_mb: 50
+    allowed_extensions: [".pdf", ".txt", ".md", ".docx"]
+    scan_for_malware: false  # Set to true in production with antivirus
+    quarantine_suspicious: true
+    
+  # Content filtering
+  content_filtering:
+    remove_html: true
+    escape_special_chars: true
+    normalize_unicode: true
+    max_query_complexity: 100
+
+# Rate Limiting Configuration
+rate_limiting:
+  enabled: true
+  storage: "memory"  # Options: memory, redis
+  
+  # General rate limits
+  global_limits:
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    burst_allowance: 10
+    
+  # Endpoint-specific limits
+  endpoint_limits:
+    "/api/chat":
+      requests_per_minute: 20
+      requests_per_hour: 200
+      
+    "/api/upload":
+      requests_per_minute: 5
+      requests_per_hour: 50
+      
+    "/api/health":
+      requests_per_minute: 30
+      requests_per_hour: 300
+      
+  # IP-based limiting
+  ip_limits:
+    max_concurrent_sessions: 3
+    cooldown_period_minutes: 15
+    blacklist_threshold: 1000  # requests per hour
+    
+# Security Headers Configuration
+security_headers:
+  enabled: true
+  headers:
+    "X-Content-Type-Options": "nosniff"
+    "X-Frame-Options": "DENY"
+    "X-XSS-Protection": "1; mode=block"
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+
+# Threat Detection
+threat_detection:
+  enabled: true
+  
+  # Suspicious pattern detection
+  patterns:
+    sql_injection: true
+    xss_attempts: true
+    path_traversal: true
+    command_injection: true
+    
+  # Automated blocking
+  auto_block:
+    enabled: true
+    threshold_violations: 5
+    block_duration_minutes: 60
+    
+  # Logging and alerting
+  logging:
+    log_attempts: true
+    log_level: "WARNING"
+    alert_on_block: true
+
+# Environment-specific settings
+environments:
+  development:
+    authentication.enabled: false
+    rate_limiting.enabled: false
+    threat_detection.enabled: false
+    
+  testing:
+    authentication.enabled: true
+    rate_limiting.requests_per_minute: 1000
+    
+  production:
+    # All security features enabled with strict settings
+    authentication.enabled: true
+    rate_limiting.enabled: true
+    threat_detection.enabled: true

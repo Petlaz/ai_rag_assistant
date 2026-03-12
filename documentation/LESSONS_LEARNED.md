@@ -283,4 +283,68 @@ except ConnectionError:
 - **Solution**: Deterministic mock modes with option for real model testing
 - **Outcome**: Reliable automated testing + production-like validation
 
+---
+
+## Gradio App Debugging Experience
+
+### What Worked Well
+
+#### 1. **Gradio 6.0 Migration Strategy**
+- **Success**: Systematic API upgrade from deprecated methods
+- **Why**: Incremental changes with testing at each step
+- **Impact**: Modern UI components with better performance
+- **Key Changes**: `gr.update()` → direct parameter updates, event handling improvements
+
+#### 2. **Automatic Environment Loading**
+- **Success**: Implemented automatic `.env` file detection and loading
+- **Why**: Reduced manual configuration steps for users
+- **Impact**: Seamless startup without manual environment setup
+- **Implementation**: `python-dotenv` integration with fallback handling
+
+#### 3. **LLM Model Detection**
+- **Success**: Dynamic model discovery and health checking
+- **Why**: Automatic fallback when preferred models unavailable
+- **Impact**: Robust operation across different Ollama configurations
+- **Feature**: Real-time model status in UI
+
+### What Didn't Work Initially
+
+#### 1. **Gradio 6.0 Deprecation Warnings**
+- **Problem**: Multiple deprecation warnings cluttering console output
+- **Issue**: Outdated event handling and component update patterns
+- **Root Cause**: Breaking changes in Gradio 6.x API structure
+- **Solution**: Updated to new event syntax and component patterns
+- **Lesson**: Stay current with major framework updates to avoid technical debt
+
+#### 2. **Model Display Issues**
+- **Problem**: "unknown" model appearing instead of actual model names
+- **Issue**: Model name detection failing with certain LLM configurations
+- **Root Cause**: Inconsistent model response format from Ollama API
+- **Solution**: Improved model name parsing with fallback logic
+- **Lesson**: Always implement graceful degradation for external API dependencies
+
+#### 3. **Environment Configuration Complexity**
+- **Problem**: Users needed manual .env file setup
+- **Issue**: Configuration dependencies not clear to end users
+- **Root Cause**: Assumption that users would manually configure environment
+- **Solution**: Automatic detection with helpful error messages if missing
+- **Lesson**: Minimize user configuration requirements for better UX
+
+### Key Debugging Insights
+
+#### 1. **Framework Migration Best Practices**
+- **Incremental Updates**: Change one API at a time and test
+- **Deprecation Warnings**: Address immediately to prevent future issues
+- **Backward Compatibility**: Maintain fallback modes during transitions
+
+#### 2. **User Experience Priorities**
+- **Zero Configuration**: Automatic setup reduces adoption friction
+- **Clear Error Messages**: Users need actionable feedback when things fail
+- **Progressive Enhancement**: Core functionality should work even with limited features
+
+#### 3. **Production Readiness**
+- **Environment Detection**: Automatic configuration where possible
+- **Health Checks**: Real-time status monitoring for dependencies
+- **Graceful Degradation**: System remains functional when components fail
+
 This document serves as a comprehensive reference for the technical decisions, challenges, and solutions encountered throughout the RAG Assistant development lifecycle.

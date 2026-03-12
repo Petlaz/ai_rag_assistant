@@ -108,14 +108,14 @@ python scripts/deployment/blue_green_deploy.py --target production
 
 ## Implementation Status
 
-### ✅ Implemented and Ready
+### Implemented and Ready
 - Core evaluation scripts (`eval_retrieval.py`, `smoke_test.py`)
 - Document ingestion pipeline (`run_ingestion.py`, `ingest_watch.py`)
 - **Phase 1 evaluation framework**: Complete with 6 comprehensive scripts
 - **Phase 2 optimization framework**: Complete with 5 optimization scripts
 - Advanced script templates with comprehensive docstrings
 
-### 🚧 Implementation Required
+### Implementation Required
 - **Phase 3-6 Frameworks**: Full implementation of advanced features (currently documented with TODO markers)
 
 ## Development Best Practices
@@ -156,6 +156,6 @@ python scripts/deployment/blue_green_deploy.py --target production
 
 ## Reference Documentation
 
-- **[Pre-Deployment Testing Plan](../PRE_DEPLOYMENT_TESTING_PLAN.md)**: Comprehensive 8-week optimization methodology
+- **[Pre-Deployment Testing Plan](../documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Comprehensive 8-week optimization methodology
 - **[System Design](../docs/system_design.md)**: Overall architecture and component relationships
 - **[Operations Runbook](../docs/ops_runbook.md)**: Production operations and troubleshooting guide

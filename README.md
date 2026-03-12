@@ -58,8 +58,8 @@ See [`docs/code_analysis_baseline/`](docs/code_analysis_baseline/) for complete 
 **Code Documentation:**
 - **18,000+ Lines of Analysis**: Comprehensive model optimization code documentation and architectural analysis
 - **Seven Complete Script Analyses**: Detailed documentation of all model optimization components
-- **Optimization Guide**: Complete [`MODEL_OPTIMIZATION_GUIDE.md`](MODEL_OPTIMIZATION_GUIDE.md) for production implementation
-- **Lessons Learned**: Comprehensive [`LESSONS_LEARNED.md`](LESSONS_LEARNED.md) documenting successes and failures
+- **Optimization Guide**: Complete [`MODEL_OPTIMIZATION_GUIDE.md`](guides/MODEL_OPTIMIZATION_GUIDE.md) for production implementation
+- **Lessons Learned**: Comprehensive [`LESSONS_LEARNED.md`](documentation/LESSONS_LEARNED.md) documenting successes and failures
 
 **Model Optimization Execution:**
 ```bash
@@ -84,48 +84,167 @@ See [`docs/code_analysis_optimization/`](docs/code_analysis_optimization/) for c
 ## Key Features
 
 - **Ultra-Budget AWS Deployment**: Revolutionary $8-18/month cloud deployment using SQLite vector storage and Lambda Function URLs
+- **Enterprise Security**: API authentication, rate limiting, input sanitization, and comprehensive threat detection
 - **Hybrid Search**: Combines BM25 (sparse) and vector (dense) search for optimal retrieval performance
 - **Advanced PDF Processing**: Automated OCR pipeline with metadata extraction and intelligent chunking
 - **Document Session Isolation**: Clear previous documents option prevents cross-contamination between research sessions
 - **Local LLM Integration**: Ollama-based chat with health monitoring and automatic fallback mechanisms
 - **Research-Focused**: Tailored prompts with citation support and safety guardrails for scientific literature
-- **Professional UI**: Modern Gradio 6.2.0 interface with custom CSS and real-time status monitoring
+- **Professional UI**: Modern Gradio 6.2.0 interface with custom CSS, real-time status monitoring, and security protection
 - **Production Ready**: Three-tier deployment strategy (Ultra-Budget/Balanced/Full) with comprehensive AWS documentation
 - **Analytics & Health**: Built-in usage tracking, performance metrics, and service health dashboards
-- **Professional Landing Page**: FastAPI-powered landing page with analytics and modern design
+- **Professional Landing Page**: FastAPI-powered landing page with analytics, security dashboard, and modern design
 
 ## Architecture
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Gradio UI     │    │  RAG Pipeline   │    │     Ollama      │
-│  (Port 7860)    │───▶│                 │───▶│   LLM Server    │
-│ • Custom CSS    │    │ • Ingestion     │    │  (Port 11434)   │
-│ • Health Monitor│    │ • Indexing      │    │ • Health Checks │
-│ • Doc Sessions  │    │ • Retrieval     │    │ • Model Fallback│
-└─────────────────┘    │ • Embeddings    │    └─────────────────┘
-                       │ • Session Mgmt  │    
-┌─────────────────┐    │ • Clear Index   │    ┌─────────────────┐
-│ Landing Page    │    └─────────────────┘    │   OpenSearch    │
-│  (Port 3000)    │             │             │  (Port 9200)    │
-│ • Analytics     │             └────────────▶│ • Hybrid Search │
-│ • Health Status │                           │ • Index Mgmt    │
-└─────────────────┘                           └─────────────────┘
+### Current Implementation: Enterprise Monolithic RAG Architecture
 
-                    ┌─────────────────────────────────────┐
-                    │        MLOps Testing Framework        │
-                    │  ┌─────────────────────────────────┐ │
-                    │  │  • Baseline Evaluation         │ │
-                    │  │  • Statistical Analysis        │ │
-                    │  │  • A/B Testing Pipeline        │ │
-                    │  │  • Domain Query Generation     │ │
-                    │  │  • Performance Monitoring      │ │
-                    │  │  • Experimental Framework      │ │
-                    │  └─────────────────────────────────┘ │
-                    └─────────────────────────────────────┘
 ```
 
-### MLOps Testing Infrastructure
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                        CURRENT MONOLITHIC ARCHITECTURE (IMPLEMENTED)                   │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                          WEB APPLICATION LAYER                                      │ │
+│  │                                                                                     │ │
+│  │  ┌─────────────────────────┐                 ┌─────────────────────────┐           │ │
+│  │  │    Gradio 6.2 Web UI    │                 │   FastAPI Landing Page  │           │ │
+│  │  │     (Port 7860)         │                 │      (Port 3000)        │           │ │
+│  │  │                         │                 │                         │           │ │
+│  │  │  • Interactive Chat     │                 │  • Security Dashboard   │           │ │
+│  │  │  • Document Upload      │                 │  • Analytics API        │           │ │
+│  │  │  • Health Monitoring    │                 │  • Status Monitoring    │           │ │
+│  │  │  • Session Isolation    │                 │  • API Key Management   │           │ │
+│  │  │  • Real-time Status     │                 │  • Modern Web Design    │           │ │
+│  │  │                         │                 │                         │           │ │
+│  │  │  SECURITY INTEGRATED    │                 │  SECURITY INTEGRATED    │           │ │
+│  │  │  • API Authentication   │                 │  • Rate Limiting        │           │ │
+│  │  │  • Input Sanitization   │                 │  • Threat Detection     │           │ │
+│  │  │  • Rate Limiting        │                 │  • Security Headers     │           │ │
+│  │  │  • File Validation      │                 │  • Admin Analytics      │           │ │
+│  │  └─────────────────────────┘                 └─────────────────────────┘           │ │
+│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                             │                                           │
+│                                             ▼                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                        CORE RAG PROCESSING ENGINE                                   │ │
+│  │                              (Integrated Pipeline)                                  │ │
+│  │                                                                                     │ │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐│ │
+│  │  │   Document      │  │   Embeddings    │  │    Hybrid       │  │   LLM Generation ││ │  
+│  │  │   Ingestion     │  │   & Indexing    │  │   Retrieval     │  │   & Response     ││ │
+│  │  │                 │  │                 │  │                 │  │                  ││ │
+│  │  │ • PDF OCR       │  │ • Sentence-T    │  │ • Vector Search │  │ • Ollama Local   ││ │
+│  │  │ • Text Extract  │  │ • OpenSearch    │  │ • BM25 Sparse   │  │ • Health Monitor ││ │
+│  │  │ • Metadata      │  │ • Vector Store  │  │ • Hybrid Fusion │  │ • Auto Fallback  ││ │
+│  │  │ • Chunking      │  │ • Index Mgmt    │  │ • Re-ranking    │  │ • Context Window ││ │
+│  │  │ • Validation    │  │ • Schema Def    │  │ • Cross-Encoder │  │ • Stream Response││ │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  └──────────────────┘│ │
+│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                             │                                           │
+│                                             ▼                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                          DATA STORAGE & SEARCH                                      │ │
+│  │                                                                                     │ │
+│  │     ┌─────────────────┐              ┌─────────────────┐              ┌──────────┐  │ │
+│  │     │   OpenSearch    │              │  Local Storage  │              │  Config  │  │ │
+│  │     │  (Port 9200)    │              │                 │              │  Files   │  │ │
+│  │     │                 │              │ • Documents     │              │          │  │ │
+│  │     │ • Vector Index  │              │ • Results Cache │              │ • YAML   │  │ │
+│  │     │ • Hybrid Search │              │ • MLOps Data    │              │ • JSON   │  │ │
+│  │     │ • Text Search   │              │ • Analytics     │              │ • Security│ │ │
+│  │     │ • Metadata      │              │ • Logs          │              │ • Monitor│  │ │ │
+│  │     └─────────────────┘              └─────────────────┘              └──────────┘  │ │
+│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                    COMPREHENSIVE MLOPS & MONITORING (IMPLEMENTED)                       │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                          24 PRODUCTION SCRIPTS SUITE                                │ │
+│  │                                                                                     │ │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐│ │
+│  │  │   Evaluation    │  │  Optimization   │  │   A/B Testing   │  │   Monitoring     ││ │
+│  │  │   Pipeline      │  │   Pipeline      │  │   Framework     │  │   & Analytics    ││ │
+│  │  │                 │  │                 │  │                 │  │                  ││ │
+│  │  │ • Baseline      │  │ • Embedding     │  │ • Statistical   │  │ • Production     ││ │
+│  │  │   Evaluation    │  │   Comparison    │  │   Significance  │  │   Monitoring     ││ │
+│  │  │ • Domain Tests  │  │ • Reranking     │  │ • Config Select │  │ • Cost Tracking  ││ │
+│  │  │ • P@5, MRR      │  │ • Performance   │  │ • Experiments   │  │ • Health Checks  ││ │
+│  │  │ • Confidence    │  │ • Cost Analysis │  │ • Grid Search   │  │ • Log Analysis   ││ │
+│  │  │   Intervals     │  │ • Hardware Opt  │  │ • Param Tuning  │  │ • Alerting       ││ │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  └──────────────────┘│ │
+│  │                                                                                     │ │
+│  │  ACHIEVEMENTS: P@5: 0.4 | MRR: 1.0 | 95% Confidence | Hardware Optimized        │ │
+│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                     SECURITY & MONITORING IMPLEMENTATION                            │ │
+│  │                                                                                     │ │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐│ │
+│  │  │  Security       │  │   Monitoring    │  │   Health        │  │   Configuration  ││ │
+│  │  │  Middleware     │  │   System        │  │   Checks        │  │   Management     ││ │
+│  │  │                 │  │                 │  │                 │  │                  ││ │
+│  │  │ • API Keys      │  │ • CloudWatch    │  │ • Ollama Status │  │ • YAML Configs   ││ │
+│  │  │ • Rate Limits   │  │ • Structured    │  │ • Performance   │  │ • Environment    ││ │
+│  │  │ • Input Valid   │  │   Logging       │  │ • Auto Recovery │  │ • Security Rules ││ │ │
+│  │  │ • Threat Detect │  │ • Custom        │  │ • Latency Track │  │ • Alert Rules    ││ │
+│  │  │ • File Scanning │  │   Metrics       │  │ • Health API    │  │ • Monitoring     ││ │
+│  │  │ • CLI Tools     │  │ • Cost Alerts   │  │ • Real-time UI  │  │ • CLI Management ││ │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  └──────────────────┘│ │
+│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                       INFRASTRUCTURE (CURRENT & PLANNED)                                │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  IMPLEMENTED:                            PLANNED FOR FUTURE:                         │
+│  ┌─────────────────────────────────┐      ┌─────────────────────────────────────┐      │
+│  │ • Docker Containerization       │      │ • Terraform Infrastructure         │      │
+│  │ • Docker Compose Orchestration  │      │ • Kubernetes Manifests             │      │
+│  │ • Local Development Setup       │      │ • GitOps CI/CD Pipeline            │      │
+│  │ • Production-Ready Code         │      │ • Multi-Environment Deployment     │      │
+│  │ • AWS Deployment Documentation  │      │ • Auto-scaling & Load Balancing    │      │
+│  │ • Ultra-Budget Architecture     │      │ • Advanced Monitoring Stack       │      │
+│  │ • Security Implementation       │      │ • Service Mesh Implementation      │      │
+│  │ • Comprehensive MLOps           │      │ • Microservices Architecture       │      │
+│  └─────────────────────────────────┘      └─────────────────────────────────────┘      │
+│                                                                                         │
+│  DEPLOYMENT STRATEGY:                                                                 │
+│  Current: Sophisticated monolithic architecture ready for production deployment        │
+│  Future: Gradual evolution to microservices as scale and complexity requirements grow  │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+```
+
+### Key Architectural Innovations
+
+**Ultra-Budget Cloud Deployment**: Revolutionary $8-18/month AWS architecture design using Lambda Function URLs and SQLite vector storage
+
+**Current Technology Stack**: 
+- **Docker Containerization**: Multi-service architecture with dedicated containers for app, landing, and worker processes
+- **FastAPI Landing Page**: High-performance async API with analytics and health monitoring
+- **Gradio 6.2 Interface**: Modern web UI with real-time health monitoring and security integration
+- **OpenSearch Integration**: Production vector search with hybrid retrieval capabilities
+- **Docker Compose**: Streamlined development and production deployment workflows
+
+**Advanced MLOps Pipeline**: 24 production-ready scripts spanning evaluation, optimization, monitoring, and cost analysis
+
+**Comprehensive Evaluation**: Statistical analysis with 95% confidence intervals, A/B testing, and realistic performance metrics
+
+**Production Optimization**: Cross-encoder re-ranking, embedding model comparison, and hardware-specific optimization for M1/M2 Macs
+
+**Enterprise Resilience**: Graceful fallbacks, health monitoring, and CI/CD-ready infrastructure with deterministic testing modes
+
+**Security Implementation**: API authentication, rate limiting, input sanitization, threat detection, and security headers
+
+**Cost Intelligence**: Detailed ROI analysis, scale projections, and multi-tier deployment options from $8/month to enterprise scale
+
+
 
 **Baseline Testing Scripts:**
 | Script | Purpose | Status |
@@ -137,7 +256,7 @@ See [`docs/code_analysis_optimization/`](docs/code_analysis_optimization/) for c
 | `ab_testing/experiment_pipeline.py` | A/B testing and parameter optimization | Complete |
 | `evaluation/generate_test_queries.py` | Query expansion and synthetic dataset creation | Complete |
 
-**Model Optimization Scripts:****
+**Model Optimization Scripts:**
 | Script | Purpose | Status | Key Achievement |
 |--------|---------|--------|-----------------|
 | `optimization/run_model_optimization.py` | Master optimization orchestration pipeline | Complete | Full automation |
@@ -365,7 +484,7 @@ python scripts/reranking_evaluation.py \
 python scripts/m1_optimization.py --enable-mps --optimize-memory
 ```
 
-**Comprehensive Guide:** See [`MODEL_OPTIMIZATION_GUIDE.md`](MODEL_OPTIMIZATION_GUIDE.md) for detailed setup, execution, and troubleshooting.
+**Comprehensive Guide:** See [`MODEL_OPTIMIZATION_GUIDE.md`](guides/MODEL_OPTIMIZATION_GUIDE.md) for detailed setup, execution, and troubleshooting.
 
 **Traditional System Testing:**
 ```bash
@@ -420,7 +539,7 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 See the comprehensive deployment guide:
 - **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Complete deployment guide with three cost-optimized modes
-- **[Pre-Deployment Testing Plan](PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic 8-week optimization and testing plan
+- **[Pre-Deployment Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic 8-week optimization and testing plan
 - **Docker Compose**: Local development configurations
 
 ## Project Structure
@@ -445,12 +564,13 @@ ai_rag_assistant/
 │   ├── embeddings/           # Sentence transformer wrappers
 │   │   ├── __init__.py
 │   │   └── sentence_transformer.py  # Embedding model interface
-│   └── prompts/              # Research-focused prompt templates
-│       ├── guardrails.yaml          # Safety guardrails config
-│       └── research_qa_prompt.yaml  # QA prompt templates
+│   ├── prompts/              # Research-focused prompt templates
+│   │   ├── guardrails.yaml          # Safety guardrails config
+│   │   └── research_qa_prompt.yaml  # QA prompt templates
+│   └── security.py           # Security module (API auth, rate limiting, input sanitization)
 ├── deployment/               # Web interface & deployment
 │   ├── __init__.py           # Python package initialization
-│   ├── app_gradio.py         # Main Gradio application 
+│   ├── app_gradio.py         # Main Gradio application with security enhancements
 │   └── aws/                  # AWS deployment system
 │       ├── AWS_DEPLOYMENT_GUIDE.md  # Consolidated deployment guide
 │       └── docker/           # Docker deployment configurations
@@ -467,6 +587,7 @@ ai_rag_assistant/
 ├── landing/                  # Professional landing page
 │   ├── __init__.py
 │   ├── main.py               # FastAPI app with modern lifespan events
+│   ├── secure_main.py        # Security-enhanced FastAPI app with analytics
 │   └── templates/            # HTML templates
 │       └── index.html        # Professional landing page
 ├── scripts/                  # Operational utilities & MLOps testing
@@ -474,6 +595,7 @@ ai_rag_assistant/
 │   ├── ingest_watch.py             # File watcher for ingestion
 │   ├── run_ingestion.py            # Batch processing pipeline
 │   ├── smoke_test.py               # End-to-end system testing
+│   ├── security_manager.py         # Security management CLI tool
 │   ├── ab_testing/experiment_pipeline.py # A/B testing & parameter optimization
 │   ├── m1_optimization.py          # M1/M2 Mac hardware optimization
 │   ├── optimization/performance_cost_analysis.py # Performance vs cost trade-off analysis
@@ -509,11 +631,12 @@ ai_rag_assistant/
 │       ├── production_validation.py # Production validation and health checks
 │       └── estimate_aws_costs.py   # AWS cost estimation framework
 ├── configs/                  # Configuration management
-│   ├── app_settings.yaml           # Application configuration settings
-│   ├── logging.yaml                # Logging configuration
-│   ├── secrets.template.env        # Environment variables template
+│   ├── ab_testing_config.yaml      # A/B testing configuration
+│   ├── alerting_rules.yaml         # CloudWatch alerting rules configuration
+│   ├── baseline_config.json        # Baseline evaluation configuration
 │   ├── monitoring_config.yaml      # Production monitoring configuration
-│   └── alerting_rules.yaml         # CloudWatch alerting rules configuration
+│   ├── optimization_config.yaml    # Model optimization configuration
+│   └── security_config.yaml        # Security settings (API auth, rate limits, input validation)
 ├── tests/                    # Unit & integration tests
 │   └── test_retrieval.py     # Search functionality tests
 ├── data/                     # Data storage
@@ -526,10 +649,13 @@ ai_rag_assistant/
 │           ├── reranking_evaluation.json     # Cross-encoder P@5: 0.4, Hybrid P@5: 0.4
 │           ├── combined_analysis.json        # Aggregated metrics
 │           └── optimization_summary_report.json    # Executive summary
-├── LESSONS_LEARNED.md        # Comprehensive success/failure analysis
-├── BASELINE_EVALUATION_GUIDE.md # Baseline testing framework
-├── MODEL_OPTIMIZATION_GUIDE.md # Model optimization guide
-├── PRE_DEPLOYMENT_TESTING_PLAN.md   # 8-week optimization plan
+├── guides/                   # Implementation guides
+│   ├── BASELINE_EVALUATION_GUIDE.md # Baseline testing framework
+│   ├── MODEL_OPTIMIZATION_GUIDE.md # Model optimization guide
+│   └── SECURITY_GUIDE.md           # Security implementation and setup guide
+├── documentation/            # Project documentation
+│   ├── LESSONS_LEARNED.md        # Comprehensive success/failure analysis
+│   └── PRE_DEPLOYMENT_TESTING_PLAN.md   # 8-week optimization plan
 ├── TECH_STACK_DOCUMENTATION.md      # Technology stack reference
 ├── TECH_STACK_REFERENCE.md          # Technical interview reference
 ├── AI_ENGINEER_WORK_SAMPLE.md       # Work sample documentation
@@ -595,14 +721,14 @@ python scripts/optimization/reranking_evaluation.py --strategies cross_encoder,h
 ## Documentation
 
 ### Technical Analysis
-- **[Baseline Evaluation Guide](BASELINE_EVALUATION_GUIDE.md)**: Baseline testing framework and methodology
-- **[Model Optimization Guide](MODEL_OPTIMIZATION_GUIDE.md)**: Model optimization implementation guide
-- **[Lessons Learned](LESSONS_LEARNED.md)**: Comprehensive success/failure analysis
+- **[Baseline Evaluation Guide](guides/BASELINE_EVALUATION_GUIDE.md)**: Baseline testing framework and methodology
+- **[Model Optimization Guide](guides/MODEL_OPTIMIZATION_GUIDE.md)**: Model optimization implementation guide
+- **[Lessons Learned](documentation/LESSONS_LEARNED.md)**: Comprehensive success/failure analysis
 - **Internal Analysis**: 34,000+ lines of detailed code analysis (local docs/ directory)
 
 ### Deployment & Operations
 - **[AWS Deployment](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Three cost-optimized deployment modes
-- **[Testing Plan](PRE_DEPLOYMENT_TESTING_PLAN.md)**: 8-week optimization methodology
+- **[Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: 8-week optimization methodology
 
 ## Troubleshooting
 
