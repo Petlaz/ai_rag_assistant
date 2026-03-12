@@ -1,0 +1,430 @@
+# CloudWatch Alerting Rules Configuration
+# =====================================
+#
+# Comprehensive alerting configuration for Quest Analytics RAG Assistant
+# production monitoring with intelligent thresholds, escalation policies,
+# and cost-optimized alerting strategy for ultra-budget deployment.
+
+# Global Alerting Configuration
+global:
+  enabled: true
+  environment: "production"
+  namespace: "RAGAssistant"
+  
+  # Default settings for all alerts
+  defaults:
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    treat_missing_data: "notBreaching"
+    comparison_operator: "GreaterThanThreshold"
+    
+  # Cost optimization
+  budget_mode: "ultra_budget"
+  max_alerts_per_hour: 10
+  alert_deduplication_minutes: 15
+
+# Performance Alerts
+performance_alerts:
+  
+  # High response time alert
+  high_response_time:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "QueryResponseTime"
+    namespace: "RAGAssistant/Performance"
+    threshold: 2000  # 2 seconds
+    period: 300  # 5 minutes
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    description: "Query response time exceeds 2 seconds"
+    alarm_actions:
+      - "sns_topic"
+      - "auto_scaling"
+    ok_actions:
+      - "sns_topic"
+      
+  # Critical response time alert
+  critical_response_time:
+    enabled: true
+    severity: "CRITICAL"
+    metric_name: "QueryResponseTime"
+    namespace: "RAGAssistant/Performance"
+    threshold: 5000  # 5 seconds
+    period: 300
+    evaluation_periods: 1
+    datapoints_to_alarm: 1
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    description: "Query response time critically high (>5s)"
+    alarm_actions:
+      - "sns_topic"
+      - "pager_duty"  # If configured
+      
+  # Performance degradation alert
+  performance_degradation:
+    enabled: true
+    severity: "MEDIUM"
+    metric_name: "PrecisionAtFive"
+    namespace: "RAGAssistant/Performance"
+    threshold: 0.68  # 5% below baseline of 0.72
+    period: 900  # 15 minutes
+    evaluation_periods: 3
+    datapoints_to_alarm: 2
+    comparison_operator: "LessThanThreshold"
+    statistic: "Average"
+    
+    description: "Retrieval precision dropping below acceptable threshold"
+    alarm_actions:
+      - "sns_topic"
+      - "mlflow_alert"
+      
+  # MRR degradation alert
+  mrr_degradation:
+    enabled: true
+    severity: "MEDIUM"
+    metric_name: "MRR"
+    namespace: "RAGAssistant/Performance"
+    threshold: 0.72  # 10% below baseline of 0.80
+    period: 900
+    evaluation_periods: 3
+    datapoints_to_alarm: 2
+    comparison_operator: "LessThanThreshold" 
+    statistic: "Average"
+    
+    description: "Mean Reciprocal Rank dropping significantly"
+    alarm_actions:
+      - "sns_topic"
+
+# Error and Availability Alerts
+error_alerts:
+  
+  # High error rate
+  high_error_rate:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "ErrorRate"
+    namespace: "RAGAssistant/Errors"
+    threshold: 5.0  # 5% error rate
+    period: 300
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    description: "Error rate exceeds 5%"
+    alarm_actions:
+      - "sns_topic"
+      - "auto_scaling"
+      
+  # Critical error rate
+  critical_error_rate:
+    enabled: true
+    severity: "CRITICAL"  
+    metric_name: "ErrorRate"
+    namespace: "RAGAssistant/Errors"
+    threshold: 15.0  # 15% error rate
+    period: 300
+    evaluation_periods: 1
+    datapoints_to_alarm: 1
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    description: "Critical error rate (>15%) - immediate action required"
+    alarm_actions:
+      - "sns_topic"
+      - "pager_duty"
+      - "auto_rollback"  # If implemented
+      
+  # Timeout rate alert
+  high_timeout_rate:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "TimeoutRate"
+    namespace: "RAGAssistant/Errors"
+    threshold: 10.0  # 10% timeout rate
+    period: 600  # 10 minutes
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    description: "Query timeout rate exceeds 10%"
+    alarm_actions:
+      - "sns_topic"
+
+# Cost Monitoring Alerts
+cost_alerts:
+  
+  # Daily budget alert  
+  daily_budget_exceeded:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "EstimatedCharges"
+    namespace: "AWS/Billing"
+    threshold: 0.60  # $0.60 daily threshold for $18/month budget
+    period: 3600  # 1 hour 
+    evaluation_periods: 1
+    datapoints_to_alarm: 1
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Maximum"
+    
+    dimensions:
+      Currency: "USD"
+      ServiceName: "AmazonBedrock"
+      
+    description: "Daily costs approaching budget limit"
+    alarm_actions:
+      - "sns_topic"
+      - "cost_optimization"
+      
+  # Monthly budget alert
+  monthly_budget_alert:
+    enabled: true
+    severity: "MEDIUM"
+    metric_name: "EstimatedCharges"
+    namespace: "AWS/Billing" 
+    threshold: 15.0  # 80% of $18 budget
+    period: 86400  # Daily check
+    evaluation_periods: 1
+    datapoints_to_alarm: 1
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Maximum"
+    
+    dimensions:
+      Currency: "USD"
+      
+    description: "Monthly costs approaching 80% of budget"
+    alarm_actions:
+      - "sns_topic"
+      - "email"
+      
+  # High cost per query
+  high_cost_per_query:
+    enabled: true
+    severity: "MEDIUM"
+    metric_name: "TotalCostPerQuery"
+    namespace: "RAGAssistant/Costs"
+    threshold: 0.003  # $0.003 per query
+    period: 900  # 15 minutes
+    evaluation_periods: 3
+    datapoints_to_alarm: 2
+    comparison_operator: "GreaterThanThreshold" 
+    statistic: "Average"
+    
+    description: "Cost per query exceeding expected threshold"
+    alarm_actions:
+      - "sns_topic"
+
+# Resource Utilization Alerts  
+resource_alerts:
+  
+  # Lambda memory usage
+  high_memory_usage:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "MemoryUtilization"
+    namespace: "AWS/Lambda"
+    threshold: 90.0  # 90% of allocated memory
+    period: 300
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    dimensions:
+      FunctionName: "rag-assistant-app"
+      
+    description: "Lambda memory usage critical"
+    alarm_actions:
+      - "sns_topic"
+      - "auto_scaling"
+      
+  # Lambda duration alert
+  high_duration:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "Duration"  
+    namespace: "AWS/Lambda"
+    threshold: 25000  # 25 seconds (near 30s limit)
+    period: 300
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Average"
+    
+    dimensions:
+      FunctionName: "rag-assistant-app"
+      
+    description: "Lambda execution time approaching limit"
+    alarm_actions:
+      - "sns_topic"
+      
+  # Lambda throttling
+  lambda_throttles:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "Throttles"
+    namespace: "AWS/Lambda" 
+    threshold: 0  # Any throttling
+    period: 300
+    evaluation_periods: 1
+    datapoints_to_alarm: 1
+    comparison_operator: "GreaterThanThreshold"
+    statistic: "Sum"
+    
+    dimensions:
+      FunctionName: "rag-assistant-app"
+      
+    description: "Lambda function being throttled"
+    alarm_actions:
+      - "sns_topic"
+      - "auto_scaling"
+
+# Health Check Alerts
+health_alerts:
+  
+  # Service availability
+  service_unavailable:
+    enabled: true
+    severity: "CRITICAL"
+    metric_name: "HealthCheck"
+    namespace: "RAGAssistant/Health"
+    threshold: 1  # 1 = healthy, 0 = unhealthy
+    period: 300
+    evaluation_periods: 2
+    datapoints_to_alarm: 2
+    comparison_operator: "LessThanThreshold"
+    statistic: "Average"
+    
+    description: "RAG service health check failing"
+    alarm_actions:
+      - "sns_topic" 
+      - "pager_duty"
+      - "auto_restart"  # If implemented
+      
+  # Dependency failures
+  dependency_failure:
+    enabled: true
+    severity: "HIGH"
+    metric_name: "DependencyHealth"
+    namespace: "RAGAssistant/Health"
+    threshold: 1
+    period: 300
+    evaluation_periods: 3
+    datapoints_to_alarm: 2
+    comparison_operator: "LessThanThreshold"
+    statistic: "Average"
+    
+    description: "External dependency health check failing"
+    alarm_actions:
+      - "sns_topic"
+
+# Notification Channels
+notification_channels:
+  
+  # SNS topic for general alerts
+  sns_topic:
+    type: "sns"
+    topic_arn: ""  # Set during deployment
+    protocol: "email"
+    endpoint: ""   # Set with deployment email
+    
+  # Slack integration (optional)
+  slack:
+    type: "slack"
+    enabled: false
+    webhook_url: ""  # Set in environment
+    channel: "#rag-alerts"
+    mentions: "@here"
+    
+  # Email notifications
+  email:
+    type: "email"
+    enabled: true
+    recipients:
+      - ""  # Set deployment email
+    subject_prefix: "[RAG-ALERT]"
+    
+  # PagerDuty integration (optional)
+  pager_duty:
+    type: "pagerduty"
+    enabled: false
+    integration_key: ""  # Set if using PagerDuty
+
+# Escalation Policies  
+escalation:
+  enabled: true
+  
+  # Escalation levels
+  levels:
+    level_1:
+      duration_minutes: 15
+      actions: ["sns_topic", "email"]
+      
+    level_2: 
+      duration_minutes: 30
+      actions: ["sns_topic", "email", "slack"]
+      
+    level_3:
+      duration_minutes: 60
+      actions: ["sns_topic", "email", "slack", "pager_duty"]
+      
+  # Automatic escalation rules
+  auto_escalation:
+    critical_alerts: 
+      escalate_after_minutes: 5
+      max_level: 3
+      
+    high_alerts:
+      escalate_after_minutes: 15
+      max_level: 2
+      
+    medium_alerts:
+      escalate_after_minutes: 30
+      max_level: 1
+
+# Alert Suppression and Maintenance
+suppression:
+  enabled: true
+  
+  # Maintenance windows
+  maintenance_windows:
+    - name: "weekly_maintenance"
+      day: "sunday"
+      start_time: "02:00"
+      end_time: "04:00"
+      timezone: "UTC"
+      suppress_alerts: ["medium", "low"]
+      
+  # Alert deduplication
+  deduplication:
+    enabled: true
+    window_minutes: 15
+    max_alerts_per_window: 3
+    
+  # Alert grouping
+  grouping:
+    enabled: true
+    group_by: ["severity", "service"]
+    max_group_size: 5
+
+# Testing and Validation
+testing:
+  enabled: true
+  
+  # Test alert functionality
+  test_alerts:
+    enabled: true
+    schedule: "weekly"
+    test_types: ["sns", "email"]
+    
+  # Alert validation
+  validation:
+    enabled: true
+    check_thresholds: true
+    validate_channels: true
+    test_escalation: false  # Set to true for comprehensive testing

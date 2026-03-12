@@ -1,4 +1,30 @@
-"""CLI for ingesting PDFs into the Quest Analytics RAG pipeline."""
+"""
+Batch PDF Ingestion Pipeline Runner
+
+This script provides batch processing capabilities for ingesting multiple PDF documents
+into the RAG system, with support for index management, metadata extraction,
+and parallel processing optimization.
+
+Features:
+- Batch PDF document processing
+- Automatic index clearing and management
+- Parallel processing support
+- Progress tracking and logging
+- Error handling and recovery
+- Metadata extraction integration
+- Configurable processing parameters
+- Resume capability for interrupted jobs
+
+Usage:
+    # Ingest PDFs with automatic index clearing
+    python scripts/run_ingestion.py /path/to/pdfs/*.pdf --index quest-research --clear
+    
+    # Append to existing index
+    python scripts/run_ingestion.py documents/*.pdf --index quest-research
+    
+    # Parallel processing with custom workers
+    python scripts/run_ingestion.py pdfs/ --workers 4 --batch-size 10
+"""
 
 from __future__ import annotations
 

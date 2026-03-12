@@ -1,4 +1,31 @@
-"""Hybrid index writer that combines sparse text and dense embeddings."""
+"""
+Hybrid Indexing Engine
+
+This module implements hybrid indexing that combines sparse BM25 text matching
+with dense vector embeddings, providing the best of both retrieval approaches
+for comprehensive document search capabilities.
+
+Features:
+- Dual-mode indexing (BM25 + vector embeddings)
+- Embedding model integration
+- Bulk document processing
+- Index management (add/clear operations)
+- Document chunk optimization
+- Memory-efficient batch processing
+- Error handling and recovery
+- Protocol-based embedding interface
+
+Architecture:
+- EmbeddingModel protocol for flexible model integration
+- HybridIndexer class for coordinated indexing
+- OpenSearch backend integration
+- Chunked document processing
+
+Usage:
+    indexer = HybridIndexer(embedding_model)
+    indexer.add_documents(document_chunks, 'research-index')
+    indexer.clear_documents('research-index')
+"""
 
 from __future__ import annotations
 

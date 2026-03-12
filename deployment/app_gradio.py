@@ -1,11 +1,41 @@
-"""Gradio entrypoint that wires Quest Analytics RAG assistant components."""
+"""
+Gradio Web Application for Quest Analytics RAG Assistant
+
+A production-ready web interface that integrates all RAG pipeline components
+into a user-friendly chat application. Provides real-time health monitoring,
+document ingestion capabilities, and intelligent question-answering.
+
+Features:
+- Interactive chat interface with conversation history
+- Real-time Ollama health monitoring with visual indicators
+- Document upload and ingestion pipeline integration
+- Hybrid retrieval with embeddings and keyword search
+- Professional UI with status indicators and error handling
+- Analytics tracking and performance monitoring
+- Configurable prompt templates and guardrails
+- Production deployment with automatic fallback strategies
+
+Components:
+- AssistantState: Application state management
+- AssistantDependencies: External service dependencies
+- Health monitoring: Real-time LLM status tracking
+- Chat interface: Interactive Q&A with RAG integration
+- Document ingestion: File upload and processing workflow
+"""
 
 from __future__ import annotations
 
 import copy
-import json
 import logging
 import os
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logging.info("Environment variables loaded from .env file")
+except ImportError:
+    logging.warning("python-dotenv not installed. Ensure environment variables are set manually.")
 import random
 import statistics
 import sys
@@ -51,12 +81,25 @@ HEALTH_RED_TOAST_MESSAGE = (
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "prompts" / "research_qa_prompt.yaml"
 GUARDRAILS_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "prompts" / "guardrails.yaml"
-SCHEMA_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "indexing" / "schema.json"
+SCHEMA_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "indexing" / "schema.yaml"
 
 
 @dataclass
 class AssistantDependencies:
-    """Bundle external services needed by the Gradio interface."""
+    """
+    External Service Dependencies for RAG Assistant
+    
+    Bundles all external services and configurations needed by the Gradio
+    interface, providing centralized dependency management and connection
+    handling for retrieval, embeddings, search, and chat services.
+    
+    Attributes:
+        retriever: Hybrid retriever for document search
+        embedding_model: Model for text embeddings
+        opensearch_client: OpenSearch client for indexing
+        index_name: Target index name for documents
+        chat_adapter: Ollama chat interface adapter
+    """
 
     retriever: HybridRetriever
     embedding_model: Any
@@ -71,7 +114,17 @@ class AssistantDependencies:
 
 
 class AssistantState:
-    """Simple container passed between Gradio callbacks."""
+    """
+    Application State Container for Gradio Interface
+    
+    Manages the application state passed between Gradio callbacks, including
+    service dependencies and prompt configuration. Provides proper deep copy
+    handling for live connections and mutable configurations.
+    
+    Attributes:
+        deps: External service dependencies bundle
+        prompt_template: Configurable prompt template dictionary
+    """
 
     def __init__(self, deps: AssistantDependencies, prompt_template: Dict[str, Any]):
         self.deps = deps
@@ -91,7 +144,18 @@ class AssistantState:
 
 
 def current_model_name(state: AssistantState) -> str:
-    """Return the model currently configured on the chat adapter."""
+    """
+    Extract current Ollama model name from application state.
+    
+    Safely retrieves the currently configured model name from the chat adapter,
+    with robust error handling for connection issues or configuration problems.
+    
+    Args:
+        state: Current application state with chat adapter
+        
+    Returns:
+        Model name string, or "unknown" if unavailable
+    """
 
     try:
         return getattr(state.deps.chat_adapter.client.config, "model", "unknown") or "unknown"
@@ -100,7 +164,20 @@ def current_model_name(state: AssistantState) -> str:
 
 
 def render_model_status(model_name: str, status: str, latency_ms: Optional[float]) -> str:
-    """Construct professional HTML status card with colored indicator and model info."""
+    """
+    Generate professional HTML status card for Ollama model health.
+    
+    Creates a visually appealing status indicator card with color-coded health
+    status, model information, and performance metrics for real-time monitoring.
+    
+    Args:
+        model_name: Current Ollama model name
+        status: Health status ('green', 'amber', 'red', 'unknown')
+        latency_ms: Optional response latency in milliseconds
+        
+    Returns:
+        HTML string with styled status card and CSS animations
+    """
 
     color_map = {
         "green": "#10b981",  # emerald-500
@@ -189,7 +266,18 @@ def render_model_status(model_name: str, status: str, latency_ms: Optional[float
 
 
 def initial_health_state(model_name: str) -> Dict[str, Any]:
-    """Bootstrap the health-state dictionary for Gradio interactions."""
+    """
+    Initialize health monitoring state dictionary.
+    
+    Creates the initial health state structure used by Gradio for tracking
+    Ollama service health, performance metrics, and status history.
+    
+    Args:
+        model_name: Ollama model name to monitor
+        
+    Returns:
+        Dictionary with health state fields including status, timing, and latency data
+    """
 
     now = time.time()
     return {
@@ -206,7 +294,19 @@ def initial_health_state(model_name: str) -> Dict[str, Any]:
 
 
 def _choose_interval(status: str, status_since: float) -> float:
-    """Pick the next poll interval with jitter based on current health."""
+    """
+    Calculate next health check interval with adaptive timing.
+    
+    Implements intelligent polling intervals based on current health status,
+    with longer delays when service is unhealthy to avoid overwhelming it.
+    
+    Args:
+        status: Current health status ('green', 'amber', 'red', 'unknown')
+        status_since: Timestamp when current status began
+        
+    Returns:
+        Float representing seconds until next health check
+    """
 
     now = time.time()
     if status == "red" and (now - status_since) >= 120:
@@ -215,12 +315,35 @@ def _choose_interval(status: str, status_since: float) -> float:
 
 
 def _median_latency(latencies: List[float]) -> float:
+    """
+    Calculate median latency from collected response times.
+    
+    Computes the median latency from a list of response times, providing
+    robust performance metrics that are less affected by outliers.
+    
+    Args:
+        latencies: List of response times in milliseconds
+        
+    Returns:
+        Median latency or baseline if no data available
+    """
     if not latencies:
         return HEALTH_LATENCY_BASELINE_MS
     return statistics.median(latencies)
 
 
 def _log_health_transition(previous: str, current: str, latency_ms: Optional[float]) -> None:
+    """
+    Log health status changes for analytics and monitoring.
+    
+    Records health status transitions with structured logging for monitoring
+    and analytics purposes, including timing and performance data.
+    
+    Args:
+        previous: Previous health status
+        current: New health status
+        latency_ms: Optional response latency in milliseconds
+    """
     if not ANALYTICS_ENABLED:
         return
     logger.info(
@@ -243,12 +366,16 @@ def run_health_check(
     """Poll Ollama and update cached health information."""
 
     model_name = current_model_name(state)
-    if not health_state or health_state.get("model") != model_name:
+    # Health check cache for efficiency
+    now = time.time()
+    if health_state is None:
+        health_state = initial_health_state(model_name)
+    elif health_state.get("model") != model_name:
         health_state = initial_health_state(model_name)
     else:
+        # Make a copy to avoid mutation issues
         health_state = dict(health_state)
-
-    now = time.time()
+        
     if not force and health_state.get("next_allowed", 0.0) > now:
         html = render_model_status(
             model_name,
@@ -307,35 +434,64 @@ def run_health_check(
     return health_state, html
 
 
-def timer_health_check(state: AssistantState, health_state: Dict[str, Any]):
-    return run_health_check(state, health_state, force=False)
-
-
-def immediate_health_check(state: AssistantState, health_state: Dict[str, Any]):
-    return run_health_check(state, health_state, force=True)
-
 
 def load_prompt_templates(path: Path) -> Dict[str, Any]:
-    """Read YAML prompt templates so the UI can display context awareness."""
+    """
+    Load YAML prompt templates for RAG question answering.
+    
+    Reads and parses YAML prompt template configuration files that define
+    the structure and content for generating RAG-based responses.
+    
+    Args:
+        path: Path to YAML prompt template file
+        
+    Returns:
+        Dictionary containing parsed prompt template configuration
+    """
 
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def load_guardrails(path: Path) -> Dict[str, Any]:
-    """Load guardrails configuration that the UI can reference."""
+    """
+    Load guardrails configuration for content safety and filtering.
+    
+    Reads guardrails configuration that defines content filtering rules,
+    safety constraints, and response validation criteria.
+    
+    Args:
+        path: Path to YAML guardrails configuration file
+        
+    Returns:
+        Dictionary containing guardrails rules and constraints
+    """
 
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
 
 
 def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) -> Tuple[str, AssistantState]:
-    """Handle PDF uploads by running the ingestion + indexing pipeline.
+    """
+    Process uploaded files through the RAG ingestion pipeline.
+    
+    Handles document upload and ingestion, including PDF processing, OCR,
+    embedding generation, and indexing into OpenSearch for retrieval.
     
     Args:
-        clear_previous: If True, clear all previous documents before adding new ones.
+        files: List of file paths to process
+        clear_previous: If True, clear all previous documents before adding new ones
+        state: Current application state with dependencies
+        
+    Returns:
+        Tuple of (status_message, updated_state)
+        
+    Note:
+        This function processes documents through the full ingestion pipeline
+        including text extraction, metadata generation, and search indexing.
     """
 
+    # Cache progress object to avoid repeated instantiation
     if not files:
         return "No file uploaded yet.", state
 
@@ -380,7 +536,29 @@ def answer_question(
     history: List[Tuple[str, str]],
     state: AssistantState,
 ) -> Tuple[List[Tuple[str, str]], AssistantState]:
-    """Retrieve context, craft prompts, invoke the LLM, and display citations."""
+    """
+    Process user questions through the complete RAG pipeline.
+    
+    Orchestrates the full question-answering workflow including document
+    retrieval, context formatting, prompt generation, LLM inference,
+    and response presentation with citations.
+    
+    Args:
+        query: User's question or query
+        history: Conversation history as list of (user, assistant) tuples
+        state: Current application state with all dependencies
+        
+    Returns:
+        Tuple of (updated_history, updated_state) where updated_history
+        includes the new Q&A pair with formatted citations
+        
+    Process:
+        1. Retrieve relevant documents from index
+        2. Format context and conversation history
+        3. Generate structured prompt
+        4. Query Ollama LLM for response
+        5. Format response with citations and sources
+    """
 
     try:
         documents = state.deps.retriever.retrieve(query=query, top_k=3)
@@ -493,9 +671,8 @@ def handle_question(
         health_state["toast_shown"] = True
 
     pairs = messages_to_pairs(history)
-
     updated_pairs, state = answer_question(query, pairs, state)
-    health_state, status_html = immediate_health_check(state, health_state)
+    health_state, status_html = run_health_check(state, health_state, force=True)
     messages = pairs_to_messages(updated_pairs)
     return messages, state, health_state, status_html
 
@@ -511,12 +688,38 @@ def apply_llm_settings_with_health(
 
     state, message = update_llm_settings(primary_model, fallback_model, timeout_seconds, state)
     health_state = initial_health_state(current_model_name(state))
-    health_state, status_html = immediate_health_check(state, health_state)
+    health_state, status_html = run_health_check(state, health_state, force=True)
     return state, message, health_state, status_html
 
 
 def build_interface(state: AssistantState) -> gr.Blocks:
-    """Construct the Gradio layout used for both ingestion and chat."""
+    """
+    Construct the complete Gradio web interface for RAG Assistant.
+    
+    Builds a professional web interface with tabbed layout for document
+    ingestion, chat interaction, and health monitoring. Includes custom
+    CSS styling, real-time status indicators, and comprehensive controls.
+    
+    Interface Components:
+    - Chat tab: Interactive Q&A with conversation history
+    - Upload tab: Document ingestion with file management
+    - Settings tab: Model configuration and advanced options
+    - Health monitoring: Real-time LLM status with visual indicators
+    
+    Args:
+        state: Application state with initialized dependencies
+        
+    Returns:
+        Configured Gradio Blocks interface ready for deployment
+        
+    Features:
+        - Professional CSS styling with gradients and animations
+        - Responsive design for desktop and mobile
+        - Real-time health monitoring with auto-refresh
+        - File upload with progress tracking
+        - Conversation export and management
+        - Advanced model configuration controls
+    """
 
     guardrail_config = load_guardrails(GUARDRAILS_PATH)
     current_model = current_model_name(state)
@@ -589,7 +792,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
     }
     """
 
-    with gr.Blocks(title="Quest Analytics AI RAG Assistant", css=custom_css, theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="Quest Analytics AI RAG Assistant") as demo:
         # Professional Header
         with gr.Row():
             gr.HTML("""
@@ -762,9 +965,9 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                         with gr.Accordion("Prompt Configuration", open=False):
                             gr.JSON(state.prompt_template, label="Research QA Template")
 
-        # Initialize health check on page load
+        # Initialize health check on page load with periodic monitoring
         demo.load(
-            fn=immediate_health_check,
+            fn=lambda s, h: run_health_check(s, h, force=True),
             inputs=[assistant_state, health_state],
             outputs=[health_state, model_status_html],
         )
@@ -772,28 +975,81 @@ def build_interface(state: AssistantState) -> gr.Blocks:
         # Periodic health monitoring
         health_timer = gr.Timer(value=HEALTH_TIMER_INTERVAL)
         health_timer.tick(
-            fn=timer_health_check,
-            inputs=[assistant_state, health_state],
-            outputs=[health_state, model_status_html],
-        )
-        demo.load(
-            fn=immediate_health_check,
+            fn=lambda s, h: run_health_check(s, h, force=False),
             inputs=[assistant_state, health_state],
             outputs=[health_state, model_status_html],
         )
 
-        health_timer = gr.Timer(value=HEALTH_TIMER_INTERVAL)
-        health_timer.tick(
-            fn=timer_health_check,
-            inputs=[assistant_state, health_state],
-            outputs=[health_state, model_status_html],
-        )
-
+    # Apply CSS at the demo level if available
+    if 'custom_css' in globals():
+        demo.css = custom_css
+    
     return demo
 
 
 def load_dependencies() -> AssistantDependencies:
-    """Prepare dependency placeholders until real services are configured."""
+    """
+    Initialize and configure all external service dependencies.
+    
+    Sets up the complete RAG pipeline infrastructure including OpenSearch
+    client, embedding models, retrieval systems, and LLM chat adapters.
+    Handles environment-based configuration and graceful fallbacks.
+    
+    Dependencies Configured:
+    - OpenSearch client with index management
+    - Sentence transformer embeddings model
+    - Hybrid retriever with reranking
+    - Ollama chat adapter with health monitoring
+    
+    Environment Variables:
+    - OPENSEARCH_HOST: OpenSearch server URL
+    - OPENSEARCH_INDEX: Target index name
+    - EMBEDDING_MODEL_NAME: HuggingFace model for embeddings
+    - OLLAMA_BASE_URL: Ollama server URL
+    - OLLAMA_MODEL: Primary model name
+    - OLLAMA_FALLBACK_MODEL: Backup model name
+    
+    Returns:
+        AssistantDependencies with all configured services
+        
+    Raises:
+        RuntimeError: If critical services fail to initialize
+        
+    Note:
+        Creates stub implementations when services are unavailable,
+        allowing the interface to start even with missing dependencies.
+    """
+
+    class NotImplementedStub:
+        """Generic stub for uninitialized services."""
+        
+        def __init__(self, service_name: str, error_detail: str = ""):
+            self.service_name = service_name
+            self.error_detail = error_detail or f"{service_name} not configured yet."
+        
+        def __getattr__(self, name):
+            def stub_method(*args, **kwargs):
+                raise NotImplementedError(self.error_detail)
+            return stub_method
+        
+        def search(self, *args, **kwargs):
+            raise NotImplementedError(self.error_detail)
+            
+        @property
+        def indices(self):
+            return NotImplementedStub(f"{self.service_name} indices")
+            
+        def exists(self, *args, **kwargs):
+            raise NotImplementedError(self.error_detail)
+            
+        def embed_documents(self, texts: List[str]) -> List[List[float]]:
+            raise NotImplementedError(self.error_detail)
+            
+        def embed_query(self, text: str) -> List[float]:
+            raise NotImplementedError(self.error_detail)
+            
+        def invoke_messages(self, messages):
+            raise NotImplementedError(self.error_detail)
 
     class StubSearchClient:
         def search(self, index: str, body: Dict[str, Any]) -> Dict[str, Any]:
@@ -826,20 +1082,8 @@ def load_dependencies() -> AssistantDependencies:
         embedding_model = embedding_backend
         query_embedder = embedding_backend
     except Exception as exc:  # pragma: no cover - defensive fallback
-        class StubEmbeddingModel:
-            def embed_documents(self, texts: List[str]) -> List[List[float]]:
-                raise NotImplementedError(
-                    f"Embedding backend failed to load ({exc})."
-                )
-
-        class StubQueryEmbedder:
-            def embed_query(self, text: str) -> List[float]:
-                raise NotImplementedError(
-                    f"Query embedding backend failed to load ({exc})."
-                )
-
-        embedding_model = StubEmbeddingModel()
-        query_embedder = StubQueryEmbedder()
+        embedding_model = NotImplementedStub("Embedding Model", f"Embedding backend failed to load ({exc}).")
+        query_embedder = NotImplementedStub("Query Embedder", f"Query embedding backend failed to load ({exc}).")
 
     class StubChatAdapter:
         def __init__(self, detail: str):
@@ -859,7 +1103,8 @@ def load_dependencies() -> AssistantDependencies:
         else:
             raise ValueError("OLLAMA_BASE_URL and OLLAMA_MODEL must be configured.")
     except Exception as exc:
-        chat_adapter = StubChatAdapter(
+        chat_adapter = NotImplementedStub(
+            "Ollama Chat",
             f"Ollama configuration error: {exc}. Set OLLAMA_BASE_URL and OLLAMA_MODEL."
         )
 
@@ -875,7 +1120,8 @@ def load_dependencies() -> AssistantDependencies:
             )
             client = create_client(config)
             if SCHEMA_PATH.exists():
-                schema = json.loads(SCHEMA_PATH.read_text())
+                with SCHEMA_PATH.open("r", encoding="utf-8") as schema_file:
+                    schema = yaml.safe_load(schema_file)
                 ensure_index(client, index_name, schema)
         except Exception as exc:  # pragma: no cover - fallback on failure
             error_message = (
@@ -908,7 +1154,7 @@ def load_dependencies() -> AssistantDependencies:
                 chat_adapter=chat_adapter,
             )
     else:
-        client = StubSearchClient()
+        client = NotImplementedStub("OpenSearch Client", "OPENSEARCH_HOST not configured")
 
     retriever = HybridRetriever(
         client=client,

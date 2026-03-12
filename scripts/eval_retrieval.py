@@ -1,4 +1,30 @@
-"""Simple retrieval evaluation CLI for Quest Analytics RAG assistant."""
+"""
+Traditional Retrieval Quality Evaluation Tool
+
+This script provides traditional retrieval evaluation capabilities for RAG systems,
+focusing on core retrieval metrics and direct performance assessment without
+complex experimental frameworks.
+
+Features:
+- Precision@K and Recall@K calculation
+- Mean Reciprocal Rank (MRR) measurement
+- Direct retrieval quality assessment
+- Lightweight evaluation framework
+- Command-line interface for quick testing
+- JSON output for integration
+- Simple metric computation
+- Fast evaluation cycles
+
+Usage:
+    # Evaluate retrieval quality with standard metrics
+    python scripts/eval_retrieval.py data/samples/queries.jsonl --top-k 5
+    
+    # Quick retrieval assessment
+    python scripts/eval_retrieval.py queries.jsonl --output results.json
+    
+    # Custom top-k evaluation
+    python scripts/eval_retrieval.py queries.jsonl --top-k 10 --detailed
+"""
 
 from __future__ import annotations
 

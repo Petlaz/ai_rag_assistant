@@ -1,4 +1,27 @@
-"""FastAPI-based landing page for Quest Analytics RAG Assistant."""
+"""
+FastAPI Landing Page Server for Quest Analytics RAG Assistant
+
+A professional landing page implementation that serves as the entry point for users
+accessing the Quest Analytics RAG Assistant. Provides analytics tracking, responsive
+design, and seamless integration with the main Gradio application.
+
+Features:
+- FastAPI-based web server
+- Professional landing page with call-to-action
+- Optional analytics tracking (Plausible or local CSV)
+- Analytics log rotation for storage management
+- Environment-based configuration
+- CORS and security considerations
+- Health monitoring and logging
+
+Environment Variables:
+- APP_URL: URL of the main Gradio application (default: http://localhost:7860)
+- LANDING_PORT: Port for landing page server (default: 3000)
+- ENABLE_ANALYTICS: Enable analytics tracking (default: false)
+- ANALYTICS_PROVIDER: Analytics provider ('plausible' or 'csv')
+- ANALYTICS_ID: Analytics tracking ID for external providers
+- ANALYTICS_CSV_PATH: Path for local CSV analytics (default: data/analytics.csv)
+"""
 
 from __future__ import annotations
 
@@ -29,7 +52,16 @@ _analytics_lock = asyncio.Lock()
 
 
 def _ensure_analytics_file() -> None:
-    """Ensure analytics CSV exists with header row."""
+    """
+    Initialize analytics CSV file with proper headers.
+    
+    Creates the analytics CSV file and directory structure if they don't exist,
+    and writes the header row for tracking visitor interactions.
+    
+    Note:
+        Only executes when ENABLE_ANALYTICS is True. Creates parent directories
+        as needed for the analytics file path.
+    """
 
     if not ENABLE_ANALYTICS:
         return
@@ -41,7 +73,17 @@ def _ensure_analytics_file() -> None:
 
 
 def _rotate_if_needed() -> None:
-    """Rotate analytics log when it grows beyond configured limit."""
+    """
+    Rotate analytics log file when size limit is exceeded.
+    
+    Checks the current analytics CSV file size and rotates it to a timestamped
+    archive file when it exceeds the ANALYTICS_MAX_BYTES limit (5MB default).
+    Creates a new analytics file after rotation.
+    
+    Note:
+        Rotation filename format: analytics-YYYYMMDDTHHMMSSZ.csv
+        Automatically creates a fresh analytics file after rotation.
+    """
 
     if not ANALYTICS_CSV_PATH.exists():
         return
@@ -55,7 +97,19 @@ def _rotate_if_needed() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """FastAPI lifespan event handler."""
+    """
+    FastAPI application lifespan event handler.
+    
+    Manages application startup and shutdown events, including analytics
+    file initialization and logging of server status information.
+    
+    Startup tasks:
+    - Initialize analytics CSV file structure
+    - Log server URLs and configuration
+    
+    Yields:
+        None: Application runs between startup and shutdown
+    """
     # Startup
     _ensure_analytics_file()
     print(f"Landing page running at: http://0.0.0.0:{LANDING_PORT}")
@@ -69,13 +123,30 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(
     title="Quest Analytics RAG Assistant Landing Page",
+    description="Professional landing page for Quest Analytics RAG Assistant with analytics tracking",
+    version="1.0.0",
     lifespan=lifespan
 )
 
 
 @app.get("/", response_class=HTMLResponse)
 async def landing(request: Request) -> HTMLResponse:
-    """Render the landing page."""
+    """
+    Render the professional landing page for Quest Analytics RAG Assistant.
+    
+    Serves the main landing page with dynamic configuration, analytics integration,
+    and responsive design. Provides call-to-action for accessing the main application.
+    
+    Args:
+        request: FastAPI request object containing client information
+        
+    Returns:
+        HTMLResponse: Rendered landing page with context variables including:
+        - app_url: URL to the main Gradio RAG application
+        - enable_analytics: Boolean for analytics tracking status
+        - analytics_provider: Provider type ('plausible', 'csv', etc.)
+        - analytics_id: Tracking ID for external analytics services
+    """
 
     context: Dict[str, Any] = {
         "request": request,
@@ -89,7 +160,28 @@ async def landing(request: Request) -> HTMLResponse:
 
 @app.post("/analytics/log")
 async def log_event(request: Request) -> JSONResponse:
-    """Persist button click analytics when external provider is disabled."""
+    """
+    Handle analytics event logging for user interactions.
+    
+    Logs user interaction events to the local CSV analytics file with proper
+    concurrency control and automatic log rotation. Designed for tracking
+    button clicks and user engagement when external analytics are disabled.
+    
+    Args:
+        request: FastAPI request object containing event payload and client info
+        
+    Request Payload:
+        action (str): Type of interaction event being tracked
+        
+    Returns:
+        JSONResponse: Status response with appropriate HTTP status code:
+        - 202 ACCEPTED: When external analytics provider is enabled
+        - 201 CREATED: When event is successfully logged to local CSV
+        
+    Note:
+        Uses async file locking to prevent concurrent write issues.
+        Automatically rotates log files when size limit is exceeded.
+    """
 
     payload = await request.json()
     action = str(payload.get("action", "unknown"))

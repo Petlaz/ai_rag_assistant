@@ -1,0 +1,263 @@
+#
+# Phase 2 A/B Testing Configuration - Quest Analytics RAG Assistant
+# ====================================================================
+#
+# Purpose: This configuration file defines A/B testing parameters for comparing
+# different RAG system configurations with statistical significance validation
+# and comprehensive performance measurement.
+#
+# Features:
+# - Multiple test configuration variants (baseline, balanced, semantic-focused)
+# - Statistical significance testing with confidence intervals
+# - Performance expectation targets for each configuration
+# - Automated winner selection based on multiple metrics
+# - Cost-benefit analysis integration for optimal configuration selection
+# - Reproducible experiment design with controlled parameters
+#
+# Usage: Used by ab_testing/experiment_pipeline.py and A/B testing scripts to orchestrate
+# systematic configuration comparison and optimization.
+#
+
+# Test Configurations for A/B Testing
+test_configurations:
+  
+  baseline:
+    name: "current_baseline"
+    description: "Current production configuration"
+    embedding_model: "all-MiniLM-L6-v2"
+    bm25_weight: 0.7
+    semantic_weight: 0.3
+    top_k_retrieval: 20
+    reranker: "passthrough"
+    expected_performance:
+      precision_at_5: 0.72
+      mrr: 0.80
+      latency_ms: 150
+      
+  balanced:
+    name: "balanced_hybrid"
+    description: "Balanced BM25 and semantic with cross-encoder" 
+    embedding_model: "WINNER_FROM_EMBEDDING_COMPARISON"  # To be filled after embedding comparison
+    bm25_weight: 0.5
+    semantic_weight: 0.5
+    top_k_retrieval: 25
+    reranker: "cross_encoder"
+    expected_performance:
+      precision_at_5: 0.76
+      mrr: 0.83
+      latency_ms: 175
+      
+  semantic_heavy:
+    name: "semantic_focused"
+    description: "Semantic-focused with LLM re-ranking"
+    embedding_model: "all-mpnet-base-v2"  # High-quality embeddings
+    bm25_weight: 0.3
+    semantic_weight: 0.7
+    top_k_retrieval: 30
+    reranker: "ollama_llm"
+    expected_performance:
+      precision_at_5: 0.78
+      mrr: 0.85
+      latency_ms: 350
+      
+  optimized:
+    name: "best_of_both"
+    description: "Best embedding model + best re-ranking strategy"
+    embedding_model: "WINNER_FROM_EMBEDDING_COMPARISON"
+    bm25_weight: 0.6
+    semantic_weight: 0.4
+    top_k_retrieval: 25
+    reranker: "WINNER_FROM_RERANKING_EVALUATION"
+    expected_performance:
+      precision_at_5: 0.80
+      mrr: 0.87
+      latency_ms: 200
+      
+  lightweight:
+    name: "speed_optimized"
+    description: "Optimized for speed with minimal quality loss"
+    embedding_model: "gte-small"  # ARM64 optimized
+    bm25_weight: 0.8
+    semantic_weight: 0.2
+    top_k_retrieval: 15
+    reranker: "hybrid_scoring"
+    expected_performance:
+      precision_at_5: 0.70
+      mrr: 0.78
+      latency_ms: 120
+
+# A/B Testing Parameters
+ab_testing:
+  
+  statistical_parameters:
+    alpha: 0.05                    # Significance level
+    power: 0.80                    # Statistical power (1 - beta)
+    min_effect_size: 0.05         # Minimum detectable effect (5% improvement)
+    bonferroni_correction: true   # Multiple comparison correction
+    
+  sample_size:
+    queries_per_configuration: 75  # Based on scale_test_set.jsonl
+    validation_split: 0.2         # 20% for validation
+    test_confidence_interval: 0.95
+    
+  randomization:
+    method: "stratified"          # Stratified by domain
+    stratification_factors:
+      - domain
+      - difficulty_level
+    seed: 42                      # For reproducibility
+    
+  metrics_for_testing:
+    primary:
+      name: "precision_at_5"
+      direction: "maximize"
+      baseline_value: 0.72
+      
+    secondary:
+      - name: "mrr" 
+        direction: "maximize"
+        baseline_value: 0.80
+      - name: "latency_ms"
+        direction: "minimize"  
+        baseline_value: 150
+      - name: "user_satisfaction_score"
+        direction: "maximize"
+        baseline_value: 7.5
+        
+# Experiment Design
+experiment_design:
+  
+  type: "multi_armed_bandit"      # Initially, then switch to A/B test best performers
+  
+  phases:
+    phase_1_exploration:
+      description: "Test all configurations with equal traffic"
+      duration_days: 2
+      traffic_allocation:
+        baseline: 0.25
+        balanced: 0.25
+        semantic_heavy: 0.25
+        optimized: 0.25
+        
+    phase_2_exploitation:
+      description: "Focus on top 2 performers"
+      duration_days: 3
+      traffic_allocation:
+        # To be determined based on Phase 1 results
+        top_performer: 0.6
+        second_best: 0.4
+        
+  stopping_rules:
+    max_queries: 500              # Stop after 500 queries total
+    min_significance_threshold: 0.05
+    early_stopping_power: 0.90   # Stop early if power > 90%
+
+# Cost Analysis Parameters
+cost_analysis:
+  
+  baseline_costs:
+    embedding_inference: 0.0001   # Per query
+    opensearch_query: 0.0002     # Per query  
+    total_per_query: 0.0003
+    
+  additional_costs:
+    cross_encoder_reranking: 0.0001
+    llm_reranking: 0.0000         # Local Ollama - no cost
+    large_embedding_model: 0.0001 # Increased compute
+    
+  cost_constraints:
+    max_cost_increase_per_query: 0.001  # Max $0.001 additional per query
+    monthly_query_volume: 10000   # Estimated monthly queries
+    max_monthly_cost_increase: 10.0      # Max $10/month increase
+
+# Quality Thresholds
+quality_thresholds:
+  
+  minimum_acceptable:
+    precision_at_5: 0.65          # Must be at least 90% of baseline
+    mrr: 0.72                     # Must be at least 90% of baseline
+    latency_ms: 300               # Must be under 300ms total
+    
+  target_performance:
+    precision_at_5: 0.78          # 8.3% improvement target
+    mrr: 0.85                     # 6.3% improvement target
+    latency_ms: 200               # Under 200ms target
+    
+  excellent_performance:
+    precision_at_5: 0.82          # 13.9% improvement 
+    mrr: 0.88                     # 10% improvement
+    latency_ms: 180               # Under 180ms
+
+# Monitoring and Alerts
+monitoring:
+  
+  real_time_metrics:
+    - query_latency_p95
+    - error_rate
+    - precision_at_5_rolling_avg
+    - cost_per_query
+    
+  alert_thresholds:
+    error_rate_percent: 5.0       # Alert if error rate > 5%
+    latency_p95_ms: 500          # Alert if P95 latency > 500ms
+    cost_spike_multiplier: 2.0    # Alert if cost > 2x expected
+    
+  dashboard_metrics:
+    - configuration_performance_comparison
+    - statistical_significance_tracking
+    - cost_analysis_breakdown
+    - user_satisfaction_trends
+
+# Results Analysis
+analysis:
+  
+  statistical_tests:
+    primary_metric: "welch_t_test"     # For precision_at_5 comparison
+    multiple_metrics: "holm_bonferroni" # Multiple comparison correction
+    effect_size: "cohen_d"             # Effect size calculation
+    
+  reporting:
+    confidence_intervals: true
+    effect_size_reporting: true
+    practical_significance: true
+    cost_benefit_analysis: true
+    
+  decision_framework:
+    primary_weight: 0.6               # Weight for primary metric (precision)
+    secondary_weight: 0.3             # Weight for secondary metrics
+    cost_weight: 0.1                  # Weight for cost considerations
+    
+# Implementation Timeline
+implementation_timeline:
+  
+  week_3_day_1_2:
+    - setup_experiment_infrastructure
+    - validate_randomization_logic
+    - baseline_data_collection
+    
+  week_3_day_3_4: 
+    - phase_1_exploration_launch
+    - real_time_monitoring_setup
+    - initial_data_analysis
+    
+  week_3_day_5:
+    - phase_1_results_analysis
+    - statistical_significance_testing
+    - phase_2_configuration_selection
+    
+  week_4_day_1_3:
+    - phase_2_exploitation_testing
+    - detailed_performance_analysis
+    - cost_benefit_analysis
+    
+  week_4_day_4_5:
+    - final_results_compilation
+    - winning_configuration_selection
+    - implementation_recommendations
+
+# Documentation Requirements
+documentation:
+  experiment_plan: "docs/phase2_ab_testing_plan.md"
+  statistical_analysis: "docs/phase2_statistical_analysis.md"  
+  results_report: "docs/phase2_ab_testing_results.md"
+  implementation_guide: "docs/phase2_winning_config_implementation.md"

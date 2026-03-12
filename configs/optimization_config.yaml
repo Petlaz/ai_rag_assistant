@@ -1,0 +1,200 @@
+#
+# Model Optimization Configuration - Quest Analytics RAG Assistant
+# =========================================================================
+#
+# Purpose: This YAML configuration file defines the parameters for model
+# optimization including embedding model comparison, reranking strategy evaluation,
+# and A/B testing framework for systematic performance improvement.
+#
+# Features:
+# - Multiple embedding model configurations with performance targets
+# - Reranking strategy comparison (PassThrough, CrossEncoder, LLM-based, Hybrid)
+# - M1 Mac optimization settings for ARM64 performance
+# - Cost-benefit analysis parameters for model selection
+# - A/B testing framework with statistical significance validation
+# - Resource consumption limits and memory management
+#
+# Usage: Used by run_model_optimization.py and related optimization scripts
+# to orchestrate comprehensive model comparison and optimization workflows.
+#
+
+# Embedding Model Comparison Configuration
+embedding_models:
+  baseline:
+    name: "all-MiniLM-L6-v2"
+    dimensions: 384
+    description: "Current baseline model - lightweight and fast"
+    expected_memory_mb: 80
+    target_inference_ms: 50
+
+  quality_focused:
+    name: "all-mpnet-base-v2" 
+    dimensions: 768
+    description: "Higher quality embeddings, larger model"
+    expected_memory_mb: 420
+    target_inference_ms: 120
+
+  efficient_modern:
+    name: "e5-small-v2"
+    dimensions: 384
+    description: "Latest generation, memory efficient"
+    expected_memory_mb: 118
+    target_inference_ms: 60
+
+  m1_optimized:
+    name: "gte-small"
+    dimensions: 384
+    description: "ARM64 optimized for local inference"
+    expected_memory_mb: 67
+    target_inference_ms: 45
+
+# Re-ranking Strategy Configuration  
+reranking_strategies:
+  passthrough:
+    name: "passthrough"
+    description: "No re-ranking (baseline)"
+    cost_per_query: 0.0
+    expected_latency_ms: 0
+    
+  cross_encoder:
+    name: "cross_encoder"
+    model: "ms-marco-MiniLM-L-6-v2"
+    description: "Cross-encoder re-ranking"
+    cost_per_query: 0.0001
+    expected_latency_ms: 25
+    batch_size: 16
+    
+  ollama_llm:
+    name: "ollama_llm"
+    model: "phi3:mini"
+    description: "Local LLM-based re-ranking"
+    cost_per_query: 0.0
+    expected_latency_ms: 200
+    timeout: 30
+    
+  hybrid_scoring:
+    name: "hybrid_scoring"
+    description: "Hybrid BM25 + semantic + relevance scoring"
+    cost_per_query: 0.0
+    expected_latency_ms: 5
+    weights:
+      bm25: 0.4
+      semantic: 0.4
+      relevance: 0.2
+
+# Evaluation Configuration
+evaluation:
+  test_datasets:
+    scale_test:
+      path: "data/evaluation/scale_test_set.jsonl"
+      size: 75
+      description: "Scale testing dataset"
+      
+    domain_specific:
+      cs_ai: "data/evaluation/domains/cs_ai_queries.jsonl"
+      life_sciences: "data/evaluation/domains/life_sciences_queries.jsonl"
+      physics: "data/evaluation/domains/physics_queries.jsonl"
+      social_sciences: "data/evaluation/domains/social_sciences_queries.jsonl"
+      
+  metrics:
+    primary:
+      - precision_at_5
+      - mrr
+      - ndcg_at_10
+    secondary:
+      - precision_at_1
+      - precision_at_10
+      - recall_at_5
+      - recall_at_10
+    performance:
+      - inference_time_ms
+      - memory_usage_mb
+      - cost_per_query
+      
+  thresholds:
+    min_precision_at_5: 0.65  # Must maintain at least 65% of baseline
+    max_latency_increase_ms: 50  # Max additional 50ms latency
+    max_memory_increase_mb: 200  # Max additional 200MB memory
+    max_cost_per_query: 0.001  # Max $0.001 per query
+
+# Hardware Configuration (M1 Mac Optimized)
+hardware:
+  max_memory_gb: 6.0
+  batch_size: 8
+  parallel_workers: 4
+  device: "auto"  # CPU/MPS for M1
+  
+# Optimization Targets
+targets:
+  precision_at_5:
+    baseline: 0.72
+    target: 0.78
+    improvement: 8.3
+    
+  mrr:
+    baseline: 0.80
+    target: 0.85
+    improvement: 6.3
+    
+  total_latency:
+    baseline_ms: 150
+    target_ms: 200
+    max_increase_ms: 50
+    
+# Model Optimization Experiment Design
+experiments:
+  embedding_comparison:
+    description: "Compare embedding models for optimal performance"
+    models: ["all-MiniLM-L6-v2", "all-mpnet-base-v2", "e5-small-v2", "gte-small"]
+    test_set: "scale_test"
+    output: "results/optimization_embedding_comparison.json"
+    
+  reranking_evaluation:
+    description: "Evaluate re-ranking strategies"
+    strategies: ["cross_encoder", "ollama_llm", "hybrid_scoring"]
+    baseline: "passthrough"
+    test_set: "scale_test" 
+    output: "results/optimization_reranking_evaluation.json"
+    
+  combined_optimization:
+    description: "Best embedding model + best re-ranking strategy"
+    depends_on: ["embedding_comparison", "reranking_evaluation"]
+    output: "results/optimization_combined_optimization.json"
+    
+# Success Criteria
+success_criteria:
+  quality:
+    precision_improvement: 5.0  # Minimum 5% improvement
+    mrr_improvement: 3.0        # Minimum 3% improvement
+    
+  performance:
+    max_latency_penalty: 33.3   # Max 33% latency increase
+    max_memory_increase: 400    # Max 400MB memory increase
+    
+  cost:
+    max_monthly_increase: 2.0   # Max $2/month additional cost
+    
+# Model Optimization Timeline
+timeline:
+  week_3:
+    - embedding_model_comparison
+    - initial_performance_analysis
+    
+  week_4:
+    - reranking_strategy_evaluation  
+    - cost_benefit_analysis
+    - combined_optimization_testing
+    
+# Output Configuration
+outputs:
+  results_dir: "results/optimization"
+  
+  reports:
+    embedding_analysis: "optimization_embedding_model_analysis.json"
+    reranking_analysis: "optimization_reranking_evaluation.json"
+    combined_results: "optimization_combined_optimization.json"
+    final_recommendations: "optimization_recommendations.json"
+    
+  documentation:
+    methodology: "docs/optimization_methodology.md"
+    results_summary: "docs/optimization_results_summary.md"

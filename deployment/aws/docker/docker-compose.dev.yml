@@ -1,3 +1,7 @@
+# Quest Analytics RAG Assistant - Development Environment
+# Multi-service Docker Compose configuration for local development
+# Includes OpenSearch, Ollama, and all application services
+
 services:
   opensearch:
     image: opensearchproject/opensearch:2.18.0

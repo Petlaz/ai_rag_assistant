@@ -1,9 +1,37 @@
-"""Metadata helpers used by the ingestion workflow.
+"""
+Document Metadata Extraction Engine
 
-We keep the surface area tiny for now: a single function returns a dictionary
-of metadata fields derived from heuristics.  When we integrate document parsers
-that expose structured fields (e.g. arXiv API, CrossRef), those values can
-replace the heuristics below.
+This module provides intelligent metadata extraction from documents using heuristic
+analysis and structured field detection, enriching documents with contextual
+information for enhanced retrieval and organization.
+
+Features:
+- Heuristic metadata inference
+- File path analysis
+- Document type detection
+- Timestamp extraction
+- Author information inference
+- Title and subject detection
+- Extensible metadata fields
+- Integration-ready for structured APIs
+
+Metadata Fields:
+- Document title and subject
+- Author information
+- Creation and modification timestamps
+- File type and format
+- Source path and location
+- Custom domain-specific fields
+
+Future Integration:
+- arXiv API for academic papers
+- CrossRef for academic citations
+- Custom document parsers
+- Structured metadata sources
+
+Usage:
+    metadata = infer_metadata(document_path='paper.pdf')
+    # Returns dict with title, author, timestamps, etc.
 """
 
 from __future__ import annotations

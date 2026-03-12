@@ -1,3 +1,6 @@
+# Quest Analytics RAG Assistant - Document Processing Worker
+# Container for background document ingestion with OCR and PDF processing
+
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

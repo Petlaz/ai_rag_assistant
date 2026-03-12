@@ -1,4 +1,34 @@
-"""Unit tests for ingestion utilities."""
+"""
+Ingestion Pipeline Unit Test Suite
+
+This module contains comprehensive unit tests for the PDF ingestion pipeline,
+validating document processing, text normalization, chunking strategies,
+and metadata extraction functionality.
+
+Features:
+- PDF text extraction validation
+- Chunk generation testing
+- Text normalization verification
+- Metadata extraction testing
+- Error handling validation
+- Pipeline component integration
+- Document structure testing
+- OCR processing validation
+
+Test Coverage:
+- normalize_text() - Text preprocessing and cleaning
+- chunk_text() - Text segmentation strategies
+- build_document_chunks() - Document chunk creation
+- DocumentChunk data structure validation
+- Edge cases and error conditions
+
+Usage:
+    # Run ingestion tests
+    pytest tests/test_ingestion.py -v
+    
+    # Run with coverage
+    pytest tests/test_ingestion.py --cov=rag_pipeline.ingestion
+"""
 
 from pathlib import Path
 

@@ -1,4 +1,75 @@
 # Pre-Deployment Testing Plan
+<!--
+Comprehensive Pre-Deployment Testing and Optimization Strategy
+==============================================================
+
+STRATEGIC PURPOSE:
+This document outlines the critical pre-deployment testing plan for the Quest Analytics
+RAG Assistant before AWS deployment. The plan ensures optimal performance, cost-efficiency,
+and production reliability through systematic evaluation and optimization.
+
+WHY PRE-DEPLOYMENT TESTING IS ESSENTIAL:
+
+1. COST OPTIMIZATION & RISK MITIGATION
+   - Prevents expensive AWS deployment failures
+   - Identifies performance bottlenecks before scaling
+   - Optimizes resource allocation to minimize cloud costs
+   - Establishes reliable baseline metrics for production monitoring
+   - Reduces operational risk through comprehensive validation
+
+2. PERFORMANCE GUARANTEE & USER EXPERIENCE
+   - Validates RAG system performance across diverse domains
+   - Ensures consistent query response quality
+   - Optimizes latency and throughput for production workloads
+   - Identifies and resolves edge cases before user exposure
+   - Maintains high availability and reliability standards
+
+3. TECHNICAL EXCELLENCE & MAINTAINABILITY
+   - Establishes reproducible evaluation methodology
+   - Creates comprehensive performance benchmarking framework
+   - Validates system scalability and resource efficiency
+   - Documents optimization decisions for future reference
+   - Ensures code quality and architectural soundness
+
+4. BUSINESS VALUE & COMPETITIVE ADVANTAGE
+   - Maximizes return on investment through systematic optimization
+   - Accelerates time-to-market with confidence in system reliability
+   - Enables data-driven decision making for model selection
+   - Creates competitive edge through superior performance metrics
+   - Supports future scaling and enhancement initiatives
+
+IMPLEMENTATION GOALS:
+
+Baseline & Scale Validation:
+- Establish performance baselines and evaluation frameworks
+- Validate system behavior under realistic query loads
+- Ensure cross-domain robustness and reliability
+
+Model & Strategy Optimization:
+- Optimize embedding models for M1 Mac efficiency
+- Evaluate reranking strategies for quality improvement
+- Balance performance gains with computational costs
+
+Phase 3 - Configuration A/B Testing:
+- Systematically compare configuration variants
+- Apply statistical rigor to performance decisions
+- Optimize for production deployment parameters
+
+Phase 4 - Integration & Stress Testing:
+- Validate end-to-end system integration
+- Test under stress conditions and edge cases
+- Ensure production readiness and reliability
+
+SUCCESS METRICS:
+- Technical: >15% improvement in Precision@5 and MRR
+- Performance: <200ms average query latency
+- Cost: <$50/month AWS operational costs
+- Reliability: >99.5% uptime and error handling
+
+This plan transforms the RAG system from prototype to production-ready solution
+through systematic testing, optimization, and validation.
+-->
+
 **AI RAG Assistant - Optimization Before AWS Deployment**
 
 **Purpose**: Complete comprehensive testing and optimization before deploying to AWS to ensure optimal performance and cost efficiency.
@@ -7,7 +78,7 @@
 
 ---
 
-## Phase 1: Baseline & Scale Testing (Week 1-2)
+## Part 1: Baseline & Scale Testing (Week 1-2)
 
 ### 1.1 Establish Current Baseline Performance
 **Objective**: Document current system performance as reference point
@@ -111,7 +182,7 @@ python scripts/domain_performance_analysis.py \
 
 ---
 
-## Phase 2: Model Optimization (Week 3-4)
+## Part 2: Model Optimization (Week 3-4)
 
 ### 2.1 Embedding Model Comparison
 **Current**: `all-MiniLM-L6-v2` (384 dimensions)
@@ -304,7 +375,196 @@ python scripts/ab_test_retrieval.py \
 - Reproducible ML workflows
 - Industry-standard MLOps practice
 
-### 4.2 GitHub Actions CI/CD Pipeline
+### 4.2 Production Monitoring Framework
+**Objective**: Implement comprehensive monitoring for deployed RAG system
+
+**Multi-Layer Monitoring Strategy**:
+
+#### **Layer 1: Infrastructure Monitoring (AWS CloudWatch)**
+```bash
+# AWS CloudWatch for infrastructure metrics
+# Automatically included with AWS services - no additional cost for basic monitoring
+
+# Key Metrics to Monitor:
+# - Lambda function duration, memory usage, errors
+# - DynamoDB read/write capacity, throttling
+# - S3 request metrics, storage usage
+# - Cost tracking and budget alerts
+```
+
+#### **Layer 2: Application Performance Monitoring**
+```python
+# Custom metrics collection for RAG system
+import boto3
+import time
+from datetime import datetime
+
+class RAGSystemMonitor:
+    def __init__(self):
+        self.cloudwatch = boto3.client('cloudwatch')
+        
+    def log_query_metrics(self, query_time, retrieval_time, generation_time, 
+                         precision_score, user_satisfaction=None):
+        """Log RAG system performance metrics to CloudWatch"""
+        
+        metrics = [
+            {
+                'MetricName': 'QueryResponseTime',
+                'Value': query_time,
+                'Unit': 'Milliseconds',
+                'Dimensions': [{'Name': 'Service', 'Value': 'RAGAssistant'}]
+            },
+            {
+                'MetricName': 'RetrievalTime', 
+                'Value': retrieval_time,
+                'Unit': 'Milliseconds',
+                'Dimensions': [{'Name': 'Component', 'Value': 'Retrieval'}]
+            },
+            {
+                'MetricName': 'PrecisionScore',
+                'Value': precision_score,
+                'Unit': 'None',
+                'Dimensions': [{'Name': 'Model', 'Value': 'Current'}]
+            }
+        ]
+        
+        self.cloudwatch.put_metric_data(
+            Namespace='RAGAssistant/Performance',
+            MetricData=metrics
+        )
+    
+    def log_cost_metrics(self, bedrock_cost, lambda_cost, total_cost):
+        """Track per-query costs for ultra-budget optimization"""
+        cost_metrics = [
+            {'MetricName': 'BedrockCostPerQuery', 'Value': bedrock_cost, 'Unit': 'None'},
+            {'MetricName': 'LambdaCostPerQuery', 'Value': lambda_cost, 'Unit': 'None'},
+            {'MetricName': 'TotalCostPerQuery', 'Value': total_cost, 'Unit': 'None'}
+        ]
+        
+        self.cloudwatch.put_metric_data(
+            Namespace='RAGAssistant/Costs',
+            MetricData=cost_metrics
+        )
+```
+
+#### **Layer 3: ML Model Performance Monitoring**
+```python
+# MLflow + Custom Model Performance Tracking
+import mlflow
+import numpy as np
+from datetime import datetime, timedelta
+
+class ModelPerformanceMonitor:
+    def __init__(self, mlflow_tracking_uri):
+        mlflow.set_tracking_uri(mlflow_tracking_uri)
+        
+    def log_production_metrics(self, precision_scores, mrr_scores, 
+                              query_latencies, model_version):
+        """Log real-time production metrics to MLflow"""
+        
+        with mlflow.start_run(run_name=f"production_monitoring_{datetime.now().strftime('%Y%m%d')}"):
+            # Log daily aggregates 
+            mlflow.log_metric("daily_avg_precision", np.mean(precision_scores))
+            mlflow.log_metric("daily_avg_mrr", np.mean(mrr_scores))
+            mlflow.log_metric("daily_avg_latency", np.mean(query_latencies))
+            mlflow.log_metric("daily_p95_latency", np.percentile(query_latencies, 95))
+            
+            # Log model version and deployment info
+            mlflow.log_param("model_version", model_version)
+            mlflow.log_param("deployment_mode", "ultra_budget")
+            mlflow.log_param("monitoring_date", datetime.now().isoformat())
+            
+            # Performance degradation alerts
+            baseline_precision = 0.72  # Your baseline
+            current_precision = np.mean(precision_scores)
+            
+            if current_precision < baseline_precision * 0.95:  # 5% degradation 
+                mlflow.log_metric("performance_alert", 1)
+                # Trigger alert mechanism
+                self.send_performance_alert(current_precision, baseline_precision)
+    
+    def send_performance_alert(self, current, baseline):
+        """Send alert when performance degrades"""
+        # Could integrate with AWS SNS, Slack, or email
+        degradation = ((baseline - current) / baseline) * 100
+        print(f"⚠️ ALERT: Model performance degraded by {degradation:.1f}%")
+```
+
+#### **Monitoring Framework Options**:
+
+| Framework | Cost (Ultra-Budget) | Use Case | Implementation |
+|-----------|-------------------|----------|----------------|
+| **AWS CloudWatch** | $2-5/month | Infrastructure & basic metrics | Built-in with AWS services |
+| **MLflow Tracking** | $0 (self-hosted) | ML experiment & model monitoring | Already in plan |
+| **Custom CloudWatch Metrics** | $1-3/month | RAG-specific application metrics | Python boto3 integration |
+| **Grafana + Prometheus** | $0 (if self-hosted) | Advanced dashboards | Requires additional infrastructure |
+
+**Recommended for Ultra-Budget**: **AWS CloudWatch + MLflow + Custom Metrics**
+- **Total Additional Cost**: $2-5/month
+- **Coverage**: Infrastructure, application, and ML model performance
+- **Integration**: Native AWS integration, fits existing architecture
+
+#### **Key Monitoring Dashboards**:
+
+**1. Real-time Performance Dashboard**:
+```python
+# CloudWatch Dashboard Configuration
+dashboard_config = {
+    "widgets": [
+        {
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    ["RAGAssistant/Performance", "QueryResponseTime"],
+                    ["RAGAssistant/Performance", "PrecisionScore"],
+                    ["RAGAssistant/Costs", "TotalCostPerQuery"]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "us-east-1",
+                "title": "RAG System Health"
+            }
+        }
+    ]
+}
+```
+
+**2. Cost Optimization Dashboard**:
+- Daily/monthly cost tracking
+- Cost per query trends
+- Budget utilization alerts
+- Service-specific cost breakdown
+
+**3. Model Performance Dashboard**:
+- Precision@5 trends over time
+- MRR score evolution
+- Query latency percentiles
+- User satisfaction metrics
+
+#### **Alerting Strategy**:
+```yaml
+# CloudWatch Alarms Configuration
+alerts:
+  performance_degradation:
+    metric: "RAGAssistant/Performance/PrecisionScore"
+    threshold: 0.68  # 5% below baseline of 0.72
+    comparison: "LessThanThreshold"
+    action: "SNS notification"
+    
+  high_latency:
+    metric: "RAGAssistant/Performance/QueryResponseTime" 
+    threshold: 3000  # 3 seconds
+    comparison: "GreaterThanThreshold"
+    action: "Auto-scaling trigger"
+    
+  budget_alert:
+    metric: "AWS/Billing/EstimatedCharges"
+    threshold: 15  # 80% of $18 budget
+    comparison: "GreaterThanThreshold"
+    action: "Email + Slack notification"
+```
+
+### 4.3 GitHub Actions CI/CD Pipeline
 **Objective**: Implement automated testing and deployment pipeline
 
 **CI/CD Pipeline Structure**:
@@ -440,48 +700,57 @@ python scripts/comprehensive_validation.py \
 | Week 3 | Embedding Models | Model comparison, recommendations |
 | Week 4 | Re-ranking Optimization | Strategy comparison, cost analysis |
 | Week 5 | A/B Configuration Testing | Statistical validation, winning config |
-| Week 6 | MLflow + GitHub Actions | Experiment tracking, CI/CD pipeline |
-| Week 7 | Final Validation + AWS Prep | MLOps integration, deployment package |
-| Week 8 | Deployment + Portfolio | AWS deployment, interview materials |
+| Week 6 | MLflow + Monitoring Setup | Experiment tracking, CloudWatch dashboards, alerting |
+| Week 7 | CI/CD + Production Monitoring | GitHub Actions pipeline, performance monitoring |
+| Week 8 | Deployment + Portfolio | AWS deployment, monitoring validation, interview materials |
 
 ---
 
 ## Files to Create for This Plan
 
-**IMPORTANT**: Most testing scripts need to be implemented before starting this plan.
+**IMPORTANT**: Phase 3-6 scripts have been organized into dedicated folders with comprehensive docstrings.
 
 ```bash
 # Create missing directories
 mkdir -p configs results mlruns .github/workflows
 
-# PHASE 1: Testing scripts (NEED TO BE CREATED)
-touch scripts/generate_test_queries.py        # TODO: Implement query generation
-touch scripts/analyze_eval_results.py         # TODO: Statistics and analysis
-touch scripts/create_domain_queries.py        # TODO: Domain-specific queries
-touch scripts/domain_performance_analysis.py  # TODO: Cross-domain analysis
+# BASELINE EVALUATION: Testing scripts (CREATED - organized in evaluation/)
+# scripts/evaluation/generate_test_queries.py        - Query generation and synthetic datasets
+# scripts/evaluation/analyze_eval_results.py         - Statistical analysis with confidence intervals
+# scripts/evaluation/create_domain_queries.py        - Domain-specific query generation
+# scripts/evaluation/domain_performance_analysis.py  - Cross-domain analysis framework
+# scripts/evaluation/baseline_evaluation.py          - Core RAG evaluation with statistics
+# scripts/evaluation/run_baseline_evaluation.py        - Baseline evaluation master orchestration script
 
-# PHASE 2: Model optimization (NEED TO BE CREATED)
-touch scripts/embedding_model_comparison.py   # TODO: Embedding model testing
-touch scripts/analyze_embedding_tradeoffs.py  # TODO: Performance vs cost analysis
-touch scripts/reranking_evaluation.py         # TODO: Re-ranking strategies
-touch scripts/reranking_cost_analysis.py      # TODO: Cost-benefit analysis
+# MODEL OPTIMIZATION: Model optimization (CREATED - organized in optimization/)
+# scripts/optimization/embedding_model_comparison.py   - Embedding model performance comparison
+# scripts/optimization/analyze_embedding_tradeoffs.py  - Performance vs cost trade-off analysis
+# scripts/optimization/reranking_evaluation.py         - Re-ranking strategy evaluation
+# scripts/optimization/reranking_cost_analysis.py      - Cost-benefit analysis framework
+# scripts/optimization/run_model_optimization.py      - Model optimization master orchestration script
 
-# PHASE 3: A/B testing (NEED TO BE CREATED)
-touch scripts/ab_test_retrieval.py             # TODO: A/B testing framework
-touch scripts/statistical_analysis.py         # TODO: Statistical significance
-touch scripts/select_best_config.py           # TODO: Configuration selection
+# PHASE 3: A/B testing (CREATED - organized in ab_testing/)
+# scripts/ab_testing/ab_test_retrieval.py        - A/B testing framework with docstrings
+# scripts/ab_testing/statistical_analysis.py    - Statistical significance analysis
+# scripts/ab_testing/select_best_config.py      - Configuration selection framework
 
-# PHASE 4: MLOps scripts (NEED TO BE CREATED + MLflow dependency)
-touch scripts/setup_mlflow_tracking.py        # TODO: MLflow setup
-touch scripts/mlflow_model_registry.py        # TODO: Model registry
-touch scripts/performance_monitoring.py       # TODO: Performance monitoring
-touch scripts/automated_retraining.py         # TODO: Automated retraining
+# PHASE 4: MLOps scripts (CREATED - organized in mlops/)
+# scripts/mlops/setup_mlops_pipeline.py     - MLOps infrastructure setup with docstrings
+# scripts/mlops/model_monitoring.py         - Model performance monitoring and drift detection
+# scripts/mlops/automated_retraining.py     - Automated retraining pipeline
 
-# PHASE 5: Deployment (NEED TO BE CREATED)
-touch scripts/prepare_aws_config.py           # TODO: AWS config preparation
-touch scripts/create_deployment_package.py    # TODO: Deployment packaging
-touch scripts/estimate_aws_costs.py           # TODO: Cost estimation
-touch scripts/comprehensive_validation.py     # TODO: Final validation
+# PHASE 5: Monitoring & Alerting (CREATED - organized in monitoring/)
+# scripts/monitoring/production_monitoring.py   - Production monitoring dashboard setup with docstrings
+# scripts/monitoring/alerting_system.py         - Automated alert configuration and management
+# scripts/monitoring/log_analysis.py            - Comprehensive log analysis framework
+# configs/monitoring_config.yaml               - Monitoring configuration (CREATED)
+# configs/alerting_rules.yaml                  - CloudWatch alarm rules (CREATED)
+
+# PHASE 6: Deployment (CREATED - organized in deployment/)
+# scripts/deployment/blue_green_deploy.py      - Blue-green deployment with zero downtime
+# scripts/deployment/rollback_system.py        - Automated rollback and recovery system
+# scripts/deployment/production_validation.py  - Production validation and health checks
+# scripts/deployment/estimate_aws_costs.py     - AWS cost estimation framework (CREATED)
 
 # CI/CD configuration (NEED TO BE CREATED)
 mkdir -p .github/workflows
@@ -504,26 +773,29 @@ touch configs/performance_thresholds.yaml     # TODO: Performance thresholds
 
 **Implementation Sequence**:
 1. **Infrastructure Setup**: Create missing directories and script templates
-2. **Phase 1 Implementation**: Build baseline testing and evaluation scripts
-3. **Phase 2-3 Development**: Implement model optimization and A/B testing frameworks
-4. **MLOps Integration**: Set up MLflow tracking and GitHub Actions CI/CD
-5. **Testing and Deployment**: Execute full testing plan and deploy to AWS
+2. **Baseline Implementation**: Build baseline testing and evaluation scripts
+3. **Optimization Development**: Implement model optimization and A/B testing frameworks
+4. **MLOps Integration**: Set up MLflow tracking, production monitoring, and GitHub Actions CI/CD
+5. **Testing and Deployment**: Execute full testing plan and deploy to AWS with comprehensive monitoring
 
 **Key Advantages of This Approach**:
 - **Technical Excellence**: Maximizes performance before deployment costs begin
-- **Professional MLOps**: Demonstrates industry-standard practices (MLflow + CI/CD)
+- **Professional MLOps**: Demonstrates industry-standard practices (MLflow + CI/CD + Monitoring)
+- **Production Monitoring**: Shows understanding of ML system observability and maintenance
 - **Portfolio Strength**: Shows modern ML engineering skills employers want
 - **Statistical Rigor**: Ensures validity of improvements with proper tracking
-- **Deployment Ready**: Automated testing and deployment pipeline
-- **Interview Material**: Rich technical discussions about MLOps choices
+- **Deployment Ready**: Automated testing, deployment, and monitoring pipeline
+- **Cost Optimization**: Monitoring within ultra-budget constraints ($2-5/month additional)
+- **Interview Material**: Rich technical discussions about MLOps and production ML
 
 ## Why This Approach Perfect for Your Target Roles:
 
 ### **Machine Learning Engineer**
 - **MLflow**: Shows you understand ML experimentation and model lifecycle
-- **A/B Testing**: Demonstrates statistical rigor in model evaluation  
-- **Performance Optimization**: Shows ability to improve ML system performance
+- **Production Monitoring**: Demonstrates ML system observability (CloudWatch + custom metrics)
+- **Performance Optimization**: Shows ability to improve ML system performance systematically
 - **Automated Testing**: Validates models systematically before deployment
+- **Cost Monitoring**: Understanding of ML system economics and budget optimization
 
 ### **AI Engineer** 
 - **RAG System**: Cutting-edge AI architecture with LLMs and vector search
@@ -546,11 +818,13 @@ touch configs/performance_thresholds.yaml     # TODO: Performance thresholds
 ---
 
 **Skills Demonstrated for Job Applications**:
-- **MLOps**: MLflow experiment tracking, model versioning
+- **MLOps**: MLflow experiment tracking, model versioning, production monitoring
 - **DevOps**: GitHub Actions CI/CD, automated testing
-- **Cloud Engineering**: AWS deployment with infrastructure as code
+- **Monitoring**: CloudWatch dashboards, alerting, performance tracking
+- **Cloud Engineering**: AWS deployment with infrastructure monitoring
 - **Data Science**: Statistical analysis, A/B testing, performance optimization
-- **Software Engineering**: Clean code, testing, documentation
+- **Cost Optimization**: Ultra-budget deployment with comprehensive monitoring ($2-5 additional cost)
+- **Software Engineering**: Clean code, testing, documentation, observability
 
 **Cost During Testing**: ~$5-15 total (mostly local, minimal cloud usage for validation)
 

@@ -1,4 +1,42 @@
-"""Glue code that connects ingestion, metadata enrichment, and indexing."""
+"""
+Ingestion Pipeline Orchestrator
+
+This module provides the main orchestration layer connecting document ingestion,
+metadata enrichment, and hybrid indexing into a unified pipeline for processing
+documents from ingestion through searchable index storage.
+
+Features:
+- End-to-end document processing pipeline
+- PDF ingestion and text extraction
+- Metadata enrichment integration
+- Hybrid indexing coordination
+- Session isolation support
+- Error handling and recovery
+- Batch processing optimization
+- Index management integration
+
+Pipeline Flow:
+1. PDF text extraction and chunking
+2. Metadata inference and enrichment
+3. Document chunk preparation
+4. Hybrid index storage (BM25 + vectors)
+
+Usage:
+    # Process single document
+    ingest_and_index_document(
+        path=Path('document.pdf'),
+        embedding_model=embedder,
+        index_name='research-docs'
+    )
+    
+    # With session isolation
+    ingest_and_index_document(
+        path=Path('doc.pdf'),
+        embedding_model=embedder,
+        index_name='docs',
+        clear_previous=True
+    )
+"""
 
 from __future__ import annotations
 

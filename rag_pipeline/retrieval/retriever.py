@@ -1,4 +1,34 @@
-"""Hybrid retriever wrapper that bridges OpenSearch and LangChain."""
+"""
+Hybrid Retrieval Engine
+
+This module implements the core hybrid retrieval system that combines BM25 sparse
+retrieval with dense vector search, integrated with OpenSearch backend and
+supporting multiple reranking strategies for optimal retrieval performance.
+
+Features:
+- Hybrid BM25 + vector similarity search
+- Configurable retrieval weights (BM25 vs semantic)
+- Multiple reranker integration
+- Query embedding optimization
+- OpenSearch protocol integration
+- Flexible top-k retrieval
+- Document scoring and ranking
+- Production-ready error handling
+
+Architecture:
+- SearchClient protocol for OpenSearch integration
+- QueryEmbedder protocol for embedding models
+- HybridRetriever orchestrates multi-modal search
+- Pluggable reranker architecture
+
+Usage:
+    retriever = HybridRetriever(
+        query_embedder=embedder,
+        search_client=opensearch_client,
+        reranker=CrossEncoderReranker()
+    )
+    results = retriever.retrieve('machine learning', top_k=5)
+"""
 
 from __future__ import annotations
 

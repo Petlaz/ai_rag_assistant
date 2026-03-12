@@ -1,4 +1,33 @@
-"""Adapters that allow the rest of the codebase to talk to Ollama easily."""
+"""
+Ollama Integration Adapters
+
+This module provides high-level adapters and convenience wrappers for integrating
+the Ollama local LLM runtime into RAG applications, offering simplified chat interfaces
+and environment-based configuration management.
+
+Features:
+- Chat-style message interface for Ollama
+- Environment variable configuration
+- Automatic fallback model management
+- Simple message formatting and handling
+- Integration with OllamaClient for low-level operations
+- Error handling and recovery mechanisms
+- Production-ready chat adapters
+- Flexible configuration options
+
+Usage:
+    # Create adapter from environment
+    adapter = OllamaChatAdapter.from_env(
+        base_url="http://localhost:11434",
+        model="llama3:8b",
+        fallback_model="gemma3:1b"
+    )
+    
+    # Send chat messages
+    response = adapter.invoke_messages([
+        {"role": "user", "content": "What is machine learning?"}
+    ])
+"""
 
 from __future__ import annotations
 
@@ -11,7 +40,24 @@ from .client import OllamaClient, OllamaConfig
 
 @dataclass
 class OllamaChatAdapter:
-    """Simple helper to wrap chat-style calls to Ollama."""
+    """
+    High-Level Chat Interface for Ollama Integration
+    
+    Provides a simplified chat-style interface for interacting with Ollama models,
+    handling message formatting, response processing, and error management with
+    automatic fallback support.
+    
+    Features:
+    - Chat message list processing
+    - Environment-based configuration
+    - Automatic fallback model support
+    - Error handling and recovery
+    - Options passing for model parameters
+    - Streaming and non-streaming modes
+    
+    Attributes:
+        client: Underlying OllamaClient for API communication
+    """
 
     client: OllamaClient
 
@@ -23,7 +69,21 @@ class OllamaChatAdapter:
         timeout: float = 30.0,
         fallback_model: Optional[str] = None,
     ) -> "OllamaChatAdapter":
-        """Convenience constructor for callers that only have env vars."""
+        """
+        Create OllamaChatAdapter from environment configuration.
+        
+        Convenience constructor that builds adapter configuration from
+        environment variables with sensible defaults and fallback handling.
+        
+        Args:
+            base_url: Ollama server base URL
+            model: Primary model name to use
+            timeout: Request timeout in seconds
+            fallback_model: Optional fallback model (defaults to env var)
+            
+        Returns:
+            Configured OllamaChatAdapter instance
+        """
 
         fallback = (
             fallback_model
@@ -43,6 +103,22 @@ class OllamaChatAdapter:
         messages: List[Dict[str, str]],
         options: Optional[Dict] = None,
     ) -> str:
-        """Send a pre-built message list to the Ollama client."""
+        """
+        Send chat messages to Ollama and get response.
+        
+        Processes a list of chat messages through the Ollama client,
+        handling formatting, options, and error recovery automatically.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys
+            options: Optional model parameters (temperature, top_p, etc.)
+            
+        Returns:
+            Generated response text from Ollama
+            
+        Raises:
+            RuntimeError: If generation fails and fallback is unavailable
+            ModelNotFoundError: If specified model is not found
+        """
 
         return self.client.generate(messages=messages, stream=False, options=options)

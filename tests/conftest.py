@@ -1,4 +1,30 @@
-"""Pytest configuration for AI_RAG project."""
+"""
+Pytest Configuration and Test Environment Setup
+
+This module provides centralized pytest configuration for the AI RAG Assistant test suite,
+including path setup, fixtures, and common test utilities to ensure consistent
+test execution across all test modules.
+
+Features:
+- Project root path configuration
+- Python path setup for module imports
+- Common test fixtures and utilities
+- Test environment standardization
+- Import path resolution
+- Shared test constants
+- Test data management
+- Cross-module test support
+
+Usage:
+    # Automatically loaded by pytest
+    pytest tests/
+    
+    # Run specific test modules
+    pytest tests/test_retrieval.py -v
+    
+    # Run with coverage
+    pytest tests/ --cov=rag_pipeline --cov-report=html
+"""
 
 import sys
 from pathlib import Path

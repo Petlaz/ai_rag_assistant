@@ -1,4 +1,35 @@
-"""Tests for Ollama client fallback behaviour."""
+"""
+Ollama LLM Client Test Suite
+
+This module tests the Ollama client implementation, focusing on fallback behavior,
+error handling, configuration management, and integration with the local
+Ollama LLM service for robust text generation.
+
+Features:
+- Fallback model testing
+- Error recovery validation
+- Configuration testing
+- Timeout handling verification
+- Health monitoring tests
+- Connection retry logic
+- Response format validation
+- Performance boundary testing
+
+Test Coverage:
+- Primary model failure scenarios
+- Automatic fallback activation
+- Configuration validation
+- Error propagation handling
+- Client initialization
+- Request/response cycles
+
+Usage:
+    # Run Ollama client tests
+    pytest tests/test_ollama_client.py -v
+    
+    # Test with mocked Ollama service
+    pytest tests/test_ollama_client.py --mock-ollama
+"""
 
 from llm_ollama.client import OllamaClient, OllamaConfig
 

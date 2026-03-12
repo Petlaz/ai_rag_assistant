@@ -1,4 +1,30 @@
-"""Simple ingestion worker that watches a directory for PDFs and indexes them."""
+"""
+Directory Watching PDF Ingestion Service
+
+This script implements an automated file watching service that monitors directories
+for new PDF documents and automatically processes them through the RAG ingestion
+pipeline with real-time document indexing.
+
+Features:
+- Real-time directory monitoring
+- Automatic PDF detection and processing
+- Duplicate file handling
+- Error recovery and retry mechanisms
+- Configurable watch directories
+- Batch processing optimization
+- Status logging and monitoring
+- Graceful shutdown handling
+
+Usage:
+    # Watch directory for automatic PDF ingestion
+    python scripts/ingest_watch.py --watch-dir /path/to/pdfs --index quest-research
+    
+    # Monitor with custom polling interval
+    python scripts/ingest_watch.py --watch-dir ./documents --interval 30
+    
+    # Batch processing mode
+    python scripts/ingest_watch.py --watch-dir ./pdfs --batch-size 10 --index docs
+"""
 
 from __future__ import annotations
 

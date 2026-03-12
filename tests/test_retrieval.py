@@ -1,4 +1,36 @@
-"""Unit tests for hybrid retriever behavior."""
+"""
+Hybrid Retrieval System Test Suite
+
+This module provides comprehensive testing for the hybrid retrieval system,
+validating BM25 + vector search integration, reranking strategies,
+and document retrieval quality across different search scenarios.
+
+Features:
+- Hybrid search algorithm testing
+- BM25 + vector search integration
+- Reranking strategy validation
+- Document scoring verification
+- Search result quality testing
+- Performance boundary validation
+- Edge case handling
+- Mock service integration
+
+Test Coverage:
+- HybridRetriever functionality
+- RetrievedDocument data structures
+- Search result ranking
+- Query embedding integration
+- OpenSearch client interaction
+- Reranker component testing
+- Error handling scenarios
+
+Usage:
+    # Run retrieval tests
+    pytest tests/test_retrieval.py -v
+    
+    # Test with different rerankers
+    pytest tests/test_retrieval.py -k "reranker" -v
+"""
 
 from typing import Any, Dict
 

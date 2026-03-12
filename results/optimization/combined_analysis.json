@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-03-12 07:40:47",
+  "best_embedding_model": "all-MiniLM-L6-v2",
+  "best_reranking_strategy": "cross_encoder",
+  "performance_estimates": {
+    "estimated_precision_at_5": 0.40000000000000013,
+    "estimated_mrr": 0.95,
+    "estimated_latency_ms": 148.86576930681863,
+    "estimated_memory_mb": 100.0
+  },
+  "cost_analysis": {
+    "embedding_cost_per_query": 5e-05,
+    "reranking_cost_per_query": 0.0001,
+    "total_cost_per_query": 0.00015000000000000001,
+    "monthly_cost_estimate": 1.5000000000000002
+  },
+  "implementation_recommendation": {
+    "recommended_configuration": {
+      "embedding_model": "all-MiniLM-L6-v2",
+      "reranking_strategy": "cross_encoder",
+      "bm25_weight": 0.6,
+      "semantic_weight": 0.4,
+      "top_k_retrieval": 25
+    },
+    "deployment_priority": "medium",
+    "risk_assessment": "low"
+  }
+}

@@ -1,4 +1,30 @@
-"""OpenSearch client helpers centralizing connection and index utilities."""
+"""
+OpenSearch Client Integration Module
+
+This module provides centralized OpenSearch connection management and utility functions
+for index operations, document management, and cluster health monitoring with
+region error handling and fallback mechanisms.
+
+Features:
+- OpenSearch cluster connection management
+- Bulk document indexing operations
+- Index clearing and management
+- Health monitoring and status checks
+- Connection retry logic
+- Error handling and graceful degradation
+- Configuration validation
+- Production-ready logging
+
+Usage:
+    # Initialize client
+    client = create_opensearch_client(host='localhost:9200')
+    
+    # Bulk index documents
+    bulk_index_documents(client, documents, 'my-index')
+    
+    # Clear index
+    clear_index_documents(client, 'my-index')
+"""
 
 from __future__ import annotations
 

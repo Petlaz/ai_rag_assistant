@@ -1,0 +1,72 @@
+{
+  "evaluation_metadata": {
+    "timestamp": "2026-03-12 07:40:47",
+    "strategies_tested": [
+      "cross_encoder",
+      "hybrid_scoring"
+    ],
+    "total_queries": 24,
+    "local_models_only": true,
+    "evaluation_framework": "Phase 2 MLOps Testing - Re-ranking"
+  },
+  "strategy_performance": [
+    {
+      "strategy_name": "cross_encoder",
+      "precision_at_1": 1.0,
+      "precision_at_5": 0.40000000000000013,
+      "precision_at_10": 0.20000000000000007,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.20000000000000007,
+      "avg_rerank_time_ms": 0.047266483306884766,
+      "memory_usage_mb": 100.0,
+      "cost_per_query": 0.0001,
+      "quality_improvement": 0.0,
+      "latency_cost_ms": 0.047266483306884766
+    },
+    {
+      "strategy_name": "hybrid_scoring",
+      "precision_at_1": 1.0,
+      "precision_at_5": 0.40000000000000013,
+      "precision_at_10": 0.20000000000000007,
+      "mrr": 1.0,
+      "ndcg_at_10": 0.20000000000000007,
+      "avg_rerank_time_ms": 0.049620866775512695,
+      "memory_usage_mb": 100.0,
+      "cost_per_query": 0.0,
+      "quality_improvement": 0.0,
+      "latency_cost_ms": 0.049620866775512695
+    }
+  ],
+  "baseline_comparison": {
+    "cross_encoder": {
+      "precision_improvement": 0.0,
+      "latency_cost_ms": 0.047266483306884766,
+      "cost_per_query": 0.0001,
+      "cost_benefit_ratio": 0.0
+    },
+    "hybrid_scoring": {
+      "precision_improvement": 0.0,
+      "latency_cost_ms": 0.049620866775512695,
+      "cost_per_query": 0.0,
+      "cost_benefit_ratio": 0.0
+    }
+  },
+  "recommendations": {
+    "best_quality": {
+      "strategy": "cross_encoder",
+      "improvement": 0.0,
+      "latency_cost": 0.047266483306884766
+    },
+    "best_speed": {
+      "strategy": "cross_encoder",
+      "rerank_time": 0.047266483306884766,
+      "quality_improvement": 0.0
+    },
+    "best_cost_benefit": {
+      "strategy": "cross_encoder",
+      "cost_benefit_score": 0.0,
+      "quality_improvement": 0.0,
+      "latency_cost": 0.047266483306884766
+    }
+  }
+}

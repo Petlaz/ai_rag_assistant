@@ -1,8 +1,34 @@
-"""Reranking utilities used to refine the retriever output.
+"""
+Document Reranking Engine
 
-The initial Quest Analytics launch will rely on lightweight heuristics, and we
-can swap in heavier cross-encoders once latency and infra budgets allow.  The
-goal here is to provide a clear extension point for future improvements.
+This module provides sophisticated document reranking capabilities to refine
+retrieval results using multiple strategies including cross-encoder scoring
+and lightweight heuristics for improved relevance ranking.
+
+Features:
+- Multiple reranking strategies (PassThrough, CrossEncoder)
+- Cross-encoder relevance scoring
+- Lightweight heuristic reranking
+- Pluggable reranker architecture
+- Performance optimization
+- Document scoring normalization
+- Extensible reranker interface
+- Production-ready implementations
+
+Reranker Types:
+- PassThroughReranker: Preserves original ordering (baseline)
+- CrossEncoderReranker: Deep learning relevance scoring
+- Custom rerankers: Extensible protocol-based interface
+
+Usage:
+    # Basic pass-through reranking
+    reranker = PassThroughReranker()
+    
+    # Advanced cross-encoder reranking
+    reranker = CrossEncoderReranker(model_name='cross-encoder/model')
+    
+    # Apply reranking
+    ranked_docs = reranker.rerank(query='search text', documents=retrieved_docs)
 """
 
 from __future__ import annotations

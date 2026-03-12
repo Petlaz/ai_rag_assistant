@@ -1,4 +1,30 @@
-"""Smoke test for the Quest Analytics AI RAG assistant."""
+"""
+End-to-End System Smoke Test Suite
+
+This script performs comprehensive end-to-end testing of the RAG system,
+validating the complete pipeline from document ingestion through query processing
+and response generation with health checks and integration validation.
+
+Features:
+- Complete pipeline integration testing
+- Document ingestion validation
+- Query processing verification
+- Response quality assessment
+- System health monitoring
+- Component connectivity checks
+- Performance boundary testing
+- Error condition simulation
+
+Usage:
+    # Run complete end-to-end smoke test
+    python scripts/smoke_test.py --pdf sample.pdf --question "research question"
+    
+    # Quick system health check
+    python scripts/smoke_test.py --health-check-only
+    
+    # Integration test with custom parameters
+    python scripts/smoke_test.py --pdf document.pdf --question "query" --timeout 30
+"""
 
 from __future__ import annotations
 

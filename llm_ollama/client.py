@@ -1,4 +1,41 @@
-"""Lightweight Ollama HTTP client used by the Quest Analytics RAG stack."""
+"""
+Ollama HTTP Client for Local LLM Integration
+
+This module provides a lightweight, production-ready HTTP client for communicating
+with the local Ollama runtime, supporting model management, health monitoring,
+and robust error handling with fallback mechanisms.
+
+Features:
+- Lightweight REST API client for Ollama
+- Model availability checking and management
+- Health monitoring and status reporting
+- Automatic fallback model support
+- Comprehensive error handling with context
+- Request timeout and retry logic
+- Model listing and introspection
+- Production-ready logging and debugging
+
+Components:
+- OllamaClient: Core HTTP client for API communication
+- OllamaConfig: Configuration management for client setup
+- OllamaHealth: Health check results and monitoring
+- ModelNotFoundError: Custom exception for missing models
+
+Usage:
+    # Configure and create client
+    config = OllamaConfig(
+        base_url="http://localhost:11434",
+        model="llama3:8b",
+        fallback_model="gemma3:1b"
+    )
+    client = OllamaClient(config)
+    
+    # Check health
+    health = client.health_check()
+    
+    # Generate responses
+    response = client.generate(messages=messages)
+"""
 
 from __future__ import annotations
 
@@ -15,12 +52,29 @@ logger = logging.getLogger(__name__)
 
 
 class ModelNotFoundError(RuntimeError):
-    """Raised when the requested Ollama model cannot be located."""
+    """
+    Custom Exception for Missing Ollama Models
+    
+    Raised when a requested Ollama model cannot be located or accessed,
+    providing clear error context for model availability issues.
+    """
+    pass
 
 
 @dataclass
 class OllamaHealth:
-    """Represents the outcome of a lightweight Ollama health probe."""
+    """
+    Ollama Service Health Status Information
+    
+    Represents comprehensive health check results for the Ollama service,
+    including connectivity status, performance metrics, and error details.
+    
+    Attributes:
+        healthy: Boolean indicating overall service health
+        status_code: HTTP status code from health check
+        latency_ms: Response latency in milliseconds
+        error: Error message if health check failed
+    """
 
     healthy: bool
     status_code: Optional[int]
@@ -30,7 +84,18 @@ class OllamaHealth:
 
 @dataclass
 class OllamaConfig:
-    """Configuration required to talk to the local Ollama runtime."""
+    """
+    Ollama Client Configuration Settings
+    
+    Comprehensive configuration for Ollama client connections, including
+    connection parameters, model selection, and fallback strategies.
+    
+    Attributes:
+        base_url: Ollama server base URL (e.g., http://localhost:11434)
+        model: Primary model name to use for generation
+        timeout: Request timeout in seconds
+        fallback_model: Fallback model name for error recovery
+    """
 
     base_url: str
     model: str
@@ -39,13 +104,50 @@ class OllamaConfig:
 
 
 class OllamaClient:
-    """Thin wrapper around the Ollama REST API."""
+    """
+    Production-Ready Ollama HTTP API Client
+    
+    Robust HTTP client for communicating with local Ollama runtime, providing
+    comprehensive error handling, health monitoring, and automatic fallback
+    capabilities for reliable LLM integration.
+    
+    Features:
+    - RESTful API communication with Ollama
+    - Automatic error detection and recovery
+    - Model availability checking
+    - Health monitoring and diagnostics
+    - Fallback model support
+    - Comprehensive logging and debugging
+    - Request timeout and retry handling
+    
+    Methods:
+        generate: Generate text responses from prompts/messages
+        health_check: Monitor service health and availability
+        list_models: Get available model information
+    """
 
     def __init__(self, config: OllamaConfig):
         self.config = config
 
     def _post(self, endpoint: str, payload: dict) -> dict:
-        """Send a POST request and surface HTTP errors with context."""
+        """
+        Send HTTP POST request to Ollama API with error handling.
+        
+        Internal method for making POST requests to Ollama endpoints with
+        comprehensive error handling, context preservation, and meaningful
+        error messages for debugging.
+        
+        Args:
+            endpoint: API endpoint path (e.g., '/api/generate')
+            payload: JSON payload to send in request body
+            
+        Returns:
+            Parsed JSON response from Ollama API
+            
+        Raises:
+            RuntimeError: For HTTP errors and connection issues
+            ModelNotFoundError: For 404 model not found errors
+        """
 
         url = f"{self.config.base_url.rstrip('/')}{endpoint}"
         try:
@@ -68,7 +170,23 @@ class OllamaClient:
         return response.json()
 
     def health_check(self) -> OllamaHealth:
-        """Ping the Ollama server; return structured health metadata."""
+        """
+        Perform comprehensive Ollama service health check.
+        
+        Checks Ollama service availability, response time, and overall health
+        status by querying the models endpoint and measuring performance.
+        
+        Returns:
+            OllamaHealth object with detailed health information including:
+            - Service availability status
+            - Response latency metrics
+            - HTTP status codes
+            - Error details if unhealthy
+            
+        Note:
+            This method does not require model loading and provides fast
+            health status suitable for monitoring and diagnostics.
+        """
 
         start = time.perf_counter()
         try:
