@@ -42,10 +42,27 @@ This document provides a comprehensive reference of all technologies, frameworks
   - Pre-trained model loading and inference
 
 ### Numerical Computing
-- **NumPy 1.24.0**
+- **NumPy 1.24.0+**
   - Numerical operations and array processing
-- **Pandas 2.0.0**
+- **Pandas 2.0.0+**
   - Data manipulation and analysis
+- **SciPy**
+  - Scientific computing and statistics
+  - Used in evaluation and A/B testing scripts
+- **Scikit-learn**
+  - Machine learning algorithms for model monitoring
+  - Used in MLOps pipeline components
+
+### Machine Learning Operations (MLOps)
+- **MLflow**
+  - Experiment tracking and model versioning
+  - Implemented in automated retraining pipeline
+  - Model performance monitoring
+  - Parameter and metric logging
+- **Custom MLOps Pipeline**
+  - Automated model retraining workflows
+  - Performance drift detection
+  - Model lifecycle management
 
 ## Search & Database Technologies
 
@@ -114,9 +131,17 @@ This document provides a comprehensive reference of all technologies, frameworks
   - Configuration model definitions
 - **PyYAML 6.0.1**
   - YAML configuration file parsing
+  - Complex configuration management
 - **Python-dotenv 1.0.0**
   - Environment variable management
   - Secrets handling
+- **Comprehensive YAML Configuration System**
+  - Monitoring configuration (`monitoring.yaml`)
+  - Alerting configuration (`alerting.yaml`)
+  - Log analysis configuration (`log_analysis.yaml`)
+  - Application settings (`app_settings.yaml`)
+  - Logging configuration (`logging.yaml`)
+  - Prompt templates (`research_qa_prompt.yaml`, `guardrails.yaml`)
 
 ## HTTP & Networking
 
@@ -154,9 +179,14 @@ This document provides a comprehensive reference of all technologies, frameworks
 - **AWS CloudWatch**
   - Monitoring and logging
   - Cost tracking and alerts
+  - Custom metrics and dashboards
+  - Log aggregation and analysis
 - **AWS IAM**
   - Access control and security
   - Least-privilege permissions
+- **AWS SES (Simple Email Service)**
+  - Production email delivery
+  - Alert notifications
 
 ### Infrastructure as Code
 - **AWS CloudFormation** (via deployment scripts)
@@ -178,6 +208,18 @@ This document provides a comprehensive reference of all technologies, frameworks
 
 ## Development Tools
 
+### Version Control & CI/CD
+- **Git**
+  - Source code version control
+  - Branch-based development workflow
+- **GitHub**
+  - Code repository hosting
+  - Collaboration and code review
+- **GitHub Actions** (Infrastructure Ready)
+  - CI/CD workflow automation framework
+  - `.github/workflows/` directory structure in place
+  - Ready for deployment pipeline implementation
+
 ### Package Management
 - **pip** (Primary)
   - Python package installation
@@ -195,17 +237,42 @@ This document provides a comprehensive reference of all technologies, frameworks
   - Style guide enforcement
 
 ### Testing
-- **pytest 7.4.0**
+- **pytest 7.4.0+**
   - Unit testing framework
   - Test automation
-- **pytest-asyncio 0.21.0**
+- **pytest-asyncio 0.21.0+**
   - Async testing support
+- **Custom Test Frameworks**
+  - RAG retrieval evaluation
+  - End-to-end API testing
+  - Performance benchmarking
+  - Smoke testing utilities
 
 ### Utilities
-- **Click 8.1.0**
+- **Click 8.1.0+**
   - Command-line interface creation
-- **tqdm 4.66.0**
+- **tqdm 4.66.0+**
   - Progress bars for long-running operations
+- **Logging**
+  - Structured logging with JSON formatting
+  - Log rotation and management
+
+### Email & Notifications
+- **smtplib** (Python Standard Library)
+  - SMTP email sending
+- **email.mime** (Python Standard Library)
+  - Email message construction
+
+### File Processing & Monitoring
+- **Watchdog 3.0.0**
+  - File system event monitoring
+  - Real-time log file change detection
+  - Used in log analysis system
+- **Pathlib** (Python Standard Library)
+  - Modern path manipulation
+- **JSON/JSONL Processing**
+  - Sample query management
+  - Configuration processing
 
 ## Development Environment
 
@@ -213,16 +280,67 @@ This document provides a comprehensive reference of all technologies, frameworks
 - **Python 3.11-slim Docker Image**
   - Lightweight Python runtime
   - Optimized for production deployment
+- **PyEnv**
+  - Python version management
+  - Virtual environment isolation
+- **Virtual Environments**
+  - Dependency isolation
+  - Clean development environments
 
 ### System Dependencies
 - **build-essential**
   - Compilation tools for native extensions
 - **git**
-  - Version control
+  - Version control and CI/CD integration
 - **curl**
   - HTTP client for health checks
 
+### Data Science & Analytics
+- **Jupyter Notebooks**
+  - Interactive data exploration
+  - RAG quality evaluation
+  - Retrieval performance analysis
+- **Matplotlib**
+  - Data visualization
+  - Performance metrics plotting
+- **Seaborn**
+  - Statistical data visualization
+  - Used in monitoring and evaluation scripts
+
 ## Monitoring & Observability
+
+### Production Monitoring
+- **Custom Production Monitoring System**
+  - Real-time system health monitoring
+  - Performance metrics collection
+  - Cost tracking and optimization
+  - Resource utilization monitoring
+- **AWS CloudWatch Integration**
+  - Custom metrics and dashboards
+  - Log aggregation and analysis
+  - Alert threshold management
+- **Psutil**
+  - System resource monitoring
+  - CPU, memory, disk utilization
+  - Process monitoring
+
+### Intelligent Alerting Framework
+- **Multi-Channel Alerting System**
+  - Email notifications (SMTP/SES)
+  - Slack integration
+  - CloudWatch alarms
+  - Webhook notifications
+- **Alert Aggregation & Noise Reduction**
+  - Smart alert batching
+  - Escalation policies
+  - Rate limiting and deduplication
+
+### Log Analysis System
+- **Real-time Log Monitoring**
+  - Live log file monitoring with Watchdog
+  - Pattern-based log parsing
+  - Anomaly detection algorithms
+  - Performance metric extraction
 
 ### Health Monitoring
 - **Custom Health Check System**
@@ -235,6 +353,10 @@ This document provides a comprehensive reference of all technologies, frameworks
   - Usage tracking
   - Performance metrics
   - User interaction monitoring
+- **Data Exploration Tools**
+  - Jupyter notebook analytics
+  - Interactive data visualization
+  - Query pattern analysis
 
 ## Deployment Architectures
 
@@ -249,15 +371,14 @@ This document provides a comprehensive reference of all technologies, frameworks
 
 ### Balanced Deployment ($15-35/month)
 **Technologies Used:**
-- External vector database (Pinecone or Chroma)
-- AWS API Gateway + Lambda
+- OpenSearch with enhanced configuration
+- AWS Lambda with optimized memory allocation
 - Enhanced monitoring and analytics
 - Smart caching strategies
 
 ### Full Production Deployment ($25-68/month)
 **Technologies Used:**
-- Amazon OpenSearch Serverless
-- AWS CloudFront CDN
+- Amazon OpenSearch cluster
 - Complete monitoring suite
 - High availability configuration
 - Advanced security features
@@ -313,5 +434,74 @@ This tech stack is designed for:
 
 ---
 
-*Last Updated: January 2025*
+## Automation & Deployment Scripts
+
+### MLOps & Model Management
+- **MLflow Integration Scripts**
+  - `scripts/mlops/setup_mlops_pipeline.py` - MLflow experiment setup
+  - `scripts/mlops/automated_retraining.py` - Model retraining with MLflow tracking
+  - `scripts/mlops/model_monitoring.py` - Production model performance monitoring
+- **Experiment Tracking**
+  - Automated parameter logging
+  - Model performance metrics collection
+  - Model versioning and comparison
+
+### Deployment Automation
+- **Bash Scripting**
+  - Infrastructure bootstrapping
+  - Deployment automation
+  - Environment setup
+- **Python Automation Scripts**
+  - Data ingestion pipelines
+  - Monitoring system setup
+  - Test data generation
+  - Performance evaluation
+
+### Development Workflow
+- **Script-based Operations**
+  - `bootstrap_opensearch.sh` - Search infrastructure setup
+  - `deploy-student-stack.sh` - Student deployment automation
+  - `run_ingestion.py` - Document processing pipeline
+  - `eval_retrieval.py` - Retrieval quality assessment
+  - `smoke_test.py` - End-to-end testing
+
+### CI/CD Infrastructure
+- **GitHub Actions Ready**
+  - Workflow directory structure established
+  - Ready for automated testing pipeline
+  - Deployment automation framework in place
+- **MLOps Pipeline Integration**
+  - Automated model training and evaluation
+  - Performance monitoring workflows
+  - Model drift detection capabilities
+
+## Data Processing Architecture
+
+### ETL Pipeline Components
+- **Document Ingestion**
+  - PDF processing with OCR
+  - Metadata extraction
+  - Content validation
+- **Embedding Generation**
+  - Sentence transformer models
+  - Vector space optimization
+- **Index Management**
+  - Hybrid indexing strategies
+  - Schema management
+  - Performance optimization
+
+### Data Storage Patterns
+- **Document Storage**
+  - Raw document preservation
+  - Processed content caching
+  - Metadata indexing
+- **Vector Storage**
+  - Optimized vector retrieval
+  - Similarity search optimization
+  - Index health monitoring
+
+---
+
+*Last Updated: March 2026*
 *Project: Quest Analytics RAG Assistant*
+*Phase 5 Complete: Full Production Monitoring & Analytics Implementation*

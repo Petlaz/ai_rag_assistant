@@ -1,0 +1,289 @@
+# Phase 3: Retrieval Configuration A/B Testing Variants
+# ======================================================
+#
+# This configuration file defines multiple retrieval configurations for systematic A/B testing
+# to identify the optimal balance of performance, cost, and latency for Quest Analytics RAG system.
+#
+# Each configuration represents a distinct retrieval strategy that will be tested against
+# the baseline and other variants using statistical significance testing.
+
+# TEST CONFIGURATIONS FOR A/B TESTING
+
+# BASELINE: Current production configuration (control group)
+baseline:
+  name: "current_baseline"
+  description: "Current production configuration serving as control group"
+  
+  # Hybrid retrieval weights  
+  bm25_weight: 0.7
+  semantic_weight: 0.3
+  
+  # Retrieval parameters
+  top_k_retrieval: 20
+  top_k_final: 5
+  
+  # Model configurations
+  embedding_model: "all-MiniLM-L6-v2"
+  reranker: "passthrough"
+  
+  # Performance targets
+  expected_precision_at_5: 0.72
+  expected_mrr: 0.80
+  max_latency_ms: 2000
+  
+  # Cost parameters
+  estimated_cost_per_query: 0.001
+  
+  # Metadata
+  created_date: "2026-03-13"
+  last_tested: "2026-03-13"
+  status: "baseline"
+
+
+# VARIANT A: Balanced hybrid approach
+balanced:
+  name: "balanced_hybrid"
+  description: "Equal weighting between BM25 and semantic search with cross-encoder reranking"
+  
+  # Hybrid retrieval weights
+  bm25_weight: 0.5
+  semantic_weight: 0.5
+  
+  # Retrieval parameters  
+  top_k_retrieval: 25
+  top_k_final: 5
+  
+  # Model configurations
+  embedding_model: "all-MiniLM-L6-v2"
+  reranker: "cross_encoder"
+  reranker_model: "ms-marco-MiniLM-L-6-v2"
+  
+  # Performance targets
+  expected_precision_at_5: 0.76
+  expected_mrr: 0.84
+  max_latency_ms: 2500
+  
+  # Cost parameters
+  estimated_cost_per_query: 0.0015
+  
+  # Hypotheses
+  hypothesis: "Equal BM25/semantic weighting + cross-encoder reranking improves precision"
+  expected_improvement: "8% precision improvement, 5% MRR improvement"
+  
+  # Metadata
+  created_date: "2026-03-13"
+  status: "test_variant"
+
+
+# VARIANT B: Semantic-focused approach  
+semantic_heavy:
+  name: "semantic_focused"
+  description: "Semantic-heavy configuration with LLM-based reranking for research context"
+  
+  # Hybrid retrieval weights
+  bm25_weight: 0.3
+  semantic_weight: 0.7
+  
+  # Retrieval parameters
+  top_k_retrieval: 30
+  top_k_final: 5
+  
+  # Model configurations
+  embedding_model: "all-MiniLM-L6-v2"
+  reranker: "llm_based"
+  reranker_model: "ollama_llama2"
+  
+  # Performance targets
+  expected_precision_at_5: 0.78
+  expected_mrr: 0.86
+  max_latency_ms: 3000
+  
+  # Cost parameters
+  estimated_cost_per_query: 0.003
+  
+  # Hypotheses  
+  hypothesis: "Semantic-focused retrieval + LLM reranking optimizes for research relevance"
+  expected_improvement: "12% precision improvement, 8% MRR improvement"
+  
+  # Metadata
+  created_date: "2026-03-13"
+  status: "test_variant"
+
+
+# VARIANT C: Optimized configuration (based on Phase 2 results)
+optimized:
+  name: "phase2_optimized"
+  description: "Best configuration incorporating Phase 2 embedding model and reranking optimizations"
+  
+  # Hybrid retrieval weights
+  bm25_weight: 0.6
+  semantic_weight: 0.4
+  
+  # Retrieval parameters
+  top_k_retrieval: 25
+  top_k_final: 5
+  
+  # Model configurations (these will be updated based on Phase 2 results)
+  embedding_model: "WINNER_FROM_PHASE2"  # To be replaced with best performing model
+  embedding_model_fallback: "all-MiniLM-L6-v2"  # Fallback if winner unavailable
+  reranker: "WINNER_FROM_PHASE2"  # To be replaced with best performing reranker
+  reranker_fallback: "cross_encoder"  # Fallback reranker
+  
+  # Performance targets
+  expected_precision_at_5: 0.80
+  expected_mrr: 0.88
+  max_latency_ms: 2200
+  
+  # Cost parameters
+  estimated_cost_per_query: 0.002
+  
+  # Hypotheses
+  hypothesis: "Optimized embedding model + reranker from Phase 2 maximizes performance"
+  expected_improvement: "15% precision improvement, 10% MRR improvement"
+  
+  # Metadata
+  created_date: "2026-03-13" 
+  status: "test_variant"
+  based_on: "phase2_optimization_results"
+
+
+# VARIANT D: Ultra-budget optimized (for cost-conscious deployment)
+ultra_budget:
+  name: "ultra_budget_optimized"
+  description: "Cost-optimized configuration maintaining acceptable performance"
+  
+  # Hybrid retrieval weights  
+  bm25_weight: 0.8
+  semantic_weight: 0.2
+  
+  # Retrieval parameters (reduced for cost)
+  top_k_retrieval: 15
+  top_k_final: 5
+  
+  # Model configurations
+  embedding_model: "all-MiniLM-L6-v2"  # Lightweight model
+  reranker: "simple_scoring"  # No expensive reranking
+  
+  # Performance targets (relaxed for cost)
+  expected_precision_at_5: 0.70
+  expected_mrr: 0.78
+  max_latency_ms: 1500
+  
+  # Cost parameters
+  estimated_cost_per_query: 0.0005
+  
+  # Hypotheses
+  hypothesis: "BM25-heavy approach minimizes costs while maintaining baseline quality"
+  expected_improvement: "50% cost reduction, <5% performance degradation"
+  
+  # Metadata
+  created_date: "2026-03-13"
+  status: "test_variant"
+  optimization_target: "cost"
+
+
+# STATISTICAL TESTING CONFIGURATION
+statistical_testing:
+  # Test design parameters
+  alpha: 0.05  # Significance level
+  power: 0.8   # Statistical power
+  effect_size: 0.05  # Minimum detectable improvement
+  
+  # Multiple comparison correction
+  correction_method: "bonferroni"  # Conservative correction for multiple tests
+  
+  # Sample size parameters
+  minimum_queries_per_variant: 50
+  recommended_queries_per_variant: 100
+  
+  # Evaluation metrics
+  primary_metrics:
+    - "precision_at_5"
+    - "mrr"
+  
+  secondary_metrics:
+    - "recall_at_10" 
+    - "latency_p95"
+    - "cost_per_query"
+  
+  # Success criteria
+  significance_threshold: 0.05
+  minimum_improvement: 0.05  # 5% minimum improvement to be worth deploying
+
+
+# EXPERIMENT EXECUTION PARAMETERS
+execution_config:
+  # Testing methodology
+  randomization: true
+  balanced_allocation: true  # Equal samples per variant
+  
+  # Query set configuration
+  test_dataset: "data/evaluation/scale_test_set.jsonl"
+  queries_per_batch: 10
+  
+  # Resource constraints (M1 Mac optimization)
+  max_memory_gb: 6
+  max_concurrent_evaluations: 2
+  batch_processing: true
+  
+  # Output configuration
+  results_directory: "results/ab_testing/"
+  detailed_logging: true
+  save_intermediate_results: true
+  
+  # Monitoring
+  track_memory_usage: true
+  track_latency: true
+  track_cost: true
+
+
+# DEPLOYMENT DECISION CRITERIA
+deployment_criteria:
+  # Performance requirements
+  minimum_precision_at_5: 0.70
+  minimum_mrr: 0.75
+  maximum_latency_p95_ms: 3000
+  
+  # Statistical requirements
+  minimum_statistical_significance: 0.05
+  minimum_effect_size: 0.03
+  
+  # Business requirements  
+  maximum_cost_per_query: 0.0025
+  maximum_monthly_cost: 18
+  
+  # Selection strategy
+  selection_method: "pareto_optimal"  # Choose best performance/cost trade-off
+  tie_breaker: "lowest_latency"  # How to break ties
+  
+  # Risk management
+  rollback_threshold: 0.90  # Performance below 90% of baseline triggers rollback
+  confidence_requirement: 0.95  # 95% confidence in results before deployment
+
+
+# CONFIGURATION METADATA
+metadata:
+  version: "1.0"
+  created_by: "Quest Analytics RAG Optimization Team"
+  created_date: "2026-03-13"
+  last_updated: "2026-03-13"
+  
+  # Related files and dependencies
+  related_scripts:
+    - "scripts/ab_testing/ab_test_retrieval.py"
+    - "scripts/ab_testing/statistical_analysis.py" 
+    - "scripts/ab_testing/select_best_config.py"
+  
+  # Documentation
+  documentation: "documentation/PRE_DEPLOYMENT_TESTING_PLAN.md"
+  section: "Phase 3: Configuration A/B Testing"
+  
+  # Notes
+  notes: |
+    This configuration enables systematic A/B testing of different retrieval configurations
+    for the Quest Analytics RAG Assistant. Each variant tests a specific hypothesis about
+    optimal retrieval parameters, model selection, and cost optimization.
+    
+    The statistical testing framework ensures rigorous validation of performance improvements
+    before deploying any changes to production. All configurations are optimized for
+    M1 Mac development environment while preparing for AWS ultra-budget deployment.

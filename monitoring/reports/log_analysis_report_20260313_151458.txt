@@ -1,0 +1,12 @@
+
+Log Analysis Report
+Generated: 2026-03-13T15:14:58.411913
+
+SUMMARY:
+- Analysis Period: 24 hours
+- Processed Entries: 15
+- Total Errors: 0
+- Anomalies Detected: 0
+
+ERROR ANALYSIS:
+Top Error Types:

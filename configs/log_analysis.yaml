@@ -1,0 +1,44 @@
+alerting:
+  channels:
+  - file
+  - cloudwatch
+  enabled: true
+  error_threshold: 10
+analysis:
+  anomaly_threshold: 0.7
+  error_patterns:
+    api_error:
+    - http.*(?:5\d{2}|4\d{2})
+    - api.*(?:error|failure|timeout)
+    - rate.*limit.*exceeded
+    authentication_error:
+    - authentication.*failed
+    - invalid.*(?:credential|token|key)
+    - unauthorized|forbidden
+    connection_error:
+    - connection.*(?:refused|timeout|failed)
+    - unable to connect
+    - network.*(?:unreachable|error)
+    database_error:
+    - database.*(?:connection|error|timeout)
+    - sql.*(?:error|exception)
+    - deadlock|lock.*timeout
+    ml_model_error:
+    - model.*(?:error|failure|timeout)
+    - inference.*(?:failed|error)
+    - embedding.*(?:error|timeout)
+    resource_error:
+    - out of memory
+    - disk.*full
+    - no space left
+    - resource.*(?:exhausted|unavailable)
+  retention_days: 30
+monitoring:
+  file_patterns:
+  - '*.log'
+  - '*.txt'
+  log_paths:
+  - /var/log/rag-assistant
+  - logs/application
+  - logs/monitoring
+  real_time: true

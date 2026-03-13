@@ -9,10 +9,10 @@
 [![LangChain](https://img.shields.io/badge/LangChain-1.2.0-121212?style=flat)](https://github.com/langchain-ai/langchain)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A production-ready **Retrieval-Augmented Generation** system designed for research teams to intelligently query and analyze scientific literature. Built with hybrid search capabilities, document session isolation, real-time health monitoring, and enterprise-grade deployment architecture.
+A production-ready **Retrieval-Augmented Generation** system designed for research teams to intelligently query and analyze scientific literature. Built with hybrid search capabilities, document session isolation, real-time health monitoring, enterprise-grade deployment architecture, and comprehensive MLOps infrastructure.
 
-**Current Status: MLOps Optimization Complete**  
-**MLOps Testing Infrastructure**: Comprehensive evaluation framework with statistical analysis, A/B testing, performance monitoring, embedding model optimization, and re-ranking evaluation
+**Current Status: Production Monitoring & Analytics Complete**  
+**MLOps Infrastructure**: Complete evaluation framework with statistical analysis, A/B testing, performance monitoring, embedding optimization, re-ranking evaluation, production monitoring, intelligent alerting, and automated deployment capabilities
 
 ## MLOps Development Stages
 
@@ -20,8 +20,8 @@ A production-ready **Retrieval-Augmented Generation** system designed for resear
 |-------|--------|------------|------------------|
 | **Baseline Testing** | **COMPLETE** | Baseline Testing & Evaluation | Statistical analysis framework, A/B testing pipeline, comprehensive code documentation |
 | **Model Optimization** | **COMPLETE** | Model Optimization & Performance Analysis | Embedding model comparison, re-ranking evaluation, M1 Mac optimization, graceful fallback systems |
-| **Production Deployment** | **PLANNED** | Production Ready & Monitoring | Real-time monitoring, alerting systems, production deployment |
-| **Advanced MLOps** | **PLANNED** | Advanced MLOps & Automation | CI/CD pipelines, automated retraining, advanced analytics |
+| **Production Monitoring** | **COMPLETE** | Production Ready & Monitoring | Real-time monitoring, intelligent alerting systems, log analysis, cost tracking |
+| **Advanced MLOps** | **COMPLETE** | Advanced MLOps & Automation | MLflow integration, automated retraining pipelines, model monitoring, deployment automation |
 
 ### Baseline Testing Achievements
 
@@ -61,28 +61,52 @@ See [`docs/code_analysis_baseline/`](docs/code_analysis_baseline/) for complete 
 - **Optimization Guide**: Complete [`MODEL_OPTIMIZATION_GUIDE.md`](guides/MODEL_OPTIMIZATION_GUIDE.md) for production implementation
 - **Lessons Learned**: Comprehensive [`LESSONS_LEARNED.md`](documentation/LESSONS_LEARNED.md) documenting successes and failures
 
-**Model Optimization Execution:**
+**Complete Testing & Infrastructure Pipeline Example:**
 ```bash
-# Complete model optimization pipeline
-python scripts/optimization/run_phase2_optimization.py
+# Complete baseline evaluation
+python scripts/evaluation/run_baseline_evaluation.py
 
-# Quick test with reduced scope for development
+# Full model optimization
 python scripts/optimization/run_model_optimization.py --quick-test
 
-# Reranking evaluation with robust fallback modes
-python scripts/optimization/reranking_evaluation.py --strategies cross_encoder,hybrid_scoring
-python scripts/optimization/reranking_evaluation.py --strategies cross_encoder --allow-real-models
+# Production monitoring setup
+python scripts/monitoring/production_monitoring.py --setup
+python scripts/monitoring/alerting_system.py --setup
+python scripts/monitoring/log_analysis.py --setup
 
-# Specific optimization analyses
-python scripts/optimization/performance_cost_analysis.py --embedding-results results/optimization/embedding_comparison.json --reranking-results results/optimization/reranking_evaluation.json --output results/optimization/cost_benefit_analysis.json
-python scripts/optimization/analyze_embedding_tradeoffs.py --models all-MiniLM-L6-v2,all-mpnet-base-v2
-python scripts/optimization/embedding_model_comparison.py --output results/optimization/embedding_comparison.json
+# MLOps pipeline setup
+python scripts/mlops/setup_mlops_pipeline.py --tracking-uri ./mlruns
+python scripts/mlops/automated_retraining.py --schedule-check
+python scripts/mlops/model_monitoring.py --production-metrics
+
+# Deployment automation
+python scripts/deployment/blue_green_deploy.py --validate
+python scripts/deployment/estimate_aws_costs.py --deployment-mode ultra-budget
 ```
 
-See [`docs/code_analysis_optimization/`](docs/code_analysis_optimization/) for complete optimization documentation.
+### Production Monitoring Achievements
+
+**Monitoring Infrastructure:**
+- **Real-time System Monitoring**: Production monitoring system with CloudWatch integration, resource utilization tracking
+- **Intelligent Alerting Framework**: Multi-channel alerting (Email, Slack, CloudWatch) with noise reduction and escalation policies
+- **Log Analysis System**: Real-time log monitoring with anomaly detection and performance metric extraction
+- **Cost Tracking & Optimization**: AWS cost monitoring with automated alerts and optimization recommendations
+- **Health Monitoring Dashboard**: Component health tracking with automatic failover mechanisms
+
+### Advanced MLOps Achievements
+
+**MLOps Infrastructure:**
+- **MLflow Integration**: Complete experiment tracking, model versioning, and performance monitoring
+- **Automated Retraining Pipeline**: Model performance drift detection with automated retraining workflows
+- **Model Monitoring**: Production model performance tracking with real-time metrics collection
+- **Deployment Automation**: Blue-green deployment capabilities with automated rollback systems
+- **CI/CD Ready Infrastructure**: GitHub Actions framework and automated testing pipelines
 
 ## Key Features
 
+- **Production Monitoring Infrastructure**: Real-time system health monitoring, intelligent alerting framework, log analysis system
+- **MLOps Pipeline**: MLflow integration, automated model retraining, performance drift detection, experiment tracking
+- **Advanced Deployment**: Blue-green deployment capabilities, automated rollback systems, cost optimization monitoring
 - **Ultra-Budget AWS Deployment**: Revolutionary $8-18/month cloud deployment using SQLite vector storage and Lambda Function URLs
 - **Enterprise Security**: API authentication, rate limiting, input sanitization, and comprehensive threat detection
 - **Hybrid Search**: Combines BM25 (sparse) and vector (dense) search for optimal retrieval performance
@@ -232,7 +256,9 @@ See [`docs/code_analysis_optimization/`](docs/code_analysis_optimization/) for c
 - **OpenSearch Integration**: Production vector search with hybrid retrieval capabilities
 - **Docker Compose**: Streamlined development and production deployment workflows
 
-**Advanced MLOps Pipeline**: 24 production-ready scripts spanning evaluation, optimization, monitoring, and cost analysis
+**Advanced MLOps Pipeline**: Complete MLOps infrastructure with MLflow integration, automated retraining, monitoring, and deployment capabilities
+
+**Comprehensive Monitoring**: Production monitoring system, intelligent alerting framework, real-time log analysis, and cost optimization
 
 **Comprehensive Evaluation**: Statistical analysis with 95% confidence intervals, A/B testing, and realistic performance metrics
 
@@ -265,24 +291,47 @@ See [`docs/code_analysis_optimization/`](docs/code_analysis_optimization/) for c
 | `optimization/reranking_cost_analysis.py` | Reranking strategy cost-benefit analysis | Complete | ROI quantified |
 | `optimization/analyze_embedding_tradeoffs.py` | Multi-objective embedding optimization | Complete | Pareto frontier |
 | `optimization/performance_cost_analysis.py` | Performance vs cost trade-off analysis | Complete | Scale projections |
-| `m1_optimization.py` | M1/M2 Mac hardware optimization utilities | Complete | MPS acceleration |
 
-**Recent Model Optimization Improvements:**
-- **Cross-Encoder Integration**: Resolved 0.0 precision issue with forced mock mode and enhanced relevance scoring
-- **Evaluation Resilience**: Graceful fallback modes for all external dependencies (OpenSearch, Ollama, GPU models)  
-- **Consistent Metrics**: Both cross-encoder and hybrid scoring now achieve comparable P@5: 0.4 performance
-- **CI/CD Ready**: Deterministic mock evaluation modes with no external dependencies required
-- **Production Metrics**: Comprehensive results in `results/optimization/` with realistic performance benchmarks
+**Production Monitoring Scripts:**
+| Script | Purpose | Status | Key Achievement |
+|--------|---------|--------|------------------|
+| `monitoring/production_monitoring.py` | Real-time system health monitoring | Complete | CloudWatch integration |
+| `monitoring/alerting_system.py` | Multi-channel intelligent alerting | Complete | Email, Slack, webhook support |
+| `monitoring/log_analysis.py` | Real-time log analysis and anomaly detection | Complete | Automatic pattern recognition |
+
+**MLOps Infrastructure Scripts:**
+| Script | Purpose | Status | Key Achievement |
+|--------|---------|--------|------------------|
+| `mlops/setup_mlops_pipeline.py` | MLflow experiment setup and configuration | Complete | Automated tracking |
+| `mlops/automated_retraining.py` | Automated model retraining pipeline | Complete | Drift detection |
+| `mlops/model_monitoring.py` | Production model performance monitoring | Complete | Real-time metrics |
+| `deployment/blue_green_deploy.py` | Blue-green deployment automation | Complete | Zero downtime |
+| `deployment/rollback_system.py` | Automated rollback and recovery | Complete | Production safety |
+
+**Additional Utilities:**
+| Script | Purpose | Status |
+|--------|---------|--------|
+| `m1_optimization.py` | M1/M2 Mac hardware optimization utilities | Complete |
+
+**Recent Production Infrastructure Improvements:**
+- **Production Monitoring System**: Real-time health monitoring with CloudWatch integration and custom metrics
+- **Intelligent Alerting**: Multi-channel alerting system with smart aggregation and escalation policies  
+- **Log Analysis Framework**: Real-time log monitoring with anomaly detection and performance metric extraction
+- **MLOps Integration**: Complete MLflow setup with automated experiment tracking and model versioning
+- **Advanced Deployment**: Blue-green deployment capabilities with automated rollback and zero-downtime updates
 
 ### Core Components
 
 | Component | Description | Key Features |
 |-----------|-------------|-------------|
 | **`rag_pipeline/`** | Core RAG functionality | Document processing, hybrid search, embedding management |
-| **`deployment/`** | Web interface and deployment | Gradio UI, AWS deployment configurations |
+| **`deployment/`** | Web interface and deployment | Gradio UI, AWS deployment configurations, blue-green deployment |
 | **`llm_ollama/`** | LLM integration | Health monitoring, fallback mechanisms |
-| **`scripts/`** | MLOps testing infrastructure | Baseline testing & model optimization frameworks |
-| **`docs/`** | Comprehensive documentation | 34,000+ lines of technical analysis |
+| **`scripts/monitoring/`** | Production monitoring | Real-time monitoring, alerting, log analysis |
+| **`scripts/mlops/`** | MLOps infrastructure | MLflow integration, automated retraining, model monitoring |
+| **`scripts/evaluation/`** | Testing & evaluation frameworks | Baseline testing, statistical analysis |
+| **`scripts/optimization/`** | Model optimization | Embedding comparison, re-ranking evaluation |
+| **`documentation/`** | Comprehensive project documentation | Technical guides, lessons learned, problem statements |
 
 ## Quick Start
 
@@ -546,28 +595,30 @@ See the comprehensive deployment guide:
 
 ```
 ai_rag_assistant/
-├── rag_pipeline/              # Core RAG components
-│   ├── ingestion/            # PDF processing & metadata extraction
-│   │   ├── __init__.py
-│   │   ├── pdf_ocr_pipeline.py      # Enhanced PDF processing
-│   │   ├── metadata_extractor.py    # Document metadata extraction
-│   │   └── pipeline.py              # Updated with session isolation
-│   ├── indexing/             # OpenSearch integration & schema
-│   │   ├── __init__.py
-│   │   ├── hybrid_indexer.py        # Added clear_previous support
-│   │   ├── opensearch_client.py     # Index management functions
-│   │   └── schema.json              # OpenSearch mapping schema
-│   ├── retrieval/            # Hybrid search & reranking
-│   │   ├── __init__.py
-│   │   ├── retriever.py             # BM25 + vector search
-│   │   └── reranker.py              # Result reranking logic
-│   ├── embeddings/           # Sentence transformer wrappers
-│   │   ├── __init__.py
-│   │   └── sentence_transformer.py  # Embedding model interface
-│   ├── prompts/              # Research-focused prompt templates
-│   │   ├── guardrails.yaml          # Safety guardrails config
-│   │   └── research_qa_prompt.yaml  # QA prompt templates
-│   └── security.py           # Security module (API auth, rate limiting, input sanitization)
+├── .env                      # Environment variables (local)
+├── .git/                     # Git repository metadata
+├── .github/                  # GitHub configuration
+│   └── workflows/            # GitHub Actions workflows (infrastructure ready)
+├── .gitignore               # Git ignore rules with privacy protection
+├── LICENSE                  # MIT License
+├── README.md                # This comprehensive documentation
+├── configs/                  # Configuration management
+│   ├── ab_testing_config.yaml      # A/B testing configuration
+│   ├── alerting.yaml               # Multi-channel alerting configuration
+│   ├── alerting_rules.yaml         # CloudWatch alerting rules configuration
+│   ├── baseline_config.json        # Baseline evaluation configuration
+│   ├── log_analysis.yaml           # Log analysis configuration
+│   ├── monitoring.yaml             # Production monitoring settings
+│   ├── monitoring_config.yaml      # Production monitoring configuration
+│   ├── optimization_config.yaml    # Model optimization configuration
+│   ├── retrieval_variants.yaml     # Retrieval strategy variants
+│   └── security_config.yaml        # Security settings configuration
+├── data/                     # Data storage
+│   ├── analytics.csv         # Analytics data
+│   ├── processed/            # Processed documents
+│   ├── raw/                  # Raw document storage
+│   └── samples/              # Sample queries and test data
+│       └── queries.jsonl     # Sample evaluation queries
 ├── deployment/               # Web interface & deployment
 │   ├── __init__.py           # Python package initialization
 │   ├── app_gradio.py         # Main Gradio application with security enhancements
@@ -578,96 +629,115 @@ ai_rag_assistant/
 │           ├── Dockerfile.app       # Application container
 │           ├── Dockerfile.worker    # Worker container
 │           └── Dockerfile.landing   # Landing page container
-├── llm_ollama/               # Ollama client & adapters
-│   ├── adapters.py           # Enhanced Ollama integration
-│   ├── client.py             # LLM client with health monitoring
-│   ├── README.md             # Comprehensive Ollama documentation
-│   └── notes/                # Implementation notes
-│       └── 2025_10_ollama_success.md  # Implementation notes
+├── documentation/            # Project documentation
+│   ├── LESSONS_LEARNED.md        # Comprehensive success/failure analysis
+│   ├── PRE_DEPLOYMENT_TESTING_PLAN.md   # Optimization methodology
+│   ├── PROBLEM_STATEMENT.md      # Project problem statement and objectives
+│   └── TECH_STACK.md             # Technology stack reference
+├── guides/                   # Implementation guides
+│   ├── BASELINE_EVALUATION_GUIDE.md # Baseline testing framework
+│   ├── MODEL_OPTIMIZATION_GUIDE.md # Model optimization guide
+│   └── SECURITY_GUIDE.md           # Security implementation and setup guide
 ├── landing/                  # Professional landing page
 │   ├── __init__.py
 │   ├── main.py               # FastAPI app with modern lifespan events
 │   ├── secure_main.py        # Security-enhanced FastAPI app with analytics
 │   └── templates/            # HTML templates
 │       └── index.html        # Professional landing page
-├── scripts/                  # Operational utilities & MLOps testing
+├── llm_ollama/               # Ollama client & adapters
+│   ├── adapters.py           # Enhanced Ollama integration
+│   ├── client.py             # LLM client with health monitoring
+│   ├── README.md             # Comprehensive Ollama documentation
+│   └── notes/                # Implementation notes
+│       └── 2025_10_ollama_success.md  # Implementation notes
+├── logs/                     # Application logs
+├── mlruns/                   # MLflow experiment tracking data
+├── models/                   # Model storage and artifacts
+├── monitoring/               # Monitoring data and reports
+├── pyproject.toml           # Project configuration
+├── rag_pipeline/              # Core RAG components
+│   ├── __init__.py
+│   ├── embeddings/           # Sentence transformer wrappers
+│   │   ├── __init__.py
+│   │   └── sentence_transformer.py  # Embedding model interface
+│   ├── indexing/             # OpenSearch integration & schema
+│   │   ├── __init__.py
+│   │   ├── hybrid_indexer.py        # Added clear_previous support
+│   │   ├── opensearch_client.py     # Index management functions
+│   │   └── schema.json              # OpenSearch mapping schema
+│   ├── ingestion/            # PDF processing & metadata extraction
+│   │   ├── __init__.py
+│   │   ├── metadata_extractor.py    # Document metadata extraction
+│   │   ├── pdf_ocr_pipeline.py      # Enhanced PDF processing
+│   │   └── pipeline.py              # Updated with session isolation
+│   ├── prompts/              # Research-focused prompt templates
+│   │   ├── guardrails.yaml          # Safety guardrails config
+│   │   └── research_qa_prompt.yaml  # QA prompt templates
+│   ├── retrieval/            # Hybrid search & reranking
+│   │   ├── __init__.py
+│   │   ├── reranker.py              # Result reranking logic
+│   │   └── retriever.py             # BM25 + vector search
+│   └── security.py           # Security module (API auth, rate limiting, input sanitization)
+├── requirements.txt         # Python dependencies
+├── results/                  # MLOps evaluation results
+│   ├── baseline_evaluation/# Baseline statistical analysis outputs
+│   └── optimization/           # Model optimization results
+│       ├── combined_analysis.json        # Aggregated metrics
+│       ├── embedding_comparison.json     # P@5: 0.4, MRR: 1.0
+│       ├── optimization_summary_report.json    # Executive summary
+│       └── reranking_evaluation.json     # Cross-encoder P@5: 0.4, Hybrid P@5: 0.4
+├── scripts/                  # Operational utilities & MLOps infrastructure
+│   ├── README.md                   # Script organization guide
 │   ├── eval_retrieval.py           # Traditional retrieval quality evaluation
 │   ├── ingest_watch.py             # File watcher for ingestion
-│   ├── run_ingestion.py            # Batch processing pipeline
-│   ├── smoke_test.py               # End-to-end system testing
-│   ├── security_manager.py         # Security management CLI tool
-│   ├── ab_testing/experiment_pipeline.py # A/B testing & parameter optimization
 │   ├── m1_optimization.py          # M1/M2 Mac hardware optimization
-│   ├── optimization/performance_cost_analysis.py # Performance vs cost trade-off analysis
-│   ├── README.md                   # Script organization guide
-│   ├── evaluation/                 # Baseline & Scale Testing
-│   │   ├── generate_test_queries.py    # Query expansion & synthetic datasets
-│   │   ├── analyze_eval_results.py     # Statistical analysis & confidence intervals
-│   │   ├── create_domain_queries.py    # Domain-specific query generation
-│   │   ├── domain_performance_analysis.py # Cross-domain analysis framework
-│   │   ├── baseline_evaluation.py      # Core RAG evaluation with statistics
-│   │   └── run_baseline_evaluation.py  # Baseline evaluation master orchestration script
-│   ├── optimization/               # Model Optimization
-│   │   ├── embedding_model_comparison.py   # Embedding model performance comparison
-│   │   ├── analyze_embedding_tradeoffs.py  # Performance vs cost trade-off analysis
-│   │   ├── reranking_evaluation.py     # Re-ranking strategy evaluation
-│   │   ├── reranking_cost_analysis.py  # Cost-benefit analysis framework
-│   │   └── run_model_optimization.py  # Model optimization master orchestration script
+│   ├── run_ingestion.py            # Batch processing pipeline
+│   ├── security_manager.py         # Security management CLI tool
+│   ├── smoke_test.py               # End-to-end system testing
 │   ├── ab_testing/                 # A/B Testing Framework
 │   │   ├── ab_test_retrieval.py    # A/B testing framework with statistical validation
-│   │   ├── statistical_analysis.py # Statistical significance and confidence intervals
-│   │   └── select_best_config.py   # Intelligent configuration selection
+│   │   ├── select_best_config.py   # Intelligent configuration selection
+│   │   └── statistical_analysis.py # Statistical significance and confidence intervals
+│   ├── deployment/                 # Production Deployment
+│   │   ├── blue_green_deploy.py    # Blue-green deployment with zero downtime
+│   │   ├── estimate_aws_costs.py   # AWS cost estimation framework
+│   │   ├── production_validation.py # Production validation and health checks
+│   │   └── rollback_system.py      # Automated rollback and recovery system
+│   ├── evaluation/                 # Baseline & Scale Testing
+│   │   ├── analyze_eval_results.py     # Statistical analysis & confidence intervals
+│   │   ├── baseline_evaluation.py      # Core RAG evaluation with statistics
+│   │   ├── create_domain_queries.py    # Domain-specific query generation
+│   │   ├── domain_performance_analysis.py # Cross-domain analysis framework
+│   │   ├── generate_test_queries.py    # Query expansion & synthetic datasets
+│   │   └── run_baseline_evaluation.py  # Baseline evaluation master orchestration script
 │   ├── mlops/                      # MLOps Infrastructure
-│   │   ├── setup_mlops_pipeline.py # MLOps pipeline setup and configuration
+│   │   ├── automated_retraining.py # Automated retraining pipeline with MLflow
 │   │   ├── model_monitoring.py     # Model performance monitoring and drift detection
-│   │   └── automated_retraining.py # Automated retraining pipeline
+│   │   └── setup_mlops_pipeline.py # MLOps pipeline setup and MLflow configuration
 │   ├── monitoring/                 # Production Monitoring
-│   │   ├── production_monitoring.py # Production monitoring dashboard setup
-│   │   ├── alerting_system.py      # Automated alert configuration and management
-│   │   └── log_analysis.py         # Comprehensive log analysis framework
-│   └── deployment/                 # Production Deployment
-│       ├── blue_green_deploy.py    # Blue-green deployment with zero downtime
-│       ├── rollback_system.py      # Automated rollback and recovery system
-│       ├── production_validation.py # Production validation and health checks
-│       └── estimate_aws_costs.py   # AWS cost estimation framework
-├── configs/                  # Configuration management
-│   ├── ab_testing_config.yaml      # A/B testing configuration
-│   ├── alerting_rules.yaml         # CloudWatch alerting rules configuration
-│   ├── baseline_config.json        # Baseline evaluation configuration
-│   ├── monitoring_config.yaml      # Production monitoring configuration
-│   ├── optimization_config.yaml    # Model optimization configuration
-│   └── security_config.yaml        # Security settings (API auth, rate limits, input validation)
+│   │   ├── README.md               # Monitoring infrastructure documentation
+│   │   ├── alerting_system.py      # Multi-channel intelligent alerting framework
+│   │   ├── log_analysis.py         # Real-time log analysis and anomaly detection
+│   │   └── production_monitoring.py # Real-time system monitoring with CloudWatch
+│   └── optimization/               # Model Optimization
+│       ├── analyze_embedding_tradeoffs.py  # Performance vs cost trade-off analysis
+│       ├── embedding_model_comparison.py   # Embedding model performance comparison
+│       ├── performance_cost_analysis.py # Performance vs cost trade-off analysis
+│       ├── reranking_cost_analysis.py  # Cost-benefit analysis framework
+│       ├── reranking_evaluation.py     # Re-ranking strategy evaluation
+│       └── run_model_optimization.py  # Model optimization master orchestration script
 ├── tests/                    # Unit & integration tests
-│   └── test_retrieval.py     # Search functionality tests
-├── data/                     # Data storage
-│   ├── samples/              # Sample queries and test data
-│   │   └── queries.jsonl     # Sample evaluation queries
-│   └── results/              # MLOps evaluation results
-│       ├── baseline_evaluation/# Baseline statistical analysis outputs
-│       └── optimization/           # Model optimization results
-│           ├── embedding_comparison.json     # P@5: 0.4, MRR: 1.0
-│           ├── reranking_evaluation.json     # Cross-encoder P@5: 0.4, Hybrid P@5: 0.4
-│           ├── combined_analysis.json        # Aggregated metrics
-│           └── optimization_summary_report.json    # Executive summary
-├── guides/                   # Implementation guides
-│   ├── BASELINE_EVALUATION_GUIDE.md # Baseline testing framework
-│   ├── MODEL_OPTIMIZATION_GUIDE.md # Model optimization guide
-│   └── SECURITY_GUIDE.md           # Security implementation and setup guide
-├── documentation/            # Project documentation
-│   ├── LESSONS_LEARNED.md        # Comprehensive success/failure analysis
-│   └── PRE_DEPLOYMENT_TESTING_PLAN.md   # 8-week optimization plan
-├── TECH_STACK_DOCUMENTATION.md      # Technology stack reference
-├── TECH_STACK_REFERENCE.md          # Technical interview reference
-├── AI_ENGINEER_WORK_SAMPLE.md       # Work sample documentation
-├── CV_PROJECT_ENTRY.md              # CV project entry
-├── .env                      # Environment variables (local)
-├── .gitignore               # Git ignore rules with privacy protection
-├── pyproject.toml           # Project configuration
-├── requirements.txt         # Python dependencies
-├── LICENSE                  # MIT License
-└── README.md                # This comprehensive documentation
+│   ├── conftest.py           # Test configuration
+│   ├── test_app_endpoints.py # API endpoint testing
+│   ├── test_ingestion.py     # PDF processing tests
+│   ├── test_ollama_client.py # LLM integration tests
+│   ├── test_retrieval.py     # Search functionality tests
+│   └── fixtures/             # Test data and fixtures
+│       └── sample_docs/      # Sample documents for testing
+└── training/                 # Training data and scripts
 
-Note: docs/ contains internal code analysis (34,000+ lines) and is excluded from repository
+Note: docs/ contains internal code analysis documentation and may be excluded from public repository
+```
 
 ## Testing & Evaluation
 
@@ -696,7 +766,7 @@ python scripts/evaluation/run_baseline_evaluation.py
 **Model Optimization:**
 ```bash
 # Full optimization pipeline
-python scripts/optimization/run_phase2_optimization.py
+python scripts/optimization/run_model_optimization.py
 
 # Individual components
 python scripts/optimization/embedding_model_comparison.py --output results/optimization/
@@ -709,26 +779,30 @@ python scripts/optimization/reranking_evaluation.py --strategies cross_encoder,h
 
 ## Recent Improvements
 
+**Recent Production Infrastructure Improvements:**
+- **Production Monitoring System**: Real-time health monitoring with CloudWatch integration and custom metrics
+- **Intelligent Alerting**: Multi-channel alerting system with smart aggregation and escalation policies  
+- **Log Analysis Framework**: Real-time log monitoring with anomaly detection and performance metric extraction
+- **MLOps Integration**: Complete MLflow setup with automated experiment tracking and model versioning
+- **Advanced Deployment**: Blue-green deployment capabilities with automated rollback and zero-downtime updates
 - **Document Session Isolation**: "Clear Previous Documents" option prevents cross-contamination
-- **Automatic Environment Loading**: .env file automatically loaded on app startup (no manual export needed)
-- **Cross-Encoder Integration**: Resolved 0.0 precision issue, now achieving P@5: 0.4
-- **Scripts Organization**: Clean phase-based folder structure (evaluation/, optimization/, ab_testing/)
-- **Gradio 6.0 Compatibility**: Updated for latest Gradio version with proper API usage
-- **Graceful Degradation**: Automatic fallback modes for all external dependencies
-- **Enhanced UI**: Gradio 6.2.0 with professional styling and real-time health monitoring
-- **Infrastructure**: Docker health checks, proper service dependencies
+- **Automatic Environment Loading**: .env file automatically loaded on app startup
+- **Enhanced UI**: Production-ready Gradio interface with comprehensive monitoring integration
 
 ## Documentation
 
 ### Technical Analysis
 - **[Baseline Evaluation Guide](guides/BASELINE_EVALUATION_GUIDE.md)**: Baseline testing framework and methodology
 - **[Model Optimization Guide](guides/MODEL_OPTIMIZATION_GUIDE.md)**: Model optimization implementation guide
+- **[Security Guide](guides/SECURITY_GUIDE.md)**: Security implementation and setup guide
 - **[Lessons Learned](documentation/LESSONS_LEARNED.md)**: Comprehensive success/failure analysis
-- **Internal Analysis**: 34,000+ lines of detailed code analysis (local docs/ directory)
+- **[Tech Stack Reference](documentation/TECH_STACK.md)**: Complete technology stack documentation
+- **[Problem Statement](documentation/PROBLEM_STATEMENT.md)**: Project objectives and problem definition
 
 ### Deployment & Operations
 - **[AWS Deployment](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Three cost-optimized deployment modes
-- **[Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: 8-week optimization methodology
+- **[Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Optimization methodology
+- **[Monitoring Documentation](scripts/monitoring/README.md)**: Production monitoring infrastructure guide
 
 ## Troubleshooting
 

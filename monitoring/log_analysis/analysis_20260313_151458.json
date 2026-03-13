@@ -1,0 +1,59 @@
+{
+  "analysis_period": {
+    "start_time": "2026-03-12T15:14:58.410665",
+    "end_time": "2026-03-13T15:14:58.410665",
+    "duration_hours": 24
+  },
+  "processed_entries": 15,
+  "error_analysis": {
+    "total_errors": 0,
+    "error_types": {},
+    "error_trends": []
+  },
+  "anomaly_analysis": {
+    "total_anomalies": 0,
+    "anomaly_distribution": {}
+  },
+  "performance_analysis": {
+    "metrics_found": 0,
+    "response_time_stats": {},
+    "memory_stats": {}
+  },
+  "pattern_analysis": {
+    "total_entries": 9,
+    "level_distribution": {
+      "WARNING": 4,
+      "INFO": 5
+    },
+    "source_distribution": {
+      "logs/monitoring/production_monitoring.log": 6,
+      "logs/monitoring/alerting.log": 3
+    },
+    "common_words": {
+      "not": 3,
+      "available": 3,
+      "aws": 2,
+      "sdk": 2,
+      "production": 2,
+      "monitoring": 2,
+      "cloudwatch": 2,
+      "initialized": 2,
+      "1": 2,
+      "notification": 2,
+      "channels": 2,
+      "setting": 1,
+      "up": 1,
+      "infrastructure": 1,
+      "cannot": 1,
+      "create": 1,
+      "dashboard": 1,
+      "setup": 1,
+      "completed": 1,
+      "0": 1
+    },
+    "time_span": {
+      "start": "2026-03-13T15:12:06.423000",
+      "end": "2026-03-13T15:14:31.744000"
+    }
+  }
+}

@@ -1,0 +1,136 @@
+# Production Monitoring Configuration
+# Configuration file for RAG Assistant production monitoring infrastructure
+
+# System monitoring settings
+monitoring:
+  # Monitoring intervals (in seconds)
+  intervals:
+    system_metrics: 60
+    health_checks: 30
+    performance: 120
+    cost_tracking: 3600  # 1 hour
+  
+  # Performance thresholds
+  thresholds:
+    cpu_usage_warning: 70.0
+    cpu_usage_critical: 90.0
+    memory_usage_warning: 75.0
+    memory_usage_critical: 90.0
+    disk_usage_warning: 80.0
+    disk_usage_critical: 95.0
+    response_time_warning: 2000  # milliseconds
+    response_time_critical: 5000
+    error_rate_warning: 0.05
+    error_rate_critical: 0.15
+    availability_minimum: 0.99
+
+# Health check endpoints
+health_endpoints:
+  application: "http://localhost:7860/health"
+  api: "http://localhost:8000/health"
+  gradio_app: "http://localhost:7860/status"
+  landing_page: "http://localhost:3000/health"
+
+# AWS CloudWatch configuration
+cloudwatch:
+  enabled: true
+  region: "us-east-1"
+  namespace: "RAGAssistant"
+  
+  # Custom metrics
+  metrics:
+    - name: "QueryResponseTime"
+      unit: "Milliseconds"
+      description: "RAG query response latency"
+    - name: "PrecisionAt5"
+      unit: "None"
+      description: "Model precision at 5 results"
+    - name: "ErrorRate"
+      unit: "None"
+      description: "Application error rate"
+    - name: "CostPerQuery"
+      unit: "None"
+      description: "Cost per RAG query in USD"
+  
+  # Dashboard configuration
+  dashboards:
+    main_dashboard: "RAGAssistant-Production"
+    cost_dashboard: "RAGAssistant-Costs"
+    refresh_interval: 300  # 5 minutes
+
+# Cost monitoring
+cost_monitoring:
+  enabled: true
+  budget_limit_usd: 18.0
+  alert_threshold_usd: 15.0
+  daily_limit_usd: 1.0
+  
+  # Service cost tracking
+  services:
+    - bedrock
+    - lambda
+    - s3
+    - dynamodb
+    - cloudwatch
+    - opensearch
+
+# Performance baselines
+baselines:
+  # ML model performance
+  ml_performance:
+    precision_at_5_minimum: 0.6
+    precision_at_10_minimum: 0.5
+    mrr_minimum: 0.4
+    recall_at_10_minimum: 0.7
+    
+  # System performance
+  system_performance:
+    max_query_latency_ms: 2000
+    min_success_rate: 0.95
+    max_error_rate: 0.05
+    
+  # Resource utilization
+  resource_utilization:
+    max_cpu_percent: 80
+    max_memory_percent: 85
+    max_inference_time_ms: 1500
+
+# Anomaly detection
+anomaly_detection:
+  enabled: true
+  sensitivity: "medium"  # low, medium, high
+  window_size: 100
+  threshold_multiplier: 3.0
+  
+  # Metrics to monitor for anomalies
+  monitored_metrics:
+    - query_volume
+    - response_time
+    - error_rate
+    - model_performance
+    - cost_patterns
+
+# Data retention
+retention:
+  metrics_days: 90
+  logs_days: 30
+  alerts_days: 365
+  reports_days: 180
+
+# Reporting
+reporting:
+  enabled: true
+  schedule:
+    daily_report: "06:00"
+    weekly_report: "sunday 08:00"
+    monthly_report: "1st 09:00"
+  
+  # Report recipients
+  recipients:
+    - "monitoring@example.com"
+  
+  # Report formats
+  formats:
+    - json
+    - html
+    - pdf

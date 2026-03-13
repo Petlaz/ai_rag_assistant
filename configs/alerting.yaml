@@ -1,0 +1,36 @@
+aggregation:
+  aggregation_window_minutes: 5
+  similarity_threshold: 0.8
+channels:
+  cloudwatch:
+    enabled: true
+    region: us-east-1
+    sns_topic_arn: ''
+  email:
+    enabled: false
+    from_email: rag-assistant@example.com
+    password: ''
+    smtp_port: 587
+    smtp_server: localhost
+    to_emails: []
+    use_tls: true
+    username: ''
+  slack:
+    channel: '#alerts'
+    enabled: false
+    icon_emoji: ':warning:'
+    username: RAG Assistant
+    webhook_url: ''
+escalation:
+  enabled: true
+  escalation_delay_minutes: 15
+  max_escalations: 2
+thresholds:
+  cpu_usage_critical: 90.0
+  cpu_usage_warning: 70.0
+  error_rate_critical: 0.15
+  error_rate_warning: 0.05
+  memory_usage_critical: 90.0
+  memory_usage_warning: 75.0
+  response_time_critical: 5000
+  response_time_warning: 2000
