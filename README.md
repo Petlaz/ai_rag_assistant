@@ -9,9 +9,9 @@
 [![LangChain](https://img.shields.io/badge/LangChain-1.2.0-121212?style=flat)](https://github.com/langchain-ai/langchain)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A production-ready **Retrieval-Augmented Generation** system designed for research teams to intelligently query and analyze scientific literature. Built with hybrid search capabilities, document session isolation, real-time health monitoring, enterprise-grade deployment architecture, and comprehensive MLOps infrastructure.
+A **production-deployed Retrieval-Augmented Generation** system designed for research teams to intelligently query and analyze scientific literature. Built with hybrid search capabilities, document session isolation, real-time health monitoring, enterprise-grade deployment architecture, and comprehensive MLOps infrastructure.
 
-**Current Status: Optimized Configuration Deployed**  
+**Current Status: Production Deployed**  
 **Performance**: 87.5% precision with 224ms response time (40% faster than baseline)  
 **MLOps Infrastructure**: Complete CI/CD pipeline with automated testing, model validation, blue-green deployment, production monitoring, cost estimation, security scanning, and rollback systems
 
@@ -21,7 +21,7 @@ A production-ready **Retrieval-Augmented Generation** system designed for resear
 |-------|--------|------------|------------------|
 | **Baseline Testing** | **COMPLETE** | Baseline Testing & Evaluation | Statistical analysis framework, A/B testing pipeline, comprehensive code documentation |
 | **Model Optimization** | **COMPLETE** | Model Optimization & Performance Analysis | Embedding model comparison, re-ranking evaluation, M1 Mac optimization, graceful fallback systems |
-| **Production Monitoring** | **COMPLETE** | Production Ready & Monitoring | Real-time monitoring, intelligent alerting systems, log analysis, cost tracking |
+| **Production Monitoring** | **COMPLETE** | Production Monitoring | Real-time monitoring, intelligent alerting systems, log analysis, cost tracking |
 | **Advanced MLOps** | **COMPLETE** | Advanced MLOps & Automation | MLflow integration, automated retraining pipelines, model monitoring, deployment automation |
 | **Deployment Infrastructure** | **COMPLETE** | Production Deployment & DevOps | Blue-green deployment, rollback systems, cost estimation, production validation |
 | **CI/CD Pipeline** | **COMPLETE** | Automated Testing & Deployment | GitHub Actions workflows, automated testing, model validation, security scanning, multi-environment deployment |
@@ -103,8 +103,8 @@ python scripts/deployment/estimate_aws_costs.py --deployment-mode ultra-budget
 - **Blue-Green Deployment**: Zero-downtime deployment automation with traffic switching and health validation
 - **Rollback System**: Automated failure detection with multiple rollback strategies (Fast, Graceful, Partial, Data-Safe)
 - **Production Validation**: Comprehensive health checks across Application, Resources, Dependencies, and Network
-- **Cost Estimation**: AWS cost analysis across deployment modes (Ultra-Budget $8-18/month, Balanced $25-60/month, Full-Scale $100-300+/month)
-- **Infrastructure Ready**: Production-ready deployment scripts with complete CLI interfaces and documentation
+- **Cost Estimation**: AWS cost analysis across deployment modes (Ultra-Budget $7.24/month actual, Balanced $25-60/month, Full-Scale $100-300+/month)
+- **Infrastructure Deployed**: Production-deployed automation scripts with complete CLI interfaces and documentation
 
 **Code Documentation:**
 - **4 Production Deployment Scripts**: Complete automation framework for enterprise deployment
@@ -118,7 +118,7 @@ See [`scripts/deployment/README.md`](scripts/deployment/README.md) for complete 
 - **Production Monitoring Infrastructure**: Real-time system health monitoring, intelligent alerting framework, log analysis system
 - **MLOps Pipeline**: MLflow integration, automated model retraining, performance drift detection, experiment tracking
 - **Advanced Deployment**: Blue-green deployment capabilities, automated rollback systems, cost optimization monitoring
-- **Ultra-Budget AWS Deployment**: Revolutionary $8-18/month cloud deployment using SQLite vector storage and Lambda Function URLs
+- **Ultra-Budget AWS Deployment**: Cost-optimized $7.24/month cloud deployment using SQLite vector storage and Lambda Function URLs
 - **Enterprise Security**: API authentication, rate limiting, input sanitization, and comprehensive threat detection
 - **Hybrid Search**: Combines BM25 (sparse) and vector (dense) search for optimal retrieval performance
 - **Advanced PDF Processing**: Automated OCR pipeline with metadata extraction and intelligent chunking
@@ -126,233 +126,87 @@ See [`scripts/deployment/README.md`](scripts/deployment/README.md) for complete 
 - **Local LLM Integration**: Ollama-based chat with health monitoring and automatic fallback mechanisms
 - **Research-Focused**: Tailored prompts with citation support and safety guardrails for scientific literature
 - **Professional UI**: Modern Gradio 6.2.0 interface with custom CSS, real-time status monitoring, and security protection
-- **Production Ready**: Three-tier deployment strategy (Ultra-Budget/Balanced/Full) with comprehensive AWS documentation
+- **Production Deployed**: Three-tier deployment strategy (Ultra-Budget/Balanced/Full) with comprehensive AWS documentation
 - **Analytics & Health**: Built-in usage tracking, performance metrics, and service health dashboards
 - **Professional Landing Page**: FastAPI-powered landing page with analytics, security dashboard, and modern design
 
 ## Architecture
 
-### Current Implementation: Enterprise Monolithic RAG Architecture
+### Production-Deployed Enterprise RAG System
+
+**Current Status**: Live deployment at $7.24/month on AWS infrastructure
 
 ```
-
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                        CURRENT MONOLITHIC ARCHITECTURE (IMPLEMENTED)                   │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                          WEB APPLICATION LAYER                                      │ │
-│  │                                                                                     │ │
-│  │  ┌─────────────────────────┐                 ┌─────────────────────────┐           │ │
-│  │  │    Gradio 6.2 Web UI    │                 │   FastAPI Landing Page  │           │ │
-│  │  │     (Port 7860)         │                 │      (Port 3000)        │           │ │
-│  │  │                         │                 │                         │           │ │
-│  │  │  • Interactive Chat     │                 │  • Security Dashboard   │           │ │
-│  │  │  • Document Upload      │                 │  • Analytics API        │           │ │
-│  │  │  • Health Monitoring    │                 │  • Status Monitoring    │           │ │
-│  │  │  • Session Isolation    │                 │  • API Key Management   │           │ │
-│  │  │  • Real-time Status     │                 │  • Modern Web Design    │           │ │
-│  │  │                         │                 │                         │           │ │
-│  │  │  SECURITY INTEGRATED    │                 │  SECURITY INTEGRATED    │           │ │
-│  │  │  • API Authentication   │                 │  • Rate Limiting        │           │ │
-│  │  │  • Input Sanitization   │                 │  • Threat Detection     │           │ │
-│  │  │  • Rate Limiting        │                 │  • Security Headers     │           │ │
-│  │  │  • File Validation      │                 │  • Admin Analytics      │           │ │
-│  │  └─────────────────────────┘                 └─────────────────────────┘           │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                             │                                           │
-│                                             ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                        CORE RAG PROCESSING ENGINE                                   │ │
-│  │                              (Integrated Pipeline)                                  │ │
-│  │                                                                                     │ │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐│ │
-│  │  │   Document      │  │   Embeddings    │  │    Hybrid       │  │   LLM Generation ││ │  
-│  │  │   Ingestion     │  │   & Indexing    │  │   Retrieval     │  │   & Response     ││ │
-│  │  │                 │  │                 │  │                 │  │                  ││ │
-│  │  │ • PDF OCR       │  │ • Sentence-T    │  │ • Vector Search │  │ • Ollama Local   ││ │
-│  │  │ • Text Extract  │  │ • OpenSearch    │  │ • BM25 Sparse   │  │ • Health Monitor ││ │
-│  │  │ • Metadata      │  │ • Vector Store  │  │ • Hybrid Fusion │  │ • Auto Fallback  ││ │
-│  │  │ • Chunking      │  │ • Index Mgmt    │  │ • Re-ranking    │  │ • Context Window ││ │
-│  │  │ • Validation    │  │ • Schema Def    │  │ • Cross-Encoder │  │ • Stream Response││ │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  └──────────────────┘│ │
-│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                             │                                           │
-│                                             ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                          DATA STORAGE & SEARCH                                      │ │
-│  │                                                                                     │ │
-│  │     ┌─────────────────┐              ┌─────────────────┐              ┌──────────┐  │ │
-│  │     │   OpenSearch    │              │  Local Storage  │              │  Config  │  │ │
-│  │     │  (Port 9200)    │              │                 │              │  Files   │  │ │
-│  │     │                 │              │ • Documents     │              │          │  │ │
-│  │     │ • Vector Index  │              │ • Results Cache │              │ • YAML   │  │ │
-│  │     │ • Hybrid Search │              │ • MLOps Data    │              │ • JSON   │  │ │
-│  │     │ • Text Search   │              │ • Analytics     │              │ • Security│ │ │
-│  │     │ • Metadata      │              │ • Logs          │              │ • Monitor│  │ │ │
-│  │     └─────────────────┘              └─────────────────┘              └──────────┘  │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                    COMPREHENSIVE MLOPS & MONITORING (IMPLEMENTED)                       │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                          24 PRODUCTION SCRIPTS SUITE                                │ │
-│  │                                                                                     │ │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐│ │
-│  │  │   Evaluation    │  │  Optimization   │  │   A/B Testing   │  │   Monitoring     ││ │
-│  │  │   Pipeline      │  │   Pipeline      │  │   Framework     │  │   & Analytics    ││ │
-│  │  │                 │  │                 │  │                 │  │                  ││ │
-│  │  │ • Baseline      │  │ • Embedding     │  │ • Statistical   │  │ • Production     ││ │
-│  │  │   Evaluation    │  │   Comparison    │  │   Significance  │  │   Monitoring     ││ │
-│  │  │ • Domain Tests  │  │ • Reranking     │  │ • Config Select │  │ • Cost Tracking  ││ │
-│  │  │ • P@5, MRR      │  │ • Performance   │  │ • Experiments   │  │ • Health Checks  ││ │
-│  │  │ • Confidence    │  │ • Cost Analysis │  │ • Grid Search   │  │ • Log Analysis   ││ │
-│  │  │   Intervals     │  │ • Hardware Opt  │  │ • Param Tuning  │  │ • Alerting       ││ │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  └──────────────────┘│ │
-│  │                                                                                     │ │
-│  │  ACHIEVEMENTS: P@5: 0.4 | MRR: 1.0 | 95% Confidence | Hardware Optimized        │ │
-│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                     SECURITY & MONITORING IMPLEMENTATION                            │ │
-│  │                                                                                     │ │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────┐│ │
-│  │  │  Security       │  │   Monitoring    │  │   Health        │  │   Configuration  ││ │
-│  │  │  Middleware     │  │   System        │  │   Checks        │  │   Management     ││ │
-│  │  │                 │  │                 │  │                 │  │                  ││ │
-│  │  │ • API Keys      │  │ • CloudWatch    │  │ • Ollama Status │  │ • YAML Configs   ││ │
-│  │  │ • Rate Limits   │  │ • Structured    │  │ • Performance   │  │ • Environment    ││ │
-│  │  │ • Input Valid   │  │   Logging       │  │ • Auto Recovery │  │ • Security Rules ││ │ │
-│  │  │ • Threat Detect │  │ • Custom        │  │ • Latency Track │  │ • Alert Rules    ││ │
-│  │  │ • File Scanning │  │   Metrics       │  │ • Health API    │  │ • Monitoring     ││ │
-│  │  │ • CLI Tools     │  │ • Cost Alerts   │  │ • Real-time UI  │  │ • CLI Management ││ │
-│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  └──────────────────┘│ │
-│  └─────────────────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                       INFRASTRUCTURE (CURRENT & PLANNED)                                │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                         │
-│  IMPLEMENTED:                            PLANNED FOR FUTURE:                         │
-│  ┌─────────────────────────────────┐      ┌─────────────────────────────────────┐      │
-│  │ • Docker Containerization       │      │ • Terraform Infrastructure         │      │
-│  │ • Docker Compose Orchestration  │      │ • Kubernetes Manifests             │      │
-│  │ • Local Development Setup       │      │ • GitOps CI/CD Pipeline            │      │
-│  │ • Production-Ready Code         │      │ • Multi-Environment Deployment     │      │
-│  │ • AWS Deployment Documentation  │      │ • Auto-scaling & Load Balancing    │      │
-│  │ • Ultra-Budget Architecture     │      │ • Advanced Monitoring Stack       │      │
-│  │ • Security Implementation       │      │ • Service Mesh Implementation      │      │
-│  │ • Comprehensive MLOps           │      │ • Microservices Architecture       │      │
-│  └─────────────────────────────────┘      └─────────────────────────────────────┘      │
-│                                                                                         │
-│  DEPLOYMENT STRATEGY:                                                                 │
-│  Current: Sophisticated monolithic architecture ready for production deployment        │
-│  Future: Gradual evolution to microservices as scale and complexity requirements grow  │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
-
+┌──────────────────────────────────────────────────────────────────┐
+│                        WEB TIER                                  │
+│  ┌─────────────────────────┐    ┌─────────────────────────────┐  │
+│  │    Gradio Web UI        │    │    FastAPI Landing         │  │
+│  │    Port 7860           │    │    Port 3000               │  │
+│  │  • Interactive Chat    │    │  • Analytics Dashboard     │  │
+│  │  • Document Upload     │    │  • Health Monitoring       │  │
+│  │  • Session Management  │    │  • Security Controls       │  │
+│  └─────────────────────────┘    └─────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                      CORE RAG PIPELINE                          │
+│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────┐│
+│  │   Document    │ │   Embedding   │ │    Hybrid     │ │  LLM  ││
+│  │   Ingestion   │ │   & Vector    │ │   Retrieval   │ │ Chat  ││
+│  │               │ │    Storage    │ │               │ │       ││
+│  │ • PDF OCR     │ │ • Sentence-T  │ │ • Vector      │ │ • Ollama │
+│  │ • Chunking    │ │ • OpenSearch  │ │ • BM25        │ │ • Health │
+│  │ • Metadata    │ │ • Indexing    │ │ • Re-ranking  │ │ • Fallback │
+│  └───────────────┘ └───────────────┘ └───────────────┘ └───────┘│
+└──────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    INFRASTRUCTURE LAYER                         │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │  OpenSearch (9200)  │  Local Storage  │  Configuration    │ │
+│  │  • Vector Index     │  • Documents    │  • YAML/JSON      │ │
+│  │  • Hybrid Search    │  • Cache        │  • Environment    │ │
+│  │  • Metadata Store   │  • Logs         │  • Security       │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Architectural Innovations
+### Core Architecture Principles
 
-**Ultra-Budget Cloud Deployment**: Revolutionary $8-18/month AWS architecture design using Lambda Function URLs and SQLite vector storage
+**Monolithic Design**: Single-process deployment optimized for cost-effectiveness and operational simplicity
 
-**Current Technology Stack**: 
-- **Docker Containerization**: Multi-service architecture with dedicated containers for app, landing, and worker processes
-- **FastAPI Landing Page**: High-performance async API with analytics and health monitoring
-- **Gradio 6.2 Interface**: Modern web UI with real-time health monitoring and security integration
-- **OpenSearch Integration**: Production vector search with hybrid retrieval capabilities
-- **Docker Compose**: Streamlined development and production deployment workflows
+**Hybrid Search**: Combines vector similarity and BM25 keyword search for optimal retrieval performance
 
-**Advanced MLOps Pipeline**: Complete MLOps infrastructure with MLflow integration, automated retraining, monitoring, and deployment capabilities
+**Session Isolation**: Document management prevents cross-contamination between research sessions
 
-**Comprehensive Monitoring**: Production monitoring system, intelligent alerting framework, real-time log analysis, and cost optimization
+**Health Monitoring**: Real-time service monitoring with automatic fallback mechanisms
 
-**Comprehensive Evaluation**: Statistical analysis with 95% confidence intervals, A/B testing, and realistic performance metrics
+**Security-First**: API authentication, rate limiting, input validation, and threat detection
 
-**Production Optimization**: Cross-encoder re-ranking, embedding model comparison, and hardware-specific optimization for M1/M2 Macs
+### Technology Stack
 
-**Enterprise Resilience**: Graceful fallbacks, health monitoring, and CI/CD-ready infrastructure with deterministic testing modes
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | Gradio 6.2, FastAPI | Interactive UI, landing page, analytics |
+| **RAG Engine** | LangChain, SentenceTransformers | Document processing, embedding generation |
+| **Vector Search** | OpenSearch 2.18 | Hybrid search, metadata indexing |
+| **LLM Runtime** | Ollama | Local model execution, health monitoring |
+| **Infrastructure** | Docker, Docker Compose | Containerization, service orchestration |
+| **Monitoring** | CloudWatch, Custom Scripts | Production monitoring, alerting |
 
-**Security Implementation**: API authentication, rate limiting, input sanitization, threat detection, and security headers
+### Deployment Architecture
 
-**Cost Intelligence**: Detailed ROI analysis, scale projections, and multi-tier deployment options from $8/month to enterprise scale
+**Current**: Production-deployed monolithic architecture ($7.24/month AWS)
+- Optimized for cost and operational simplicity
+- Comprehensive monitoring and automated deployment
+- Blue-green deployment capability with rollback systems
 
-
-
-**Baseline Testing Scripts:**
-| Script | Purpose | Status |
-|--------|---------|--------|
-| `evaluation/run_baseline_evaluation.py` | Master orchestration for baseline evaluation | Complete |
-| `evaluation/baseline_evaluation.py` | Core RAG system performance evaluation | Complete |
-| `evaluation/create_domain_queries.py` | Domain-specific query dataset creation | Complete |
-| `evaluation/analyze_eval_results.py` | Statistical analysis with confidence intervals | Complete |
-| `ab_testing/experiment_pipeline.py` | A/B testing and parameter optimization | Complete |
-| `evaluation/generate_test_queries.py` | Query expansion and synthetic dataset creation | Complete |
-
-**Model Optimization Scripts:**
-| Script | Purpose | Status | Key Achievement |
-|--------|---------|--------|-----------------|
-| `optimization/run_model_optimization.py` | Master optimization orchestration pipeline | Complete | Full automation |
-| `optimization/embedding_model_comparison.py` | Embedding model performance comparison | Complete | P@5: 0.4, MRR: 1.0 |
-| `optimization/reranking_evaluation.py` | Re-ranking strategy evaluation | Complete | Cross-encoder fixed |
-| `optimization/reranking_cost_analysis.py` | Reranking strategy cost-benefit analysis | Complete | ROI quantified |
-| `optimization/analyze_embedding_tradeoffs.py` | Multi-objective embedding optimization | Complete | Pareto frontier |
-| `optimization/performance_cost_analysis.py` | Performance vs cost trade-off analysis | Complete | Scale projections |
-
-**Production Monitoring Scripts:**
-| Script | Purpose | Status | Key Achievement |
-|--------|---------|--------|------------------|
-| `monitoring/production_monitoring.py` | Real-time system health monitoring | Complete | CloudWatch integration |
-| `monitoring/alerting_system.py` | Multi-channel intelligent alerting | Complete | Email, Slack, webhook support |
-| `monitoring/log_analysis.py` | Real-time log analysis and anomaly detection | Complete | Automatic pattern recognition |
-
-**MLOps Infrastructure Scripts:**
-| Script | Purpose | Status | Key Achievement |
-|--------|---------|--------|------------------|
-| `mlops/setup_mlops_pipeline.py` | MLflow experiment setup and configuration | Complete | Automated tracking |
-| `mlops/automated_retraining.py` | Automated model retraining pipeline | Complete | Drift detection |
-| `mlops/model_monitoring.py` | Production model performance monitoring | Complete | Real-time metrics |
-
-**Deployment Infrastructure Scripts:**
-| Script | Purpose | Status | Key Achievement |
-|--------|---------|--------|-----------------|
-| `deployment/blue_green_deploy.py` | Blue-green deployment automation | Complete | Zero downtime deployment |
-| `deployment/production_validation.py` | Comprehensive production validation suite | Complete | Multi-category health checks |
-| `deployment/rollback_system.py` | Automated rollback and recovery system | Complete | Multiple rollback strategies |
-| `deployment/estimate_aws_costs.py` | AWS cost estimation and budget analysis | Complete | Multi-mode cost optimization |
-| `deployment/README.md` | Deployment infrastructure documentation | Complete | Comprehensive setup guide |
-
-**Additional Utilities:**
-| Script | Purpose | Status |
-|--------|---------|--------|
-| `m1_optimization.py` | M1/M2 Mac hardware optimization utilities | Complete |
-
-**Recent Production Infrastructure Improvements:**
-- **Complete Deployment Infrastructure**: Blue-green deployment automation, rollback systems, production validation, and cost estimation
-- **Production Monitoring System**: Real-time health monitoring with CloudWatch integration and custom metrics
-- **Intelligent Alerting**: Multi-channel alerting system with smart aggregation and escalation policies  
-- **Log Analysis Framework**: Real-time log monitoring with anomaly detection and performance metric extraction
-- **MLOps Integration**: Complete MLflow setup with automated experiment tracking and model versioning
-- **Enterprise-Ready Automation**: Production-grade deployment scripts with comprehensive CLI interfaces and documentation
-
-### Core Components
-
-| Component | Description | Key Features |
-|-----------|-------------|-------------|
-| **`rag_pipeline/`** | Core RAG functionality | Document processing, hybrid search, embedding management |
-| **`deployment/`** | Web interface and deployment | Gradio UI, AWS deployment configurations, blue-green deployment |
-| **`llm_ollama/`** | LLM integration | Health monitoring, fallback mechanisms |
-| **`scripts/monitoring/`** | Production monitoring | Real-time monitoring, alerting, log analysis |
-| **`scripts/mlops/`** | MLOps infrastructure | MLflow integration, automated retraining, model monitoring |
-| **`scripts/deployment/`** | Production deployment automation | Blue-green deployment, rollback systems, cost estimation, validation |
-| **`scripts/evaluation/`** | Testing & evaluation frameworks | Baseline testing, statistical analysis |
-| **`scripts/optimization/`** | Model optimization | Embedding comparison, re-ranking evaluation |
-| **`documentation/`** | Comprehensive project documentation | Technical guides, lessons learned, problem statements |
-| **`documentation/`** | Comprehensive project documentation | Technical guides, lessons learned, problem statements |
+**Future Evolution**: Microservices transition planned as scale requirements grow
+- Kubernetes orchestration
+- Service mesh implementation  
+- Auto-scaling and load balancing
 
 ## Quick Start
 
@@ -607,7 +461,7 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 ### Production Deployment
 
-**🚀 Ready to Deploy? Start Here:**
+**Currently Deployed at $7.24/month - Management Resources:**
 - **[DEPLOY NOW - Quick Start](documentation/DEPLOY_NOW.md)**: Immediate action steps (15 minutes to production)
 - **[Production Deployment Roadmap](documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete 4-week deployment guide
 - **[Deployment Checklist](documentation/DEPLOYMENT_CHECKLIST.md)**: Track your progress step-by-step
@@ -802,7 +656,7 @@ python scripts/deployment/rollback_system.py --help
 - **Enterprise-Ready Automation**: Production-grade deployment scripts with comprehensive CLI interfaces and documentation
 - **Document Session Isolation**: "Clear Previous Documents" option prevents cross-contamination
 - **Automatic Environment Loading**: .env file automatically loaded on app startup
-- **Enhanced UI**: Production-ready Gradio interface with comprehensive monitoring integration
+- **Enhanced UI**: Production-deployed Gradio interface with comprehensive monitoring integration
 
 ## Documentation
 
