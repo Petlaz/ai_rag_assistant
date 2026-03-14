@@ -31,6 +31,7 @@ on:
         type: boolean
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   AWS_REGION: 'us-east-1'
   CONTAINER_REGISTRY: 'public.ecr.aws'
   IMAGE_TAG: ${{ github.sha }}
@@ -137,7 +138,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install boto3 click tabulate
+        pip install boto3 click tabulate PyYAML
     
     - name: Estimate deployment costs
       run: |
