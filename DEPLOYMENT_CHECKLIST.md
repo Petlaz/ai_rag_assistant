@@ -24,7 +24,7 @@
 
 ---
 
-### **🚀 Week 1-2: AWS Infrastructure Deployment** 
+### ** Week 1-2: AWS Infrastructure Deployment** 
 
 #### ** Infrastructure Deployment**
 - [x] **Day 1-3: Initial Deployment**

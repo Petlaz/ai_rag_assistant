@@ -316,4 +316,4 @@ git push origin main
 # This triggers automated deployment via GitHub Actions
 ```
 
-**Your production-ready AI RAG Assistant is ready to serve real users! 🚀**
+**Your production-ready AI RAG Assistant is ready to serve real users!**
