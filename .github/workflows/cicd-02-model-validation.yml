@@ -1,0 +1,404 @@
+name: Model Validation & Quality Assurance
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'rag_pipeline/**'
+      - 'llm_ollama/**'
+      - 'notebooks/**'
+  schedule:
+    # Run daily at 6 AM UTC for model drift detection
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      evaluation_mode:
+        description: 'Evaluation mode'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+          - standard
+          - comprehensive
+          - drift-detection
+      model_version:
+        description: 'Model version to validate'
+        required: false
+        default: 'latest'
+
+env:
+  PYTHON_VERSION: '3.11'
+  MLFLOW_TRACKING_URI: 'sqlite:///mlflow.db'
+  EVALUATION_DATASET_PATH: './data/samples/queries.jsonl'
+
+jobs:
+  setup-evaluation:
+    runs-on: ubuntu-latest
+    outputs:
+      eval-mode: ${{ steps.set-mode.outputs.mode }}
+      dataset-hash: ${{ steps.dataset-check.outputs.hash }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set evaluation mode
+      id: set-mode
+      run: |
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          echo "mode=drift-detection" >> $GITHUB_OUTPUT
+        elif [ "${{ github.event.inputs.evaluation_mode }}" != "" ]; then
+          echo "mode=${{ github.event.inputs.evaluation_mode }}" >> $GITHUB_OUTPUT
+        else
+          echo "mode=standard" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Check evaluation dataset
+      id: dataset-check
+      run: |
+        if [ -f "${{ env.EVALUATION_DATASET_PATH }}" ]; then
+          hash=$(sha256sum "${{ env.EVALUATION_DATASET_PATH }}" | cut -d' ' -f1)
+          echo "hash=$hash" >> $GITHUB_OUTPUT
+        else
+          echo "hash=none" >> $GITHUB_OUTPUT
+        fi
+
+  model-evaluation:
+    runs-on: ubuntu-latest
+    needs: setup-evaluation
+    
+    services:
+      opensearch:
+        image: opensearchproject/opensearch:2.11.0
+        env:
+          discovery.type: single-node
+          OPENSEARCH_INITIAL_ADMIN_PASSWORD: TestPassword123!
+        ports:
+          - 9200:9200
+          
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install mlflow ragas datasets rouge-score nltk
+    
+    - name: Set up Ollama
+      run: |
+        curl -fsSL https://ollama.ai/install.sh | sh
+        ollama serve &
+        sleep 10
+        ollama pull llama3.2:1b
+        ollama pull mistral:7b
+    
+    - name: Configure environment
+      run: |
+        cp configs/secrets.template.env .env
+        echo "OPENSEARCH_HOST=localhost" >> .env
+        echo "OPENSEARCH_PORT=9200" >> .env
+        echo "OPENSEARCH_USER=admin" >> .env
+        echo "OPENSEARCH_PASSWORD=TestPassword123!" >> .env
+        echo "OLLAMA_HOST=http://localhost:11434" >> .env
+        echo "MLFLOW_TRACKING_URI=${{ env.MLFLOW_TRACKING_URI }}" >> .env
+    
+    - name: Initialize services
+      run: |
+        python scripts/bootstrap_opensearch.sh
+        mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 0.0.0.0 &
+        sleep 5
+    
+    - name: Run retrieval evaluation
+      run: |
+        python scripts/eval_retrieval.py \
+          --mode ${{ needs.setup-evaluation.outputs.eval-mode }} \
+          --output-path ./evaluation_results/retrieval_metrics.json
+    
+    - name: Evaluate model responses
+      env:
+        EVAL_MODE: ${{ needs.setup-evaluation.outputs.eval-mode }}
+        MODEL_VERSION: ${{ github.event.inputs.model_version || 'latest' }}
+        DATASET_HASH: ${{ needs.setup-evaluation.outputs.dataset-hash }}
+        EVALUATION_DATASET_PATH: ${{ env.EVALUATION_DATASET_PATH }}
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+        GITHUB_REF: ${{ github.ref }}
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        python -c "
+        import sys, json, os
+        from pathlib import Path
+        sys.path.append('.')
+        
+        from rag_pipeline.retrieval.retriever import HybridRetriever
+        from llm_ollama.client import OllamaClient
+        import mlflow
+        import mlflow.sklearn
+        from datasets import Dataset
+        from ragas import evaluate
+        from ragas.metrics import (
+            answer_relevancy,
+            faithfulness,
+            context_precision,
+            context_recall
+        )
+        
+        # Initialize components
+        retriever = HybridRetriever()
+        ollama_client = OllamaClient()
+        
+        # Load evaluation dataset
+        eval_data = []
+        dataset_path = os.getenv('EVALUATION_DATASET_PATH', './data/samples/queries.jsonl')
+        if os.path.exists(dataset_path):
+            with open(dataset_path, 'r') as f:
+                for line in f:
+                    eval_data.append(json.loads(line))
+        
+        # Prepare evaluation data
+        questions = []
+        ground_truths = []
+        answers = []
+        contexts = []
+        
+        for item in eval_data[:10]:  # Limit for CI performance
+            question = item['query']
+            ground_truth = item.get('expected_answer', '')
+            
+            # Get retrieval context
+            retrieved_docs = retriever.retrieve(question, k=3)
+            context_texts = [doc.page_content for doc in retrieved_docs]
+            
+            # Generate answer
+            context_str = '\\n\\n'.join(context_texts)
+            prompt = f'''Context: {context_str}
+            
+            Question: {question}
+            
+            Answer based on the provided context:'''
+            
+            messages = [{'role': 'user', 'content': prompt}]
+            response = ollama_client.generate(messages)
+            
+            questions.append(question)
+            ground_truths.append([ground_truth]) if ground_truth else ground_truths.append([''])
+            answers.append(response if response else '')
+            contexts.append(context_texts)
+        
+        # Create RAGAS dataset
+        dataset = Dataset.from_dict({
+            'question': questions,
+            'answer': answers,
+            'contexts': contexts,
+            'ground_truths': ground_truths
+        })
+        
+        # Run RAGAS evaluation
+        result = evaluate(
+            dataset,
+            metrics=[answer_relevancy, faithfulness, context_precision, context_recall]
+        )
+        
+        # Log metrics to MLflow
+        mlflow.set_experiment('model_validation')
+        with mlflow.start_run():
+            mlflow.log_param('evaluation_mode', os.getenv('EVAL_MODE', 'unknown'))
+            mlflow.log_param('model_version', os.getenv('MODEL_VERSION', 'latest'))
+            mlflow.log_param('dataset_hash', os.getenv('DATASET_HASH', 'unknown'))
+            mlflow.log_param('num_queries', len(questions))
+            
+            for metric_name, metric_value in result.items():
+                mlflow.log_metric(f'ragas_{metric_name}', metric_value)
+        
+        # Save detailed results
+        Path('./evaluation_results').mkdir(exist_ok=True)
+        with open('./evaluation_results/ragas_metrics.json', 'w') as f:
+            json.dump(result, f, indent=2)
+        
+        print(f'Model evaluation completed. Metrics: {result}')
+        "
+    
+    - name: Quality gate validation
+      run: |
+        python -c "
+        import json, sys
+        
+        # Load evaluation results
+        with open('./evaluation_results/retrieval_metrics.json', 'r') as f:
+            retrieval_metrics = json.load(f)
+        
+        with open('./evaluation_results/ragas_metrics.json', 'r') as f:
+            ragas_metrics = json.load(f)
+        
+        # Define quality thresholds
+        thresholds = {
+            'retrieval_precision': 0.7,
+            'retrieval_recall': 0.6,
+            'ragas_answer_relevancy': 0.7,
+            'ragas_faithfulness': 0.8,
+            'ragas_context_precision': 0.7,
+            'ragas_context_recall': 0.6
+        }
+        
+        # Check quality gates
+        failed_gates = []
+        for metric, threshold in thresholds.items():
+            if metric.startswith('retrieval_'):
+                actual_value = retrieval_metrics.get(metric.replace('retrieval_', ''), 0)
+            else:
+                actual_value = ragas_metrics.get(metric.replace('ragas_', ''), 0)
+            
+            if actual_value < threshold:
+                failed_gates.append(f'{metric}: {actual_value:.3f} < {threshold}')
+        
+        if failed_gates:
+            print('Quality gates failed:')
+            for gate in failed_gates:
+                print(f'  - {gate}')
+            sys.exit(1)
+        else:
+            print('All quality gates passed')
+        "
+    
+    - name: Model drift detection
+      if: needs.setup-evaluation.outputs.eval-mode == 'drift-detection'
+      env:
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+      run: |
+        python -c "
+        import json, os
+        from datetime import datetime, timedelta
+        import mlflow
+        
+        mlflow.set_tracking_uri(os.getenv('MLFLOW_TRACKING_URI', 'sqlite:///mlflow.db'))
+        client = mlflow.tracking.MlflowClient()
+        
+        # Get recent runs from the last 7 days
+        experiment = mlflow.get_experiment_by_name('model_validation')
+        if experiment:
+            runs = mlflow.search_runs(
+                experiment_ids=[experiment.experiment_id],
+                max_results=10,
+                order_by=['start_time DESC']
+            )
+            
+            if len(runs) > 1:
+                current_metrics = {}
+                baseline_metrics = {}
+                
+                # Load current metrics
+                with open('./evaluation_results/ragas_metrics.json', 'r') as f:
+                    current_metrics = json.load(f)
+                
+                # Calculate metric drift
+                drift_threshold = 0.1  # 10% degradation threshold
+                drift_detected = False
+                
+                for run_idx in range(1, min(4, len(runs))):  # Compare with last 3 runs
+                    for metric_name in current_metrics:
+                        current_value = current_metrics[metric_name]
+                        baseline_value = runs.iloc[run_idx].get(f'metrics.ragas_{metric_name}', current_value)
+                        
+                        if baseline_value > 0:
+                            drift_ratio = (baseline_value - current_value) / baseline_value
+                            if drift_ratio > drift_threshold:
+                                print(f'WARNING: Drift detected in {metric_name}: {drift_ratio:.2%} degradation')
+                                drift_detected = True
+                
+                if drift_detected:
+                    print('Model performance has degraded significantly. Consider retraining.')
+                else:
+                    print('No significant model drift detected')
+        "
+    
+    - name: Generate evaluation report
+      env:
+        EVAL_MODE: ${{ needs.setup-evaluation.outputs.eval-mode }}
+        GITHUB_REF: ${{ github.ref }}
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        python -c "
+        import json, os, datetime
+        
+        # Load all metrics
+        retrieval_file = './evaluation_results/retrieval_metrics.json'
+        ragas_file = './evaluation_results/ragas_metrics.json'
+        
+        report = {
+            'timestamp': datetime.datetime.now().isoformat(),
+            'evaluation_mode': os.getenv('EVAL_MODE', 'unknown'),
+            'github_ref': os.getenv('GITHUB_REF', 'unknown'),
+            'commit_sha': os.getenv('COMMIT_SHA', 'unknown'),
+            'metrics': {}
+        }
+        
+        if os.path.exists(retrieval_file):
+            with open(retrieval_file, 'r') as f:
+                report['metrics']['retrieval'] = json.load(f)
+        
+        if os.path.exists(ragas_file):
+            with open(ragas_file, 'r') as f:
+                report['metrics']['response_quality'] = json.load(f)
+        
+        with open('./evaluation_results/evaluation_report.json', 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        print('Evaluation report generated')
+        "
+    
+    - name: Upload evaluation artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: model-evaluation-results-${{ github.run_number }}
+        path: |
+          evaluation_results/
+          mlruns/
+        retention-days: 30
+    
+    - name: Comment evaluation results on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const path = './evaluation_results/evaluation_report.json';
+          
+          if (fs.existsSync(path)) {
+            const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const metrics = report.metrics;
+            
+            let comment = '## Model Evaluation Results\n\n';
+            
+            if (metrics.retrieval) {
+              comment += '### Retrieval Performance\\n';
+              for (const [key, value] of Object.entries(metrics.retrieval)) {
+                comment += `- **${key}**: ${typeof value === 'number' ? value.toFixed(3) : value}\\n`;
+              }
+              comment += '\\n';
+            }
+            
+            if (metrics.response_quality) {
+              comment += '### Response Quality (RAGAS)\\n';
+              for (const [key, value] of Object.entries(metrics.response_quality)) {
+                comment += `- **${key}**: ${typeof value === 'number' ? value.toFixed(3) : value}\\n`;
+              }
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }

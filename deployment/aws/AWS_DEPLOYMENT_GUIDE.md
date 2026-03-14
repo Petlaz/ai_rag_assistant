@@ -5,16 +5,39 @@
 
 ---
 
+## Deployment Infrastructure Integration
+
+This guide leverages the **Production Deployment Infrastructure** completed in March 2026, providing enterprise-grade deployment automation and validation tools:
+
+### Available Deployment Scripts
+- **[`scripts/deployment/production_validation.py`](../../scripts/deployment/production_validation.py)**: Comprehensive health checks and system validation
+- **[`scripts/deployment/blue_green_deploy.py`](../../scripts/deployment/blue_green_deploy.py)**: Zero-downtime deployment automation  
+- **[`scripts/deployment/estimate_aws_costs.py`](../../scripts/deployment/estimate_aws_costs.py)**: AWS cost estimation and budget analysis
+- **[`scripts/deployment/rollback_system.py`](../../scripts/deployment/rollback_system.py)**: Automated rollback and recovery system
+
+### How to Use This Guide
+1. **Cost Planning**: Use `estimate_aws_costs.py` to analyze costs before deployment
+2. **Pre-Deployment**: Use `production_validation.py` to validate your local setup
+3. **Deployment Validation**: Use `blue_green_deploy.py` for configuration validation
+4. **Post-Deployment**: Use all scripts for ongoing monitoring and management
+
+See the **[Deployment Scripts Documentation](../../scripts/deployment/README.md)** for complete usage instructions.
+
+---
+
 ## Table of Contents
-1. [Deployment Modes Overview](#deployment-modes-overview)
-2. [Prerequisites & Setup](#prerequisites--setup)
-3. [Ultra-Budget Deployment ($8-18/month)](#ultra-budget-deployment-8-18month)
-4. [Balanced Deployment ($15-35/month)](#balanced-deployment-15-35month)
-5. [Full Production Deployment ($25-68/month)](#full-production-deployment-25-68month)
-6. [Post-Deployment Configuration](#post-deployment-configuration)
-7. [Monitoring & Maintenance](#monitoring--maintenance)
-8. [Troubleshooting](#troubleshooting)
-9. [Cost Optimization Tips](#cost-optimization-tips)
+1. [Deployment Infrastructure Integration](#deployment-infrastructure-integration)
+2. [Deployment Modes Overview](#deployment-modes-overview)
+3. [Prerequisites & Setup](#prerequisites--setup)
+4. [Ultra-Budget Deployment ($8-18/month)](#ultra-budget-deployment-8-18month)
+5. [Balanced Deployment ($15-35/month)](#balanced-deployment-15-35month)
+6. [Full Production Deployment ($25-68/month)](#full-production-deployment-25-68month)
+7. [Post-Deployment Configuration](#post-deployment-configuration)
+8. [Monitoring & Maintenance](#monitoring--maintenance)
+9. [Troubleshooting](#troubleshooting)
+10. [Cost Optimization Tips](#cost-optimization-tips)
+11. [Security Best Practices](#security-best-practices)
+12. [Next Steps](#next-steps)
 
 ---
 
@@ -28,7 +51,8 @@
 - Lambda Function URLs (no API Gateway costs)
 - 24-hour aggressive caching (80% cost reduction)
 - Automatic document cleanup after 7 days
-- Deploy with: `./scripts/deploy-student-stack.sh --mode=ultra-budget`
+- Deploy with: Use deployment automation scripts for cost estimation and validation
+- See: [`scripts/deployment/estimate_aws_costs.py`](../../scripts/deployment/estimate_aws_costs.py)
 
 **Services Used:**
 - **Lambda**: Query processing + embedded vector search
@@ -154,28 +178,39 @@ Create IAM user with necessary permissions:
                    └─────────────┘    └─────────────┘
 ```
 
-### Step 1: Deploy Infrastructure
+### Step 1: Pre-Deployment Validation
 
 ```bash
 # Navigate to project directory
 cd /path/to/ai_rag_assistant
 
-# Deploy ultra-budget stack
-./scripts/deploy-student-stack.sh \
-  --mode=ultra-budget \
-  --budget=20 \
-  --region=us-east-1
+# Validate deployment configuration
+python scripts/deployment/blue_green_deploy.py --validate-config --dry-run
+
+# Estimate costs for ultra-budget mode
+python scripts/deployment/estimate_aws_costs.py --deployment-mode ultra-budget --queries-per-day 100
+
+# Run production validation checks
+python scripts/deployment/production_validation.py --health-check
+```
+
+### Step 2: Deploy Infrastructure
+
+```bash
+# Manual deployment using AWS CLI
+# (Automated deployment scripts in development)
+# Deploy infrastructure components individually
 
 # Deployment typically takes 20-30 minutes
 ```
 
-### Step 2: Lambda Function Configuration
+### Step 3: Lambda Function Configuration
 
 **Memory and Timeout Settings:**
 ```bash
 # Optimize for cost and performance
 aws lambda update-function-configuration \
-  --function-name rag-assistant-ultra-query \
+  --function-name rag-assistant-query \
   --memory-size 1024 \
   --timeout 30
 ```
@@ -184,7 +219,7 @@ aws lambda update-function-configuration \
 ```bash
 # Set environment variables for Lambda
 aws lambda update-function-configuration \
-  --function-name rag-assistant-ultra-query \
+  --function-name rag-assistant-query \
   --environment Variables='{
     "CACHE_TTL": "86400",
     "VECTOR_DIMENSIONS": "384",
@@ -193,17 +228,17 @@ aws lambda update-function-configuration \
   }'
 ```
 
-### Step 3: S3 Bucket Configuration
+### Step 4: S3 Bucket Configuration
 
 ```bash
 # Create S3 bucket with lifecycle policy
 aws s3api create-bucket \
-  --bucket rag-ultra-documents-$(date +%s) \
+  --bucket rag-documents-$(date +%s) \
   --region us-east-1
 
 # Set lifecycle policy (auto-delete after 7 days)
 aws s3api put-bucket-lifecycle-configuration \
-  --bucket your-bucket-name \
+  --bucket rag-documents-$(date +%s) \
   --lifecycle-configuration '{
     "Rules": [{
       "ID": "DeleteOldDocuments",
@@ -213,7 +248,7 @@ aws s3api put-bucket-lifecycle-configuration \
   }'
 ```
 
-### Step 4: DynamoDB Caching Setup
+### Step 5: DynamoDB Caching Setup
 
 ```bash
 # Create DynamoDB table with TTL
@@ -232,12 +267,12 @@ aws dynamodb update-time-to-live \
     AttributeName=expiry,Enabled=true
 ```
 
-### Step 5: Function URL Configuration
+### Step 6: Function URL Configuration
 
 ```bash
 # Create Function URL for direct access
 aws lambda create-function-url-config \
-  --function-name rag-assistant-ultra-query \
+  --function-name rag-assistant-query \
   --config AuthType=NONE,Cors='{
     "AllowCredentials": false,
     "AllowHeaders": ["content-type"],
@@ -293,11 +328,14 @@ docker run -p 8000:8000 chromadb/chroma:latest
 ### Step 2: Deploy Balanced Stack
 
 ```bash
-./scripts/deploy-student-stack.sh \
-  --mode=balanced \
-  --budget=35 \
-  --vector-db=pinecone \
-  --pinecone-api-key=$PINECONE_API_KEY
+# Use deployment automation scripts for validation and cost estimation
+python scripts/deployment/estimate_aws_costs.py \
+  --deployment-mode balanced \
+  --queries-per-day 500 \
+  --document-count 10000
+
+# Manual deployment using AWS CLI
+# (Automated deployment scripts in development)
 ```
 
 ---
@@ -366,6 +404,8 @@ aws acm request-certificate \
   --domain-name your-domain.com \
   --validation-method DNS \
   --region us-east-1
+
+# Note: Replace 'your-domain.com' with your actual domain name
 ```
 
 ### Custom Domain Configuration
@@ -375,18 +415,24 @@ aws acm request-certificate \
 aws apigateway create-domain-name \
   --domain-name api.your-domain.com \
   --certificate-arn arn:aws:acm:us-east-1:account:certificate/cert-id
+
+# Note: Replace 'api.your-domain.com' with your actual API subdomain
 ```
 
 ### Environment-Specific Configurations
 
 **Development:**
 ```bash
-./scripts/deploy-student-stack.sh --mode=ultra-budget --env=dev
+# Use deployment scripts for cost estimation
+python scripts/deployment/estimate_aws_costs.py --deployment-mode ultra-budget
+python scripts/deployment/production_validation.py --health-check
 ```
 
 **Production:**
 ```bash
-./scripts/deploy-student-stack.sh --mode=full --env=prod
+# Use deployment scripts for production validation
+python scripts/deployment/estimate_aws_costs.py --deployment-mode full-scale
+python scripts/deployment/blue_green_deploy.py --validate-config --dry-run
 ```
 
 ---
@@ -433,7 +479,10 @@ aws ce get-cost-and-usage \
 ### Health Checks
 
 ```bash
-# Test deployment health
+# Test deployment health using production validation scripts
+python scripts/deployment/production_validation.py --health-check --verbose
+
+# Test specific components
 curl -X POST https://your-function-url.lambda-url.us-east-1.on.aws/health
 
 # Expected response:
@@ -527,7 +576,9 @@ aws ce get-cost-and-usage \
 **Solutions:**
 ```bash
 # Check S3 permissions
-aws s3api get-bucket-policy --bucket your-bucket-name
+aws s3api get-bucket-policy --bucket rag-documents-YOUR-TIMESTAMP
+
+# Note: Replace rag-documents-YOUR-TIMESTAMP with your actual bucket name
 
 # Optimize file size limits
 # Implement chunked upload for large files
@@ -548,7 +599,9 @@ aws dynamodb describe-table \
 
 # Monitor S3 costs
 aws s3api get-bucket-metrics-configuration \
-  --bucket your-bucket-name
+  --bucket rag-documents-YOUR-TIMESTAMP
+
+# Note: Replace with your actual bucket name
 ```
 
 ---
@@ -567,8 +620,10 @@ aws s3api get-bucket-metrics-configuration \
    ```bash
    # Auto-delete documents after 7 days
    aws s3api put-bucket-lifecycle-configuration \
-     --bucket your-bucket \
+     --bucket rag-documents-YOUR-TIMESTAMP \
      --lifecycle-configuration file://lifecycle.json
+   
+   # Note: Replace with your actual bucket name
    ```
 
 3. **Lambda Optimization**
@@ -588,10 +643,16 @@ aws s3api get-bucket-metrics-configuration \
    - Use us-east-1 (cheapest region)
    - Keep all resources in same region
 
-3. **Resource Cleanup**
+### Resource Cleanup
+
+4. **Resource Cleanup**
    ```bash
-   # Automated cleanup script
-   ./scripts/cleanup-unused-resources.sh
+   # Manual cleanup of unused resources
+   # Check AWS console for unused resources
+   # Use AWS CLI to delete specific resources
+   
+   # Monitor with deployment scripts
+   python scripts/deployment/estimate_aws_costs.py --budget-analysis
    ```
 
 4. **Monitoring and Alerts**
@@ -603,13 +664,17 @@ aws s3api get-bucket-metrics-configuration \
 
 ```bash
 # Emergency shutdown (if costs spike)
-./scripts/emergency-shutdown.sh
+# Manual shutdown of services through AWS console
+# Or use CLI commands to stop services
 
 # Temporarily disable services
 aws lambda put-provisioned-concurrency-config \
   --function-name rag-assistant-query \
   --qualifier '$LATEST' \
   --provisioned-concurrency-config ProvisionedConcurrencyCount=0
+
+# Monitor costs with deployment scripts
+python scripts/deployment/estimate_aws_costs.py --budget-analysis --target-cost 15
 ```
 
 ---
@@ -630,7 +695,7 @@ Use least-privilege access:
         "s3:GetObject",
         "s3:PutObject"
       ],
-      "Resource": "arn:aws:s3:::your-bucket/*"
+      "Resource": "arn:aws:s3:::rag-documents-*/*"
     },
     {
       "Effect": "Allow",
@@ -642,6 +707,9 @@ Use least-privilege access:
     }
   ]
 }
+```
+
+**Note**: Replace `rag-documents-*` with your specific bucket name pattern
 ```
 
 ### API Security
@@ -658,7 +726,7 @@ aws apigateway create-usage-plan \
 ```bash
 # Enable S3 encryption at rest
 aws s3api put-bucket-encryption \
-  --bucket your-bucket \
+  --bucket rag-documents-YOUR-TIMESTAMP \
   --server-side-encryption-configuration '{
     "Rules": [{
       "ApplyServerSideEncryptionByDefault": {
@@ -666,6 +734,8 @@ aws s3api put-bucket-encryption \
       }
     }]
   }'
+
+# Note: Replace with your actual bucket name
 ```
 
 ---
@@ -676,16 +746,24 @@ After successful deployment:
 
 1. **Test Full Functionality**
    ```bash
-   # Run comprehensive tests
-   python scripts/smoke_test.py --deployment-url https://your-url
+   # Run comprehensive tests with deployment automation scripts
+   python scripts/deployment/production_validation.py --full-suite
+   python scripts/smoke_test.py --pdf sample.pdf --question "test query"
    ```
 
 2. **Set Up Monitoring**
-   - Configure CloudWatch alarms
-   - Set up cost monitoring
-   - Enable AWS Config for compliance
+   ```bash
+   # Use production monitoring infrastructure
+   python scripts/monitoring/production_monitoring.py --setup
+   python scripts/monitoring/alerting_system.py --setup
+   ```
 
 3. **Optimize Performance**
+   ```bash
+   # Use deployment analytics tools
+   python scripts/deployment/estimate_aws_costs.py --optimize
+   python scripts/deployment/production_validation.py --performance-baseline
+   ```
    - Monitor metrics for 1 week
    - Adjust memory/timeout based on usage
    - Fine-tune caching strategy
@@ -696,13 +774,23 @@ After successful deployment:
    - Prepare demo scripts for interviews
 
 5. **Plan Scaling Strategy**
+   ```bash
+   # Use deployment scripts for planning
+   python scripts/deployment/estimate_aws_costs.py --compare-modes
+   python scripts/deployment/blue_green_deploy.py --validate-config
+   ```
    - Define metrics for mode upgrades
    - Plan migration path (Ultra → Balanced → Full)
-   - Document upgrade procedures
+   - Document upgrade procedures using deployment automation infrastructure
 
 ---
 
 **Deployment Support:**
+- **Production Deployment Scripts**: Use [`scripts/deployment/`](../../scripts/deployment/) for validation and cost estimation
+- **Production Validation**: [`scripts/deployment/production_validation.py`](../../scripts/deployment/production_validation.py)
+- **Blue-Green Deployment**: [`scripts/deployment/blue_green_deploy.py`](../../scripts/deployment/blue_green_deploy.py)
+- **Cost Estimation**: [`scripts/deployment/estimate_aws_costs.py`](../../scripts/deployment/estimate_aws_costs.py)
+- **Rollback System**: [`scripts/deployment/rollback_system.py`](../../scripts/deployment/rollback_system.py)
 - For deployment issues: Check troubleshooting section above
 - For cost concerns: Review cost optimization tips
 - For performance optimization: Monitor CloudWatch metrics

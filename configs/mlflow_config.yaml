@@ -1,0 +1,311 @@
+# MLflow Configuration for Quest Analytics RAG Assistant
+# =====================================================
+#
+# This configuration file defines MLflow experiment tracking settings
+# for systematic ML experimentation, model versioning, and performance monitoring.
+#
+# Used by: scripts/mlops/* scripts, CI/CD pipeline, production monitoring
+
+# MLFLOW TRACKING CONFIGURATION
+
+tracking:
+  # Tracking URI for experiment storage
+  tracking_uri: "./mlruns"  # Local SQLite backend
+  # Alternative: tracking_uri: "postgresql://user:password@localhost/mlflow"
+  
+  # Default artifact storage location
+  artifact_uri: "./mlruns"
+  # Alternative: artifact_uri: "s3://mlflow-artifacts-bucket/artifacts"
+  
+  # Backend store configuration
+  backend_store: "sqlite"
+  backend_store_uri: "./mlruns/mlflow.db"
+  
+  # Server configuration (if running MLflow server)
+  server:
+    enabled: false
+    host: "127.0.0.1" 
+    port: 5000
+    workers: 1
+
+# EXPERIMENT ORGANIZATION
+
+experiments:
+  # Main RAG optimization experiment
+  rag_optimization:
+    name: "rag-optimization-2026"
+    description: "Comprehensive RAG system optimization for Quest Analytics"
+    experiment_id: "1"
+    tags:
+      project: "quest-analytics-rag"
+      phase: "optimization"
+      environment: "development"
+    
+  # Embedding model comparison
+  embedding_models:
+    name: "embedding-model-comparison"
+    description: "Systematic comparison of embedding models for retrieval"
+    experiment_id: "2"
+    tags:
+      component: "embeddings"
+      optimization: "model-selection"
+    
+  # Retrieval configuration A/B tests
+  retrieval_configs:
+    name: "retrieval-configuration-testing"
+    description: "A/B testing of retrieval configurations and parameters"
+    experiment_id: "3"
+    tags:
+      component: "retrieval"
+      testing: "ab-testing"
+    
+  # Re-ranking strategy evaluation
+  reranking_strategies:
+    name: "reranking-strategy-evaluation"
+    description: "Evaluation of different re-ranking approaches"
+    experiment_id: "4"
+    tags:
+      component: "reranking"
+      optimization: "strategy-comparison"
+    
+  # Production monitoring
+  production_monitoring:
+    name: "production-performance-monitoring"
+    description: "Real-time monitoring of production model performance"
+    experiment_id: "5"
+    tags:
+      environment: "production"
+      monitoring: "performance"
+
+# STANDARD METRICS TO TRACK
+
+metrics:
+  # Performance metrics
+  performance:
+    - precision_at_k
+    - recall_at_k 
+    - mean_reciprocal_rank
+    - ndcg_at_k
+    - f1_score
+    - query_response_time_ms
+    - end_to_end_latency_ms
+  
+  # Cost metrics
+  cost:
+    - cost_per_query_usd
+    - monthly_estimated_cost_usd
+    - lambda_duration_ms
+    - lambda_memory_used_mb
+    - bedrock_tokens_input
+    - bedrock_tokens_output
+    - dynamodb_read_capacity_used
+    - dynamodb_write_capacity_used
+  
+  # System metrics
+  system:
+    - memory_usage_mb
+    - cpu_utilization_percent
+    - inference_speed_queries_per_second
+    - cache_hit_rate_percent
+    - error_rate_percent
+    - availability_percent
+
+# STANDARD PARAMETERS TO LOG
+
+parameters:
+  # Model parameters
+  model:
+    - embedding_model_name
+    - llm_model_name
+    - reranker_type
+    - model_version
+    - embedding_dimensions
+  
+  # Retrieval parameters
+  retrieval:
+    - bm25_weight
+    - semantic_weight
+    - top_k_retrieval
+    - top_k_final
+    - similarity_threshold
+    - query_expansion_enabled
+  
+  # Infrastructure parameters
+  infrastructure:
+    - deployment_mode
+    - lambda_memory_mb
+    - lambda_timeout_seconds
+    - aws_region
+    - environment
+  
+  # Experiment parameters
+  experiment:
+    - experiment_name
+    - test_dataset_size
+    - evaluation_metrics
+    - statistical_significance_level
+    - experiment_duration_days
+
+# ARTIFACTS MANAGEMENT
+
+artifacts:
+  # Model artifacts to store
+  model_artifacts:
+    - trained_model
+    - tokenizer
+    - embedding_model
+    - configuration_files
+    - evaluation_results
+    - performance_plots
+  
+  # Evaluation artifacts
+  evaluation_artifacts:
+    - test_results_json
+    - confusion_matrix_plot
+    - precision_recall_curves
+    - evaluation_report_pdf
+    - statistical_analysis_report
+  
+  # Configuration artifacts
+  config_artifacts:
+    - retrieval_config_yaml
+    - model_config_yaml
+    - deployment_config_yaml
+    - environment_variables
+
+# AUTOMATED LOGGING CONFIGURATION
+
+auto_logging:
+  # Enable automatic parameter/metric logging
+  enabled: true
+  
+  # Frameworks to auto-log
+  frameworks:
+    sklearn: true
+    pytorch: false
+    tensorflow: false
+    pandas: true
+    numpy: true
+  
+  # Custom logging settings
+  custom:
+    log_system_metrics: true
+    log_git_commit: true
+    log_conda_environment: true
+    log_pip_requirements: true
+
+# MODEL REGISTRY SETTINGS
+
+model_registry:
+  # Enable model registry
+  enabled: true
+  
+  # Model stages
+  stages:
+    - "Staging"
+    - "Production"
+    - "Archived"
+  
+  # Automatic model registration rules
+  auto_register:
+    enabled: true
+    performance_threshold:
+      precision_at_5: 0.70
+      mrr: 0.75
+      cost_increase_limit_percent: 25
+    
+    # Promotion rules
+    promotion:
+      staging_to_production:
+        min_precision_at_5: 0.75
+        min_mrr: 0.80
+        max_latency_ms: 2000
+        min_evaluation_samples: 100
+
+# COMPARISON AND ANALYSIS
+
+comparison:
+  # Baseline metrics for comparison
+  baseline:
+    precision_at_5: 0.72
+    mrr: 0.80
+    query_response_time_ms: 1500
+    cost_per_query_usd: 0.001
+  
+  # Improvement thresholds
+  improvement_thresholds:
+    minimal: 0.02   # 2% improvement
+    significant: 0.05   # 5% improvement
+    major: 0.10   # 10% improvement
+  
+  # Statistical significance settings
+  statistical_testing:
+    alpha: 0.05
+    power: 0.80
+    minimum_sample_size: 30
+    confidence_interval: 0.95
+
+# ALERTING AND NOTIFICATIONS
+
+alerts:
+  # Performance degradation alerts
+  performance_degradation:
+    enabled: true
+    precision_drop_threshold: 0.05  # 5% drop
+    latency_increase_threshold: 0.20  # 20% increase
+    
+  # Cost alerts
+  cost_escalation:
+    enabled: true
+    cost_increase_threshold: 0.25  # 25% increase
+    
+  # Notification settings
+  notifications:
+    email:
+      enabled: false
+      recipients: []
+    
+    slack:
+      enabled: false
+      webhook_url: ""
+    
+    mlflow_ui:
+      enabled: true
+
+# CLEANUP AND RETENTION
+
+cleanup:
+  # Automatic cleanup settings
+  auto_cleanup:
+    enabled: true
+    retention_days: 90  # Keep experiments for 90 days
+    archive_old_experiments: true
+    cleanup_failed_runs: true
+  
+  # Storage optimization
+  storage_optimization:
+    compress_artifacts: true
+    delete_large_artifacts_days: 30
+    max_artifact_size_mb: 100
+
+# INTEGRATION SETTINGS
+
+integrations:
+  # CI/CD integration
+  ci_cd:
+    github_actions: true
+    automatic_experiment_creation: true
+    tag_experiments_with_git_commit: true
+  
+  # Production monitoring integration
+  production:
+    sync_production_metrics: true
+    production_experiment_name: "production-monitoring"
+    real_time_logging: true
+
+---
+# Configuration Management
+created_date: "2026-03-14"
+version: "1.0.0"
+author: "Quest Analytics Team"
+description: "MLflow experiment tracking and model management configuration"

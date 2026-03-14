@@ -1,0 +1,389 @@
+# Performance Thresholds Configuration for Quest Analytics RAG Assistant
+# ======================================================================
+#
+# This configuration file defines performance monitoring thresholds,
+# alerting criteria, and SLA targets for systematic RAG system monitoring.
+#
+# Used by: Monitoring scripts, CI/CD pipeline, production alerting, MLflow tracking
+
+# PERFORMANCE DOMAINS AND THRESHOLDS
+
+# RETRIEVAL PERFORMANCE
+retrieval:
+  # Accuracy thresholds
+  accuracy:
+    # Precision at K thresholds
+    precision_at_5:
+      excellent: 0.85      # > 85% precision at top 5 results
+      good: 0.75          # 75-85% precision 
+      acceptable: 0.65    # 65-75% precision
+      warning: 0.55       # 55-65% precision
+      critical: 0.45      # < 55% precision (alert)
+    
+    precision_at_10:
+      excellent: 0.80
+      good: 0.70
+      acceptable: 0.60
+      warning: 0.50
+      critical: 0.40
+    
+    # Recall at K thresholds
+    recall_at_5:
+      excellent: 0.70
+      good: 0.60
+      acceptable: 0.50
+      warning: 0.40
+      critical: 0.30
+    
+    recall_at_10:
+      excellent: 0.85
+      good: 0.75
+      acceptable: 0.65
+      warning: 0.55
+      critical: 0.45
+    
+    # Mean Reciprocal Rank (MRR)
+    mrr:
+      excellent: 0.85
+      good: 0.75
+      acceptable: 0.65
+      warning: 0.55
+      critical: 0.45
+    
+    # Normalized Discounted Cumulative Gain
+    ndcg_at_5:
+      excellent: 0.80
+      good: 0.70
+      acceptable: 0.60
+      warning: 0.50
+      critical: 0.40
+    
+    # F1 Score
+    f1_score:
+      excellent: 0.80
+      good: 0.70
+      acceptable: 0.60
+      warning: 0.50
+      critical: 0.40
+
+  # Speed thresholds (milliseconds)
+  latency:
+    # Vector search latency
+    vector_search_ms:
+      excellent: 100      # < 100ms
+      good: 250          # 100-250ms
+      acceptable: 500    # 250-500ms
+      warning: 1000      # 500ms-1s
+      critical: 2000     # > 2s
+    
+    # BM25 search latency  
+    bm25_search_ms:
+      excellent: 50
+      good: 100
+      acceptable: 200
+      warning: 500
+      critical: 1000
+    
+    # Hybrid search total latency
+    hybrid_search_ms:
+      excellent: 200
+      good: 400
+      acceptable: 800
+      warning: 1500
+      critical: 3000
+    
+    # Reranking latency
+    reranking_ms:
+      excellent: 100
+      good: 200
+      acceptable: 400
+      warning: 800
+      critical: 1500
+
+# GENERATION PERFORMANCE
+generation:
+  # Response quality thresholds
+  quality:
+    # RAGAS metrics
+    answer_relevancy:
+      excellent: 0.90
+      good: 0.80
+      acceptable: 0.70
+      warning: 0.60
+      critical: 0.50
+    
+    context_precision:
+      excellent: 0.85
+      good: 0.75
+      acceptable: 0.65
+      warning: 0.55
+      critical: 0.45
+    
+    context_recall:
+      excellent: 0.90
+      good: 0.80
+      acceptable: 0.70
+      warning: 0.60
+      critical: 0.50
+    
+    faithfulness:
+      excellent: 0.95
+      good: 0.85
+      acceptable: 0.75
+      warning: 0.65
+      critical: 0.55
+    
+    # Response completeness
+    completeness_score:
+      excellent: 0.85
+      good: 0.75
+      acceptable: 0.65
+      warning: 0.55
+      critical: 0.45
+
+  # Generation speed thresholds
+  latency:
+    # LLM generation latency
+    llm_generation_ms:
+      excellent: 2000      # < 2 seconds
+      good: 4000          # 2-4 seconds
+      acceptable: 7000    # 4-7 seconds
+      warning: 10000      # 7-10 seconds
+      critical: 15000     # > 15 seconds
+    
+    # Token generation speed
+    tokens_per_second:
+      excellent: 50       # > 50 tokens/sec
+      good: 30           # 30-50 tokens/sec
+      acceptable: 20     # 20-30 tokens/sec
+      warning: 15        # 15-20 tokens/sec
+      critical: 10       # < 10 tokens/sec
+
+# END-TO-END SYSTEM PERFORMANCE
+system:
+  # Overall response time thresholds
+  response_time:
+    # Total query processing time
+    total_response_ms:
+      excellent: 3000      # < 3 seconds
+      good: 5000          # 3-5 seconds
+      acceptable: 8000    # 5-8 seconds
+      warning: 12000      # 8-12 seconds
+      critical: 20000     # > 20 seconds
+    
+    # 95th percentile response time
+    p95_response_ms:
+      excellent: 5000
+      good: 8000
+      acceptable: 12000
+      warning: 18000
+      critical: 30000
+    
+    # 99th percentile response time
+    p99_response_ms:
+      excellent: 8000
+      good: 12000
+      acceptable: 18000
+      warning: 25000
+      critical: 40000
+
+  # Throughput thresholds
+  throughput:
+    # Queries per second
+    queries_per_second:
+      excellent: 10        # > 10 QPS
+      good: 5             # 5-10 QPS
+      acceptable: 2       # 2-5 QPS
+      warning: 1          # 1-2 QPS
+      critical: 0.5       # < 0.5 QPS
+    
+    # Concurrent users
+    concurrent_users:
+      excellent: 50
+      good: 25
+      acceptable: 10
+      warning: 5
+      critical: 2
+
+  # Reliability thresholds
+  reliability:
+    # Success rate
+    success_rate_percent:
+      excellent: 99.5      # > 99.5% success
+      good: 99.0          # 99-99.5% success
+      acceptable: 98.0    # 98-99% success
+      warning: 95.0       # 95-98% success
+      critical: 90.0      # < 95% success
+    
+    # Error rate
+    error_rate_percent:
+      excellent: 0.5       # < 0.5% errors
+      good: 1.0           # 0.5-1% errors
+      acceptable: 2.0     # 1-2% errors
+      warning: 5.0        # 2-5% errors
+      critical: 10.0      # > 5% errors
+    
+    # Timeout rate
+    timeout_rate_percent:
+      excellent: 0.1
+      good: 0.5
+      acceptable: 1.0
+      warning: 2.0
+      critical: 5.0
+
+# RESOURCE UTILIZATION
+resources:
+  # Memory usage thresholds
+  memory:
+    # Lambda memory usage (MB)
+    lambda_memory_mb:
+      excellent: 256      # < 256 MB
+      good: 512          # 256-512 MB
+      acceptable: 1024   # 512 MB - 1 GB
+      warning: 2048      # 1-2 GB
+      critical: 3008     # > 2 GB (close to Lambda limit)
+    
+    # Memory utilization percentage
+    memory_utilization_percent:
+      excellent: 60       # < 60%
+      good: 75           # 60-75%
+      acceptable: 85     # 75-85%
+      warning: 95        # 85-95%
+      critical: 98       # > 95%
+
+  # CPU usage thresholds
+  cpu:
+    # CPU utilization percentage
+    cpu_utilization_percent:
+      excellent: 50       # < 50%
+      good: 70           # 50-70%
+      acceptable: 85     # 70-85%
+      warning: 95        # 85-95%
+      critical: 98       # > 95%
+
+# COST PERFORMANCE
+cost:
+  # Cost per query thresholds (USD)
+  per_query:
+    cost_per_query_usd:
+      excellent: 0.0005   # < $0.0005 per query
+      good: 0.001        # $0.0005-0.001
+      acceptable: 0.002  # $0.001-0.002
+      warning: 0.005     # $0.002-0.005
+      critical: 0.01     # > $0.005 per query
+  
+  # Monthly cost thresholds (USD)
+  monthly:
+    monthly_cost_usd:
+      excellent: 50       # < $50/month
+      good: 100          # $50-100/month
+      acceptable: 250    # $100-250/month
+      warning: 500       # $250-500/month
+      critical: 1000     # > $500/month
+
+  # Cost efficiency thresholds
+  efficiency:
+    cost_per_successful_query_usd:
+      excellent: 0.0005
+      good: 0.001
+      acceptable: 0.0025
+      warning: 0.005
+      critical: 0.015
+
+# DATA QUALITY
+data:
+  # Index quality thresholds
+  index_quality:
+    # Document coverage
+    document_coverage_percent:
+      excellent: 95       # > 95% docs indexed
+      good: 90           # 90-95%
+      acceptable: 85     # 85-90%
+      warning: 80        # 80-85%
+      critical: 75       # < 80%
+    
+    # Embedding quality score
+    embedding_quality_score:
+      excellent: 0.85
+      good: 0.75
+      acceptable: 0.65
+      warning: 0.55
+      critical: 0.45
+
+  # Data freshness thresholds
+  freshness:
+    # Index age (hours)
+    index_age_hours:
+      excellent: 1        # < 1 hour old
+      good: 6            # 1-6 hours
+      acceptable: 24     # 6-24 hours
+      warning: 72        # 24-72 hours
+      critical: 168      # > 72 hours (3 days)
+
+# ALERTING CONFIGURATION
+
+# Alert severity levels and actions
+alerting:
+  severity_levels:
+    critical:
+      description: "System unusable, immediate action required"
+      max_response_time_minutes: 15
+      escalation_enabled: true
+      notifications:
+        - email
+        - slack
+        - pager
+    
+    warning:
+      description: "Performance degraded, action needed within 1 hour"
+      max_response_time_minutes: 60
+      escalation_enabled: false
+      notifications:
+        - email
+        - slack
+    
+    acceptable:
+      description: "Performance below optimal but within SLA"
+      notifications:
+        - dashboard
+    
+    good:
+      description: "Performance meeting expectations"
+      notifications: []
+    
+    excellent:
+      description: "Performance exceeding expectations"
+      notifications:
+        - dashboard
+
+  # Threshold breach actions
+  breach_actions:
+    consecutive_breaches_for_alert: 3  # Alert after 3 consecutive breaches
+    breach_reset_time_minutes: 30      # Reset breach count after 30 min
+    
+    # Automatic remediation
+    auto_remediation:
+      enabled: false  # Disable auto-remediation initially
+      scale_up_threshold: "warning"
+      scale_down_threshold: "good"
+
+# SLA DEFINITIONS
+sla:
+  # Service Level Agreement targets
+  targets:
+    availability_percent: 99.0      # 99% uptime SLA
+    response_time_p95_ms: 8000     # 95% of queries < 8s
+    success_rate_percent: 98.0     # 98% success rate
+    cost_per_query_max_usd: 0.005  # Max $0.005 per query
+
+  # SLA monitoring periods
+  monitoring:
+    evaluation_period_hours: 24    # Evaluate SLA over 24-hour periods
+    breach_notification_delay_minutes: 5  # Wait 5 min before SLA breach alert
+
+---
+# Configuration Management
+created_date: "2026-03-14"
+version: "1.0.0"
+author: "Quest Analytics Team"
+description: "Performance monitoring thresholds and SLA definitions for RAG system"

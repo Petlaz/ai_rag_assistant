@@ -1,0 +1,184 @@
+# Expected Usage Patterns Configuration
+# =====================================
+#
+# This file defines expected usage patterns for the Quest Analytics RAG Assistant
+# to support cost estimation, resource planning, and deployment optimization.
+#
+# Used by: scripts/deployment/estimate_aws_costs.py, monitoring systems, capacity planning
+
+# DEPLOYMENT MODE CONFIGURATIONS
+
+ultra_budget:
+  name: "Ultra Budget Mode"
+  target_monthly_cost: 18  # USD
+  description: "Cost-optimized deployment for research teams with limited budgets"
+  
+  # Expected query patterns
+  queries_per_day: 50
+  queries_per_month: 1500
+  peak_concurrent_queries: 3
+  average_query_complexity: "medium"
+  
+  # Usage distribution
+  daily_pattern:
+    morning_hours: 0.30    # 6 AM - 12 PM
+    afternoon_hours: 0.45  # 12 PM - 6 PM  
+    evening_hours: 0.20    # 6 PM - 10 PM
+    night_hours: 0.05      # 10 PM - 6 AM
+  
+  # Weekly pattern
+  weekly_pattern:
+    weekdays: 0.75         # Monday-Friday
+    weekends: 0.25         # Saturday-Sunday
+  
+  # Query characteristics
+  average_query_length: 100  # characters
+  documents_per_query: 5
+  average_response_length: 500  # characters
+  
+  # Resource usage
+  lambda_memory_mb: 1024
+  lambda_timeout_seconds: 30
+  dynamodb_read_capacity: 5
+  dynamodb_write_capacity: 2
+  s3_storage_gb: 2
+
+balanced:
+  name: "Balanced Mode"
+  target_monthly_cost: 60  # USD
+  description: "Balanced performance and cost for active research teams"
+  
+  # Expected query patterns
+  queries_per_day: 150
+  queries_per_month: 4500
+  peak_concurrent_queries: 8
+  average_query_complexity: "medium-high"
+  
+  # Usage distribution
+  daily_pattern:
+    morning_hours: 0.25
+    afternoon_hours: 0.50
+    evening_hours: 0.20
+    night_hours: 0.05
+  
+  weekly_pattern:
+    weekdays: 0.80
+    weekends: 0.20
+  
+  # Query characteristics
+  average_query_length: 120
+  documents_per_query: 8
+  average_response_length: 600
+  
+  # Resource usage
+  lambda_memory_mb: 1536
+  lambda_timeout_seconds: 60
+  dynamodb_read_capacity: 10
+  dynamodb_write_capacity: 5
+  s3_storage_gb: 5
+
+full_scale:
+  name: "Full Scale Mode"
+  target_monthly_cost: 300  # USD
+  description: "High-performance deployment for large research organizations"
+  
+  # Expected query patterns
+  queries_per_day: 500
+  queries_per_month: 15000
+  peak_concurrent_queries: 20
+  average_query_complexity: "high"
+  
+  # Usage distribution
+  daily_pattern:
+    morning_hours: 0.20
+    afternoon_hours: 0.55
+    evening_hours: 0.20
+    night_hours: 0.05
+  
+  weekly_pattern:
+    weekdays: 0.85
+    weekends: 0.15
+  
+  # Query characteristics
+  average_query_length: 150
+  documents_per_query: 10
+  average_response_length: 800
+  
+  # Resource usage
+  lambda_memory_mb: 3008
+  lambda_timeout_seconds: 90
+  dynamodb_read_capacity: 25
+  dynamodb_write_capacity: 10
+  s3_storage_gb: 10
+
+# COST ESTIMATION PARAMETERS
+
+aws_pricing:
+  lambda:
+    price_per_request: 0.0000002  # $0.20 per 1M requests
+    price_per_gb_second: 0.0000166667  # $0.0000166667 per GB-second
+  
+  dynamodb:
+    read_capacity_unit_price: 0.25   # per month per RCU
+    write_capacity_unit_price: 1.25  # per month per WCU
+    storage_price_per_gb: 0.25       # per month
+  
+  s3:
+    storage_price_per_gb: 0.023      # per month
+    request_price_per_1000: 0.0004   # per 1000 requests
+  
+  bedrock:
+    claude_haiku_input_per_1k: 0.00025   # per 1K input tokens
+    claude_haiku_output_per_1k: 0.00125  # per 1K output tokens
+
+# MONITORING THRESHOLDS BASED ON USAGE
+
+monitoring:
+  cost_alerts:
+    ultra_budget_80_percent: 14.4   # 80% of $18
+    balanced_80_percent: 48.0       # 80% of $60
+    full_scale_80_percent: 240.0    # 80% of $300
+  
+  performance_alerts:
+    latency_p95_threshold_ms: 3000
+    error_rate_threshold_percent: 5
+    queries_per_minute_threshold: 100
+
+# CAPACITY PLANNING
+
+scaling:
+  auto_scaling:
+    enabled: true
+    min_lambda_concurrency: 1
+    max_lambda_concurrency: 50
+    target_utilization_percent: 70
+  
+  cache_settings:
+    dynamodb_ttl_hours: 24
+    response_cache_hit_rate: 0.75
+  
+  storage_growth:
+    documents_growth_per_month: 100   # new documents
+    storage_growth_gb_per_month: 0.5  # GB
+
+# EXPERIMENTAL USAGE (A/B Testing)
+
+ab_testing:
+  traffic_split_percent: 10  # % of traffic for experiments
+  experiment_duration_days: 7
+  minimum_sample_size: 100  # queries per variant
+  
+# USAGE VALIDATION
+
+validation:
+  usage_tracking_enabled: true
+  cost_tracking_enabled: true
+  performance_tracking_enabled: true
+  monthly_review_enabled: true
+
+---
+# Configuration Management
+created_date: "2026-03-14"
+version: "1.0.0"
+author: "Quest Analytics Team"
+description: "Usage patterns for cost estimation and capacity planning"

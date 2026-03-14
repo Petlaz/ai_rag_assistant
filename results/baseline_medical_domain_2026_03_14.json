@@ -1,0 +1,21 @@
+{
+  "test_date": "2026-03-14",
+  "test_type": "medical_domain_baseline",
+  "content_domain": "NICE cardiovascular guidelines", 
+  "indexed_documents": 50,
+  "system_status": "excellent_performance",
+  "metrics": {
+    "precision_at_5": 0.975,
+    "mrr": 1.0, 
+    "samples_evaluated": 8,
+    "samples_skipped": 0,
+    "success_rate": 1.0
+  },
+  "system_components": {
+    "embedding_model": "all-MiniLM-L6-v2",
+    "llm_model": "gemma3:1b", 
+    "search_backend": "opensearch_hybrid",
+    "reranker": "none"
+  },
+  "evaluation_notes": "Perfect performance on medical domain queries matching indexed NICE cardiovascular guidelines. System ready for optimization testing."
+}

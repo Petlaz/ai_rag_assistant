@@ -1,0 +1,8 @@
+{"question": "What are the NICE guidelines for cardiovascular disease risk assessment?", "keywords": ["NICE", "cardiovascular", "risk assessment"], "expected_answer_snippet": "cardiovascular disease"}
+{"question": "How should lipid modification be managed according to NICE?", "keywords": ["lipid", "modification", "NICE"], "expected_answer_snippet": "lipid"}
+{"question": "What are the recommendations for primary prevention of cardiovascular disease?", "keywords": ["primary prevention", "cardiovascular"], "expected_answer_snippet": "primary prevention"}
+{"question": "What cholesterol levels require intervention according to the guidelines?", "keywords": ["cholesterol", "intervention", "levels"], "expected_answer_snippet": "cholesterol"}
+{"question": "How should secondary prevention be approached for cardiovascular patients?", "keywords": ["secondary prevention", "cardiovascular"], "expected_answer_snippet": "secondary prevention"}
+{"question": "What risk factors should be considered in cardiovascular assessment?", "keywords": ["risk factors", "assessment"], "expected_answer_snippet": "risk"}
+{"question": "What are the guidelines for statin therapy?", "keywords": ["statin", "therapy", "guidelines"], "expected_answer_snippet": "statin"}
+{"question": "How should high-risk patients be identified and managed?", "keywords": ["high-risk", "patients", "management"], "expected_answer_snippet": "risk"}

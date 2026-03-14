@@ -1,0 +1,14 @@
+artifact_uri: /Users/peter/Desktop/ai_rag_assistant/mlruns/907647818280271038/82fbf6f8d5094189ad02575130aed40c/artifacts
+end_time: 1773506313289
+entry_point_name: ''
+experiment_id: '907647818280271038'
+lifecycle_stage: active
+run_id: 82fbf6f8d5094189ad02575130aed40c
+run_name: baseline_medical_domain
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1773506313275
+status: 3
+tags: []
+user_id: peterugonnaobi

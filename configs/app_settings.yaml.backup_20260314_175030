@@ -1,0 +1,53 @@
+# Application Settings Configuration
+app:
+  name: "AI RAG Assistant"
+  version: "1.0.0"
+  debug: false
+  host: "0.0.0.0"
+  port: 7860
+
+# RAG Pipeline Configuration
+rag:
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  chunk_size: 512
+  chunk_overlap: 50
+  max_chunks_per_query: 5
+  similarity_threshold: 0.7
+
+# OpenSearch Configuration
+opensearch:
+  host: "${OPENSEARCH_HOST:-localhost}"
+  port: "${OPENSEARCH_PORT:-9200}"
+  username: "${OPENSEARCH_USER:-admin}"
+  password: "${OPENSEARCH_PASSWORD:-admin}"
+  index_name: "rag_documents"
+  ssl_verify: false
+
+# Ollama Configuration
+ollama:
+  host: "${OLLAMA_HOST:-http://localhost:11434}"
+  model: "${OLLAMA_MODEL:-llama3.2:1b}"
+  fallback_model: "${OLLAMA_FALLBACK_MODEL:-gemma2:2b}"
+  timeout: 30
+  max_retries: 3
+
+# Gradio Interface Configuration
+gradio:
+  title: "AI RAG Assistant"
+  description: "Quest Analytics Research Assistant"
+  theme: "default"
+  share: false
+  server_name: "0.0.0.0"
+  server_port: 7860
+
+# Security Configuration
+security:
+  allowed_origins: ["*"]
+  max_query_length: 1000
+  rate_limit_per_minute: 60
+
+# Performance Configuration
+performance:
+  max_concurrent_queries: 10
+  cache_ttl: 3600
+  batch_size: 32

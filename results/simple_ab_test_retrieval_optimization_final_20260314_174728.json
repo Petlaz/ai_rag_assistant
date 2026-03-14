@@ -1,0 +1,167 @@
+{
+  "test_name": "retrieval_optimization_final",
+  "test_date": "2026-03-14T17:47:28.455778",
+  "baseline_metrics": {
+    "precision_at_5": 0.975,
+    "mrr": 1.0,
+    "success_rate": 1.0
+  },
+  "results": [
+    {
+      "config_name": "baseline",
+      "metrics": {
+        "precision_at_5": 0.875,
+        "mrr": 0.875,
+        "success_rate": 1.0,
+        "avg_response_time_ms": 369.857375
+      },
+      "config_params": {
+        "name": "current_baseline",
+        "description": "Current production configuration serving as control group",
+        "bm25_weight": 0.7,
+        "semantic_weight": 0.3,
+        "top_k_retrieval": 20,
+        "top_k_final": 5,
+        "embedding_model": "all-MiniLM-L6-v2",
+        "reranker": "passthrough",
+        "expected_precision_at_5": 0.72,
+        "expected_mrr": 0.8,
+        "max_latency_ms": 2000,
+        "estimated_cost_per_query": 0.001,
+        "created_date": "2026-03-13",
+        "last_tested": "2026-03-13",
+        "status": "baseline"
+      },
+      "precision_delta": -0.09999999999999998,
+      "performance_vs_baseline": "stable"
+    },
+    {
+      "config_name": "balanced",
+      "metrics": {
+        "precision_at_5": 0.875,
+        "mrr": 0.875,
+        "success_rate": 1.0,
+        "avg_response_time_ms": 228.920125
+      },
+      "config_params": {
+        "name": "balanced_hybrid",
+        "description": "Equal weighting between BM25 and semantic search with cross-encoder reranking",
+        "bm25_weight": 0.5,
+        "semantic_weight": 0.5,
+        "top_k_retrieval": 25,
+        "top_k_final": 5,
+        "embedding_model": "all-MiniLM-L6-v2",
+        "reranker": "cross_encoder",
+        "reranker_model": "ms-marco-MiniLM-L-6-v2",
+        "expected_precision_at_5": 0.76,
+        "expected_mrr": 0.84,
+        "max_latency_ms": 2500,
+        "estimated_cost_per_query": 0.0015,
+        "hypothesis": "Equal BM25/semantic weighting + cross-encoder reranking improves precision",
+        "expected_improvement": "8% precision improvement, 5% MRR improvement",
+        "created_date": "2026-03-13",
+        "status": "test_variant"
+      },
+      "precision_delta": -0.09999999999999998,
+      "performance_vs_baseline": "stable"
+    },
+    {
+      "config_name": "semantic_heavy",
+      "metrics": {
+        "precision_at_5": 0.875,
+        "mrr": 0.875,
+        "success_rate": 1.0,
+        "avg_response_time_ms": 227.258375
+      },
+      "config_params": {
+        "name": "semantic_focused",
+        "description": "Semantic-heavy configuration with LLM-based reranking for research context",
+        "bm25_weight": 0.3,
+        "semantic_weight": 0.7,
+        "top_k_retrieval": 30,
+        "top_k_final": 5,
+        "embedding_model": "all-MiniLM-L6-v2",
+        "reranker": "llm_based",
+        "reranker_model": "ollama_llama2",
+        "expected_precision_at_5": 0.78,
+        "expected_mrr": 0.86,
+        "max_latency_ms": 3000,
+        "estimated_cost_per_query": 0.003,
+        "hypothesis": "Semantic-focused retrieval + LLM reranking optimizes for research relevance",
+        "expected_improvement": "12% precision improvement, 8% MRR improvement",
+        "created_date": "2026-03-13",
+        "status": "test_variant"
+      },
+      "precision_delta": -0.09999999999999998,
+      "performance_vs_baseline": "stable"
+    },
+    {
+      "config_name": "optimized",
+      "metrics": {
+        "precision_at_5": 0.875,
+        "mrr": 0.875,
+        "success_rate": 1.0,
+        "avg_response_time_ms": 224.23925000000003
+      },
+      "config_params": {
+        "name": "phase2_optimized",
+        "description": "Best configuration incorporating Phase 2 embedding model and reranking optimizations",
+        "bm25_weight": 0.6,
+        "semantic_weight": 0.4,
+        "top_k_retrieval": 25,
+        "top_k_final": 5,
+        "embedding_model": "WINNER_FROM_PHASE2",
+        "embedding_model_fallback": "all-MiniLM-L6-v2",
+        "reranker": "WINNER_FROM_PHASE2",
+        "reranker_fallback": "cross_encoder",
+        "expected_precision_at_5": 0.8,
+        "expected_mrr": 0.88,
+        "max_latency_ms": 2200,
+        "estimated_cost_per_query": 0.002,
+        "hypothesis": "Optimized embedding model + reranker from Phase 2 maximizes performance",
+        "expected_improvement": "15% precision improvement, 10% MRR improvement",
+        "created_date": "2026-03-13",
+        "status": "test_variant",
+        "based_on": "phase2_optimization_results"
+      },
+      "precision_delta": -0.09999999999999998,
+      "performance_vs_baseline": "stable"
+    },
+    {
+      "config_name": "ultra_budget",
+      "metrics": {
+        "precision_at_5": 0.875,
+        "mrr": 0.875,
+        "success_rate": 1.0,
+        "avg_response_time_ms": 258.13375
+      },
+      "config_params": {
+        "name": "ultra_budget_optimized",
+        "description": "Cost-optimized configuration maintaining acceptable performance",
+        "bm25_weight": 0.8,
+        "semantic_weight": 0.2,
+        "top_k_retrieval": 15,
+        "top_k_final": 5,
+        "embedding_model": "all-MiniLM-L6-v2",
+        "reranker": "simple_scoring",
+        "expected_precision_at_5": 0.7,
+        "expected_mrr": 0.78,
+        "max_latency_ms": 1500,
+        "estimated_cost_per_query": 0.0005,
+        "hypothesis": "BM25-heavy approach minimizes costs while maintaining baseline quality",
+        "expected_improvement": "50% cost reduction, <5% performance degradation",
+        "created_date": "2026-03-13",
+        "status": "test_variant",
+        "optimization_target": "cost"
+      },
+      "precision_delta": -0.09999999999999998,
+      "performance_vs_baseline": "stable"
+    }
+  ],
+  "summary": {
+    "best_config": "baseline",
+    "best_precision": 0.875,
+    "improvement_over_baseline": -0.09999999999999998,
+    "total_configurations_tested": 5
+  }
+}

@@ -1,0 +1,14 @@
+artifact_uri: /Users/peter/Desktop/ai_rag_assistant/mlruns/269522068462102097/34a1b59c614446208b7f10b3493dc990/artifacts
+end_time: 1773506768946
+entry_point_name: ''
+experiment_id: '269522068462102097'
+lifecycle_stage: active
+run_id: 34a1b59c614446208b7f10b3493dc990
+run_name: retrieval_optimization_march_14_baseline_0c762de3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1773506768921
+status: 4
+tags: []
+user_id: peterugonnaobi

@@ -14,7 +14,26 @@ The MLOps pipeline provides end-to-end machine learning operations capabilities:
 
 ## Scripts Overview
 
-### 1. `setup_mlops_pipeline.py` - MLOps Infrastructure Setup
+### 1. `initialize_mlflow.py` - MLflow Setup Utility  
+**Size**: 100+ lines | **Purpose**: Initialize MLflow experiment tracking
+
+**Key Features**:
+- MLflow tracking server setup and configuration
+- Experiment creation for RAG optimization
+- Baseline performance logging
+- Model registry initialization
+- Production-ready experiment infrastructure
+
+**Usage**:
+```bash
+# Initialize MLflow with baseline metrics
+python scripts/mlops/initialize_mlflow.py
+
+# Launch MLflow UI
+mlflow ui --port 5000
+```
+
+### 2. `setup_mlops_pipeline.py` - MLOps Infrastructure Setup
 **Size**: 500+ lines | **Purpose**: Initialize complete MLOps infrastructure
 
 **Key Features**:

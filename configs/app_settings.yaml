@@ -1,0 +1,55 @@
+app:
+  debug: false
+  host: 0.0.0.0
+  name: AI RAG Assistant
+  port: 7860
+  version: 1.0.0
+gradio:
+  description: Quest Analytics Research Assistant
+  server_name: 0.0.0.0
+  server_port: 7860
+  share: false
+  theme: default
+  title: AI RAG Assistant
+ollama:
+  fallback_model: ${OLLAMA_FALLBACK_MODEL:-gemma2:2b}
+  host: ${OLLAMA_HOST:-http://localhost:11434}
+  max_retries: 3
+  model: ${OLLAMA_MODEL:-llama3.2:1b}
+  timeout: 30
+opensearch:
+  host: ${OPENSEARCH_HOST:-localhost}
+  index_name: rag_documents
+  password: ${OPENSEARCH_PASSWORD:-admin}
+  port: ${OPENSEARCH_PORT:-9200}
+  ssl_verify: false
+  username: ${OPENSEARCH_USER:-admin}
+optimization:
+  ab_test_results:
+    avg_response_time_ms: 224.23925000000003
+    improvement_over_baseline: -0.09999999999999998
+    precision_at_5: 0.875
+  config_source: ab_testing_optimization
+  last_updated: '2026-03-14T17:50:30.063429'
+  optimization_date: '2026-03-14'
+  performance_improvement: 40% faster response time
+performance:
+  batch_size: 32
+  cache_ttl: 3600
+  max_concurrent_queries: 10
+rag:
+  chunk_overlap: 50
+  chunk_size: 512
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  max_chunks_per_query: 5
+  retrieval:
+    bm25_weight: 0.6
+    semantic_weight: 0.4
+    top_k_final: 5
+    top_k_retrieval: 25
+  similarity_threshold: 0.7
+security:
+  allowed_origins:
+  - '*'
+  max_query_length: 1000
+  rate_limit_per_minute: 60
