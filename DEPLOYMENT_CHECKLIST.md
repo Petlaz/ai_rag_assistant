@@ -2,7 +2,7 @@
 
 ## **Track Your Production Deployment Progress**
 
-### **✅ Pre-Deployment Setup**
+### **Pre-Deployment Setup**
 
 - [x] **AWS Account Ready**
   - [x] AWS account created/configured
