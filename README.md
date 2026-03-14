@@ -608,9 +608,9 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 ### Production Deployment
 
 **🚀 Ready to Deploy? Start Here:**
-- **[DEPLOY NOW - Quick Start](DEPLOY_NOW.md)**: Immediate action steps (15 minutes to production)
-- **[Production Deployment Roadmap](PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete 4-week deployment guide
-- **[Deployment Checklist](DEPLOYMENT_CHECKLIST.md)**: Track your progress step-by-step
+- **[DEPLOY NOW - Quick Start](documentation/DEPLOY_NOW.md)**: Immediate action steps (15 minutes to production)
+- **[Production Deployment Roadmap](documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete 4-week deployment guide
+- **[Deployment Checklist](documentation/DEPLOYMENT_CHECKLIST.md)**: Track your progress step-by-step
 
 **Advanced Deployment Resources:**
 - **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Complete deployment guide with three cost-optimized modes
