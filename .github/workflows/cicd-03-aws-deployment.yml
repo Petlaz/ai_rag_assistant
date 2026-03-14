@@ -46,7 +46,7 @@ jobs:
       can-deploy: ${{ steps.validation.outputs.can-deploy }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set environment
       id: set-env
@@ -128,10 +128,10 @@ jobs:
     if: needs.validate-deployment.outputs.can-deploy == 'true'
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -166,7 +166,7 @@ jobs:
     if: needs.validate-deployment.outputs.can-deploy == 'true'
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -249,7 +249,7 @@ jobs:
     environment: ${{ needs.validate-deployment.outputs.environment }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -305,10 +305,10 @@ jobs:
     needs: [validate-deployment, deploy-infrastructure]
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -363,10 +363,10 @@ jobs:
     if: always() && needs.deploy-application.result == 'success'
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -431,10 +431,10 @@ jobs:
     if: always() && (needs.deploy-application.result == 'failure' || needs.post-deployment-tests.result == 'failure')
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
