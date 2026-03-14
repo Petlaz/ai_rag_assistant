@@ -1,4 +1,4 @@
-# Quest Analytics RAG Assistant
+# AI RAG Assistant
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -607,7 +607,12 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 ### Production Deployment
 
-See the comprehensive deployment guide:
+**🚀 Ready to Deploy? Start Here:**
+- **[DEPLOY NOW - Quick Start](DEPLOY_NOW.md)**: Immediate action steps (15 minutes to production)
+- **[Production Deployment Roadmap](PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete 4-week deployment guide
+- **[Deployment Checklist](DEPLOYMENT_CHECKLIST.md)**: Track your progress step-by-step
+
+**Advanced Deployment Resources:**
 - **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Complete deployment guide with three cost-optimized modes
 - **[Pre-Deployment Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic 8-week optimization and testing plan
 - **Docker Compose**: Local development configurations

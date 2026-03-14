@@ -1,6 +1,6 @@
-# Quest Analytics RAG Assistant - Deployment Scripts
+# AI RAG Assistant - Deployment Scripts
 
-This directory contains production-ready deployment automation scripts for the Quest Analytics RAG Assistant, implementing enterprise-grade deployment, monitoring, and rollback capabilities.
+This directory contains production-ready deployment automation scripts for the AI RAG Assistant, implementing enterprise-grade deployment, monitoring, and rollback capabilities.
 
 ## Overview
 
@@ -414,7 +414,7 @@ When adding new deployment scripts:
 
 ## License
 
-This deployment automation suite is part of the Quest Analytics RAG Assistant project. See main project license for details.
+This deployment automation suite is part of the AI RAG Assistant project. See main project license for details.
 
 ---
 
