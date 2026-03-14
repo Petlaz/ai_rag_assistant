@@ -142,17 +142,15 @@ jobs:
     - name: Estimate deployment costs
       run: |
         python scripts/deployment/estimate_aws_costs.py \
-          --mode ${{ needs.validate-deployment.outputs.deployment-mode }} \
-          --environment ${{ needs.validate-deployment.outputs.environment }} \
-          --output-format table
+          --deployment-mode ${{ needs.validate-deployment.outputs.deployment-mode }} \
+          --output table
     
     - name: Generate cost report
       id: cost-report
       run: |
         cost_output=$(python scripts/deployment/estimate_aws_costs.py \
-          --mode ${{ needs.validate-deployment.outputs.deployment-mode }} \
-          --environment ${{ needs.validate-deployment.outputs.environment }} \
-          --output-format json)
+          --deployment-mode ${{ needs.validate-deployment.outputs.deployment-mode }} \
+          --output json)
         
         echo "cost-report<<EOF" >> $GITHUB_OUTPUT
         echo "$cost_output" >> $GITHUB_OUTPUT
