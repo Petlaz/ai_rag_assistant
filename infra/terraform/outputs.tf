@@ -1,10 +1,20 @@
-output "app_function_url" {
+output "app_url" {
   description = "URL for the main AI RAG Assistant application"
   value       = aws_lambda_function_url.app.function_url
 }
 
-output "landing_function_url" {
+output "landing_url" {
   description = "URL for the landing page"
+  value       = aws_lambda_function_url.landing.function_url
+}
+
+output "app_function_url" {
+  description = "URL for the main AI RAG Assistant application (legacy)"
+  value       = aws_lambda_function_url.app.function_url
+}
+
+output "landing_function_url" {
+  description = "URL for the landing page (legacy)" 
   value       = aws_lambda_function_url.landing.function_url
 }
 

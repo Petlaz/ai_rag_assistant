@@ -38,6 +38,24 @@ variable "project_name" {
   default     = "ai-rag-assistant"
 }
 
+variable "app_image_uri" {
+  description = "Container image URI for the main application"
+  type        = string
+  default     = "ghcr.io/petlaz/rag-assistant:latest"
+}
+
+variable "landing_image_uri" {
+  description = "Container image URI for the landing page"
+  type        = string
+  default     = "ghcr.io/petlaz/rag-landing:latest"
+}
+
+variable "worker_image_uri" {
+  description = "Container image URI for the worker"
+  type        = string
+  default     = "ghcr.io/petlaz/rag-worker:latest"
+}
+
 # Resource sizing based on deployment mode
 locals {
   deployment_config = {

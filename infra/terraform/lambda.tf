@@ -29,12 +29,8 @@ resource "aws_lambda_function" "app" {
   function_name = "${local.name_prefix}-app"
   role         = aws_iam_role.lambda_role.arn
   
-  # Using a dummy source for now - would be replaced by actual container image
-  filename         = data.archive_file.dummy_zip.output_path
-  source_code_hash = data.archive_file.dummy_zip.output_base64sha256
-  
-  handler = "app.handler"
-  runtime = "python3.11"
+  package_type = "Image"
+  image_uri    = var.app_image_uri
   
   memory_size = local.config.lambda_memory
   timeout     = local.config.lambda_timeout
@@ -55,11 +51,8 @@ resource "aws_lambda_function" "landing" {
   function_name = "${local.name_prefix}-landing"
   role         = aws_iam_role.lambda_role.arn
   
-  filename         = data.archive_file.dummy_zip.output_path
-  source_code_hash = data.archive_file.dummy_zip.output_base64sha256
-  
-  handler = "main.handler"
-  runtime = "python3.11"
+  package_type = "Image"
+  image_uri    = var.landing_image_uri
   
   memory_size = 256
   timeout     = 10
@@ -78,11 +71,8 @@ resource "aws_lambda_function" "worker" {
   function_name = "${local.name_prefix}-worker"
   role         = aws_iam_role.lambda_role.arn
   
-  filename         = data.archive_file.dummy_zip.output_path
-  source_code_hash = data.archive_file.dummy_zip.output_base64sha256
-  
-  handler = "worker.handler"
-  runtime = "python3.11"
+  package_type = "Image" 
+  image_uri    = var.worker_image_uri
   
   memory_size = local.config.lambda_memory
   timeout     = 300  # 5 minutes for processing
@@ -122,16 +112,5 @@ resource "aws_lambda_function_url" "landing" {
     allow_headers     = ["date", "keep-alive"]
     expose_headers    = ["date", "keep-alive"]
     max_age          = 86400
-  }
-}
-
-# Dummy zip file for initial deployment
-data "archive_file" "dummy_zip" {
-  type        = "zip"
-  output_path = "/tmp/dummy.zip"
-  
-  source {
-    content  = "def handler(event, context): return {'statusCode': 200, 'body': 'Hello World'}"
-    filename = "index.py"
   }
 }
