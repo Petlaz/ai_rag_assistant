@@ -62,7 +62,7 @@ locals {
     "ultra-budget" = {
       lambda_memory    = 512
       lambda_timeout   = 30
-      lambda_reserved  = 1
+      lambda_reserved  = -1  # No concurrency limit to avoid AWS minimum requirements
       opensearch_instance = "t3.micro"
       opensearch_nodes = 1
     }

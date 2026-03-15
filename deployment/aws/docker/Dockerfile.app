@@ -1,7 +1,7 @@
 # Quest Analytics RAG Assistant - Main Application Container
 # Production-ready Docker image for the Gradio web application with all dependencies
 
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
