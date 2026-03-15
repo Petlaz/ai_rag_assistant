@@ -16,6 +16,11 @@ AI RAG Assistant is ready for production! Follow these steps **TODAY**:
 #    e) Next: Attach policies directly → Search "AdministratorAccess" → Select it
 #    f) Next: Review → Create user
 #    g) Go to Security credentials tab → Create access key
+
+#    Create Access Keys (Your Current Step):
+#    Click on User: Click on the newly created user ai-rag-assistant-deployer
+#    Security Credentials Tab: Click "Security credentials" tab
+#    Create Access Key: Scroll down to "Access keys" section → Click "Create access key"
 #    h) Use case: Select "Command Line Interface (CLI)" → Check acknowledgment → Next
 #    i) Tag (optional): Add description "AI RAG Assistant deployment" → Create access key
 #    j) IMPORTANT: Click "Download .csv file" button immediately (you cannot view these again!)
