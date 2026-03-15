@@ -170,6 +170,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: read
     
     steps:
     - uses: actions/checkout@v5
@@ -246,19 +247,63 @@ jobs:
         sudo apt-get install trivy
         
         # Scan each image (non-blocking for deployment continuity)
-        echo "🔍 Scanning rag-assistant image..."
+        echo "Scanning rag-assistant image..."
         trivy image --exit-code 0 --severity HIGH,CRITICAL \
-          ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-assistant:${{ env.IMAGE_TAG }} || echo "⚠️ Vulnerabilities found in rag-assistant"
+          ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-assistant:${{ env.IMAGE_TAG }} || echo "WARNING: Vulnerabilities found in rag-assistant"
         
-        echo "🔍 Scanning rag-landing image..."
+        echo "Scanning rag-landing image..."
         trivy image --exit-code 0 --severity HIGH,CRITICAL \
-          ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-landing:${{ env.IMAGE_TAG }} || echo "⚠️ Vulnerabilities found in rag-landing"
+          ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-landing:${{ env.IMAGE_TAG }} || echo "WARNING: Vulnerabilities found in rag-landing"
         
-        echo "🔍 Scanning rag-worker image..."
+        echo "Scanning rag-worker image..."
         trivy image --exit-code 0 --severity HIGH,CRITICAL \
-          ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-worker:${{ env.IMAGE_TAG }} || echo "⚠️ Vulnerabilities found in rag-worker"
+          ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-worker:${{ env.IMAGE_TAG }} || echo "WARNING: Vulnerabilities found in rag-worker"
         
-        echo "✅ Vulnerability scans completed (non-blocking)"
+        echo "SUCCESS: Vulnerability scans completed (non-blocking)"
+    
+    - name: Make container packages public
+      run: |
+        echo "Making container packages public for Lambda access..."
+        
+        # Set packages to public visibility for AWS Lambda access
+        for package in rag-assistant rag-landing rag-worker; do
+          echo "Setting $package to public..."
+          
+          # Get package info first
+          package_info=$(curl -s \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/orgs/${{ github.repository_owner }}/packages/container/$package" \
+            2>/dev/null || echo "null")
+          
+          if [ "$package_info" != "null" ]; then
+            # Try to set package to public
+            response=$(curl -s -w "%{http_code}" \
+              -X PATCH \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/orgs/${{ github.repository_owner }}/packages/container/$package" \
+              -d '{"visibility":"public"}' \
+              2>/dev/null)
+            
+            if [[ "$response" == *"200"* ]]; then
+              echo "SUCCESS: $package set to public"
+            else
+              echo "INFO: $package visibility update response: $response"
+            fi
+          else
+            echo "INFO: Package $package not found in org, checking user packages..."
+            
+            # Try user packages endpoint
+            curl -s -X PATCH \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/user/packages/container/$package" \
+              -d '{"visibility":"public"}' || echo "Note: Could not update $package visibility"
+          fi
+        done
+        
+        echo "SUCCESS: Package visibility update completed"
 
   deploy-infrastructure:
     runs-on: ubuntu-latest
@@ -280,7 +325,7 @@ jobs:
       run: echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
     
     - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@v4
       with:
         terraform_version: "1.6.0"
     
@@ -292,6 +337,41 @@ jobs:
           -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}" \
           -backend-config="key=${{ needs.validate-deployment.outputs.environment }}/terraform.tfstate" \
           -backend-config="region=${{ env.AWS_REGION }}"
+        
+        # Validate Docker images exist before deployment
+        echo "Verifying Docker images are available..."
+        
+        # Wait a moment for packages to be available after being made public
+        echo "Waiting for package visibility changes to propagate..."
+        sleep 30
+        
+        # Validate each image
+        echo "Testing app image..."
+        if docker manifest inspect ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-assistant:${{ env.IMAGE_TAG }}; then
+          echo "SUCCESS: App image is accessible"
+        else
+          echo "ERROR: App image not found or not accessible"
+          echo "Image URI: ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-assistant:${{ env.IMAGE_TAG }}"
+          exit 1
+        fi
+        
+        echo "Testing landing image..."
+        if docker manifest inspect ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-landing:${{ env.IMAGE_TAG }}; then
+          echo "SUCCESS: Landing image is accessible"
+        else
+          echo "ERROR: Landing image not found or not accessible"
+          exit 1
+        fi
+        
+        echo "Testing worker image..."
+        if docker manifest inspect ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-worker:${{ env.IMAGE_TAG }}; then
+          echo "SUCCESS: Worker image is accessible"
+        else
+          echo "ERROR: Worker image not found or not accessible"
+          exit 1
+        fi
+        
+        echo "SUCCESS: All Docker images verified and accessible"
         
         # Plan deployment
         terraform plan \
