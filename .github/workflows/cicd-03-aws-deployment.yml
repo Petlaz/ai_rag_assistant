@@ -517,18 +517,27 @@ jobs:
         if [ "$APP_URL" != "pending" ] && [ "$APP_URL" != "" ]; then
           echo "Testing deployment at: $APP_URL"
           
-          # Simple health check with curl
+          # Health check using root endpoint (Gradio app)
           for attempt in {1..10}; do
-            if curl -f -s "$APP_URL/health" > /dev/null 2>&1; then
+            if curl -f -s --max-time 30 "$APP_URL" > /dev/null 2>&1; then
               echo "SUCCESS: Health check passed"
               break
             else
               echo "Attempt $attempt: Health check failed"
               if [ $attempt -eq 10 ]; then
                 echo "ERROR: Health checks failed after all retries"
-                exit 1
+                echo "Trying alternative endpoint test..."
+                # Check if Lambda is responding at all
+                response_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$APP_URL" || echo "000")
+                echo "Response code: $response_code"
+                if [ "$response_code" -eq "200" ] || [ "$response_code" -eq "302" ]; then
+                  echo "SUCCESS: Lambda is responding (code: $response_code)"
+                  exit 0
+                else
+                  exit 1
+                fi
               fi
-              sleep 10
+              sleep 15  # Increased wait time for Lambda cold start
             fi
           done
         else
@@ -558,7 +567,7 @@ jobs:
     - name: Install rollback dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install boto3 click
+        pip install boto3 click pyyaml
     
     - name: Execute rollback
       run: |
