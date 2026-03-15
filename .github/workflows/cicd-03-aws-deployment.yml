@@ -180,7 +180,7 @@ jobs:
       run: echo "owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
     
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v5
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -197,7 +197,7 @@ jobs:
       uses: docker/setup-buildx-action@v4
     
     - name: Build and push app image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: deployment/aws/docker/Dockerfile.app
@@ -210,7 +210,7 @@ jobs:
         cache-to: type=gha,mode=max
     
     - name: Build and push landing page image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: deployment/aws/docker/Dockerfile.landing
@@ -223,7 +223,7 @@ jobs:
         cache-to: type=gha,mode=max
     
     - name: Build and push worker image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: deployment/aws/docker/Dockerfile.worker
@@ -260,6 +260,39 @@ jobs:
           ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-worker:${{ env.IMAGE_TAG }} || echo "WARNING: Vulnerabilities found in rag-worker"
         
         echo "SUCCESS: Vulnerability scans completed (non-blocking)"
+    
+    - name: Mirror images to ECR for Lambda compatibility
+      run: |
+        echo "Setting up ECR repositories and mirroring images for Lambda access..."
+        
+        # Create ECR repositories if they don't exist
+        for repo in rag-assistant rag-landing rag-worker; do
+          aws ecr describe-repositories --repository-names $repo --region ${{ env.AWS_REGION }} 2>/dev/null || \
+          aws ecr create-repository --repository-name $repo --region ${{ env.AWS_REGION }} --image-scanning-configuration scanOnPush=false
+        done
+        
+        # Get ECR login token
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+        
+        # Mirror images to ECR
+        for image in rag-assistant rag-landing rag-worker; do
+          echo "Mirroring $image to ECR..."
+          
+          # Pull from GitHub Container Registry
+          docker pull ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/$image:${{ env.IMAGE_TAG }}
+          
+          # Tag for ECR
+          docker tag ${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/$image:${{ env.IMAGE_TAG }} \
+            $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$image:${{ env.IMAGE_TAG }}
+          
+          # Push to ECR
+          docker push $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$image:${{ env.IMAGE_TAG }}
+          
+          echo "Successfully mirrored $image to ECR"
+        done
+        
+        echo "All images mirrored to ECR for Lambda compatibility"
     
     - name: Make container packages public
       run: |
@@ -314,7 +347,7 @@ jobs:
     - uses: actions/checkout@v5
     
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v5
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -373,14 +406,17 @@ jobs:
         
         echo "SUCCESS: All Docker images verified and accessible"
         
+        # Get AWS account ID for ECR URIs
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        
         # Plan deployment
         terraform plan \
           -var="environment=${{ needs.validate-deployment.outputs.environment }}" \
           -var="deployment_mode=${{ needs.validate-deployment.outputs.deployment-mode }}" \
           -var="image_tag=${{ env.IMAGE_TAG }}" \
-          -var="app_image_uri=${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-assistant:${{ env.IMAGE_TAG }}" \
-          -var="landing_image_uri=${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-landing:${{ env.IMAGE_TAG }}" \
-          -var="worker_image_uri=${{ env.CONTAINER_REGISTRY }}/${{ steps.repo.outputs.owner }}/rag-worker:${{ env.IMAGE_TAG }}" \
+          -var="app_image_uri=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/rag-assistant:${{ env.IMAGE_TAG }}" \
+          -var="landing_image_uri=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/rag-landing:${{ env.IMAGE_TAG }}" \
+          -var="worker_image_uri=$ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/rag-worker:${{ env.IMAGE_TAG }}" \
           -out=tfplan
         
         # Apply if not production or if this is a tagged release
@@ -417,7 +453,7 @@ jobs:
         python-version: '3.11'
     
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v5
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
