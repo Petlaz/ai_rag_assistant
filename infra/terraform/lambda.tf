@@ -114,3 +114,20 @@ resource "aws_lambda_function_url" "landing" {
     max_age          = 86400
   }
 }
+
+# Resource-based policies to allow public access to Lambda function URLs
+resource "aws_lambda_permission" "app_url_public_access" {
+  statement_id           = "AllowPublicAccess"
+  action                = "lambda:InvokeFunctionUrl"
+  function_name         = aws_lambda_function.app.function_name
+  principal             = "*"
+  function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "landing_url_public_access" {
+  statement_id           = "AllowPublicAccess"
+  action                = "lambda:InvokeFunctionUrl"
+  function_name         = aws_lambda_function.landing.function_name
+  principal             = "*"
+  function_url_auth_type = "NONE"
+}

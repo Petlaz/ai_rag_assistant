@@ -1,5 +1,10 @@
 name: Deploy to AWS
 
+permissions:
+  contents: read
+  issues: write
+  packages: read
+
 on:
   push:
     branches: [ main ]
@@ -567,7 +572,7 @@ jobs:
     - name: Install rollback dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install boto3 click pyyaml
+        pip install boto3 click pyyaml requests
     
     - name: Execute rollback
       run: |
