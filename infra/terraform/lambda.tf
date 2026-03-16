@@ -51,8 +51,6 @@ resource "aws_lambda_function" "app" {
   environment {
     variables = {
       ENVIRONMENT = var.environment
-      AWS_REGION = var.aws_region
-      AWS_DEFAULT_REGION = var.aws_region
     }
   }
 
@@ -73,8 +71,6 @@ resource "aws_lambda_function" "landing" {
   environment {
     variables = {
       ENVIRONMENT = var.environment
-      AWS_REGION = var.aws_region
-      AWS_DEFAULT_REGION = var.aws_region
     }
   }
 
