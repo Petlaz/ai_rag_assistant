@@ -35,6 +35,27 @@ resource "aws_iam_role_policy_attachment" "lambda_bedrock_access" {
   role       = aws_iam_role.lambda_role.name
 }
 
+# ECR permissions for Lambda container image access
+resource "aws_iam_role_policy" "lambda_ecr_access" {
+  name = "${local.name_prefix}-lambda-ecr-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # Main AI RAG Assistant Lambda Function
 resource "aws_lambda_function" "app" {
   function_name = "${local.name_prefix}-app"
