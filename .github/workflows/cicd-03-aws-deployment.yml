@@ -577,8 +577,7 @@ jobs:
     - name: Execute rollback
       run: |
         python scripts/deployment/rollback_system.py \
-          --strategy fast \
-          --environment ${{ needs.validate-deployment.outputs.environment }}
+          --strategy fast
     
     - name: Notify rollback completion
       run: |

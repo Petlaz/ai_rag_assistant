@@ -24,6 +24,17 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
 }
 
+# Additional IAM policies for RAG functionality
+resource "aws_iam_role_policy_attachment" "lambda_s3_access" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  role       = aws_iam_role.lambda_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_bedrock_access" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+  role       = aws_iam_role.lambda_role.name
+}
+
 # Main AI RAG Assistant Lambda Function
 resource "aws_lambda_function" "app" {
   function_name = "${local.name_prefix}-app"
@@ -40,6 +51,8 @@ resource "aws_lambda_function" "app" {
   environment {
     variables = {
       ENVIRONMENT = var.environment
+      AWS_REGION = var.aws_region
+      AWS_DEFAULT_REGION = var.aws_region
     }
   }
 
@@ -60,6 +73,8 @@ resource "aws_lambda_function" "landing" {
   environment {
     variables = {
       ENVIRONMENT = var.environment
+      AWS_REGION = var.aws_region
+      AWS_DEFAULT_REGION = var.aws_region
     }
   }
 
