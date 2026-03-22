@@ -11,8 +11,8 @@ from deployment.app_gradio import build_interface, load_dependencies, load_promp
 os.environ.setdefault("GRADIO_SHARE_LINK", "false")
 os.environ.setdefault("GRADIO_SERVER_PORT", "7860")
 
-# Path setup - use absolute path from working directory
-PROMPT_PATH = Path("/app/rag_pipeline/prompts")
+# Path setup - use absolute path from working directory  
+PROMPT_PATH = Path("/app/rag_pipeline/prompts/research_qa_prompt.yaml")
 
 # Initialize the app components
 dependencies = load_dependencies()
