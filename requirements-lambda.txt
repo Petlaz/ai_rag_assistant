@@ -1,0 +1,3 @@
+# AWS Lambda Runtime Dependencies
+awslambdaric>=2.0.0,<3.0.0
+mangum>=0.17.0,<1.0.0

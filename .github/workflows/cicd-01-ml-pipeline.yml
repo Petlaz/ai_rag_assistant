@@ -19,20 +19,21 @@ on:
 env:
   PYTHON_VERSION: '3.11'
   OLLAMA_HOST: 'http://localhost:11434'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -76,15 +77,15 @@ jobs:
           - 9200:9200
           
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -142,10 +143,10 @@ jobs:
           - 9200:9200
           
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
@@ -203,10 +204,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     

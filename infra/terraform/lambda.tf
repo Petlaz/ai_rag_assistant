@@ -65,7 +65,7 @@ resource "aws_lambda_function" "app" {
   image_uri    = var.app_image_uri
   
   memory_size = local.config.lambda_memory
-  timeout     = local.config.lambda_timeout
+  timeout     = 60  # Increased timeout for container initialization
   
   reserved_concurrent_executions = local.config.lambda_reserved
 
@@ -87,7 +87,7 @@ resource "aws_lambda_function" "landing" {
   image_uri    = var.landing_image_uri
   
   memory_size = 256
-  timeout     = 10
+  timeout     = 60  # Increased from 10 to 60 seconds
 
   environment {
     variables = {
@@ -149,7 +149,7 @@ resource "aws_lambda_function_url" "landing" {
 
 # Resource-based policies to allow public access to Lambda function URLs
 resource "aws_lambda_permission" "app_url_public_access" {
-  statement_id           = "AllowPublicAccess"
+  statement_id           = "FunctionURLPublicAccess"
   action                = "lambda:InvokeFunctionUrl"
   function_name         = aws_lambda_function.app.function_name
   principal             = "*"
@@ -157,9 +157,38 @@ resource "aws_lambda_permission" "app_url_public_access" {
 }
 
 resource "aws_lambda_permission" "landing_url_public_access" {
-  statement_id           = "AllowPublicAccess"
+  statement_id           = "FunctionURLPublicAccess"
   action                = "lambda:InvokeFunctionUrl"
   function_name         = aws_lambda_function.landing.function_name
   principal             = "*"
   function_url_auth_type = "NONE"
+}
+
+# Additional permissions for lambda:InvokeFunction (required for function URLs created after Oct 2025)
+resource "aws_lambda_permission" "app_invoke_public_access" {
+  statement_id  = "FunctionURLInvokeAllowPublicAccess"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.app.function_name
+  principal     = "*"
+  
+  # This condition ensures the function can only be invoked through the function URL
+  condition {
+    test     = "Bool"
+    variable = "lambda:InvokedViaFunctionUrl"
+    values   = ["true"]
+  }
+}
+
+resource "aws_lambda_permission" "landing_invoke_public_access" {
+  statement_id  = "FunctionURLInvokeAllowPublicAccess"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.landing.function_name
+  principal     = "*"
+  
+  # This condition ensures the function can only be invoked through the function URL
+  condition {
+    test     = "Bool"
+    variable = "lambda:InvokedViaFunctionUrl"
+    values   = ["true"]
+  }
 }

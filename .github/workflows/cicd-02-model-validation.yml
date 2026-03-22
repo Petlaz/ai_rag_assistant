@@ -30,6 +30,7 @@ env:
   PYTHON_VERSION: '3.11'
   MLFLOW_TRACKING_URI: 'sqlite:///mlflow.db'
   EVALUATION_DATASET_PATH: './data/samples/queries.jsonl'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   setup-evaluation:
@@ -39,7 +40,7 @@ jobs:
       dataset-hash: ${{ steps.dataset-check.outputs.hash }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set evaluation mode
       id: set-mode
@@ -76,15 +77,15 @@ jobs:
           - 9200:9200
           
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
