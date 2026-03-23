@@ -76,8 +76,8 @@ def lambda_handler(event, context):
         
         logger.info(f"Request: {http_method} {path}")
         
-        # Handle health check requests - return simple JSON response
-        if path in ['/', '/health'] and http_method == 'GET':
+        # Handle health check requests - return simple JSON response  
+        if path == '/health' and http_method == 'GET':
             logger.info("Returning health check response")
             return {
                 "statusCode": 200,
