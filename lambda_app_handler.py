@@ -74,11 +74,12 @@ def lambda_handler(event, context):
         if not path:
             path = '/'
         
-        logger.info(f"Request: {http_method} {path}")
+        logger.info(f"Request: {http_method} {path} (raw_path: {raw_path})")
+        logger.info(f"Full event structure: {json.dumps(event, default=str)[:1000]}")
         
-        # Handle health check requests - return simple JSON response  
+        # Handle health check requests ONLY for /health path - return simple JSON response  
         if path == '/health' and http_method == 'GET':
-            logger.info("Returning health check response")
+            logger.info("Returning health check response for /health path")
             return {
                 "statusCode": 200,
                 "headers": {
@@ -93,11 +94,34 @@ def lambda_handler(event, context):
                 })
             }
         
+        # Log when we are NOT returning health check
+        logger.info(f"Path '{path}' is NOT '/health' - proceeding to Gradio interface")
+        
         # For all other requests (Gradio interface), use the full Gradio handler
         # This will only be loaded when actually accessing the Gradio interface
-        logger.info("Loading Gradio handler...")
-        gradio_handler = get_gradio_handler()
-        return gradio_handler(event, context)
+        logger.info(f"Loading Gradio handler for path: {path}")
+        try:
+            gradio_handler = get_gradio_handler()
+            logger.info("Gradio handler loaded successfully, calling with event")
+            result = gradio_handler(event, context)
+            logger.info(f"Gradio handler returned result type: {type(result)}")
+            return result
+        except Exception as gradio_error:
+            logger.error(f"Gradio handler failed: {str(gradio_error)}", exc_info=True)
+            # If Gradio fails, return a helpful error message but DO NOT return health check
+            return {
+                "statusCode": 500,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({
+                    "error": "Gradio app failed to load",
+                    "message": str(gradio_error),
+                    "path": path,
+                    "service": "lambda-gradio-error"
+                })
+            }
         
     except Exception as e:
         logger.error(f"Lambda handler error: {str(e)}", exc_info=True)
