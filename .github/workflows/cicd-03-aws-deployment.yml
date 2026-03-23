@@ -130,7 +130,7 @@ jobs:
   cost-estimation:
     runs-on: ubuntu-latest
     needs: validate-deployment
-    if: needs.validate-deployment.outputs.can-deploy == 'true' && false  # Skip cost estimation for speed
+    if: needs.validate-deployment.outputs.can-deploy == 'true'  # Re-enabled for cost monitoring
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
@@ -530,7 +530,7 @@ jobs:
 
   notify-deployment:
     runs-on: ubuntu-latest
-    needs: [validate-deployment, deploy-application, post-deployment-tests]  # Remove cost-estimation
+    needs: [validate-deployment, cost-estimation, deploy-application, post-deployment-tests]  # Re-add cost-estimation
     if: always()
     
     steps:
@@ -555,7 +555,7 @@ jobs:
           const status = '${{ steps.status.outputs.status }}';
           const message = '${{ steps.status.outputs.message }}';
           const deploymentSummary = `${{ needs.deploy-application.outputs.deployment-summary || 'Deployment summary not available' }}`;
-          const costReport = 'Cost estimation skipped for faster deployments';
+          const costReport = `${{ needs.cost-estimation.outputs.cost-report || 'Cost report not available' }}`;
           
           const body = `${message}
           
