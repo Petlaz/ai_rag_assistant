@@ -170,13 +170,6 @@ resource "aws_lambda_permission" "app_invoke_public_access" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.app.function_name
   principal     = "*"
-  
-  # This condition ensures the function can only be invoked through the function URL
-  condition {
-    test     = "Bool"
-    variable = "lambda:InvokedViaFunctionUrl"
-    values   = ["true"]
-  }
 }
 
 resource "aws_lambda_permission" "landing_invoke_public_access" {
@@ -184,11 +177,4 @@ resource "aws_lambda_permission" "landing_invoke_public_access" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.landing.function_name
   principal     = "*"
-  
-  # This condition ensures the function can only be invoked through the function URL
-  condition {
-    test     = "Bool"
-    variable = "lambda:InvokedViaFunctionUrl"
-    values   = ["true"]
-  }
 }
