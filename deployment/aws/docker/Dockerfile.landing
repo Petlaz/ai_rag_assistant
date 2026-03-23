@@ -25,5 +25,5 @@ ENV LANDING_PORT=3000
 
 EXPOSE 3000
 
-# Use Lambda handler instead of web server
-CMD ["lambda_landing_handler.lambda_handler"]
+# Use AWS Lambda Runtime Interface Client for Lambda container execution
+CMD ["python", "-m", "awslambdaric", "lambda_landing_handler.lambda_handler"]

@@ -37,5 +37,5 @@ ENV OPENSEARCH_HOST= \
 
 EXPOSE 7860
 
-# Use Lambda handler instead of web server
-CMD ["lambda_app_handler.lambda_handler"]
+# Use AWS Lambda Runtime Interface Client for Lambda container execution
+CMD ["python", "-m", "awslambdaric", "lambda_app_handler.lambda_handler"]
