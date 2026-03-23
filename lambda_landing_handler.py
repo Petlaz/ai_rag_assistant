@@ -41,15 +41,16 @@ def lambda_handler(event, context):
         raw_path = event.get('rawPath', '/')
         path = event.get('requestContext', {}).get('http', {}).get('path', raw_path)
         
-        # Normalize path
-        if not path:
+        # Normalize path and ensure it's not empty
+        if not path or path == '':
             path = '/'
             
-        logger.info(f"Request: {http_method} {path}")
+        logger.info(f"Request: {http_method} {path} (raw_path: {raw_path})")
+        logger.info(f"Full event structure: {json.dumps(event, default=str)[:1000]}")
         
-        # Handle health check requests - return simple JSON response
+        # Handle health check requests ONLY for EXACT /health path - return simple JSON response
         if path == '/health' and http_method == 'GET':
-            logger.info("Returning landing health check response")
+            logger.info("✅ LANDING HEALTH: Returning health response for EXACT /health path")
             return {
                 "statusCode": 200,
                 "headers": {
@@ -64,13 +65,38 @@ def lambda_handler(event, context):
                 })
             }
         
+        # Log when we are NOT returning health check
+        logger.info(f"🚀 FASTAPI ROUTE: Path '{path}' is NOT '/health' - proceeding to FastAPI interface")
+        
         # For all other requests (FastAPI interface), use the FastAPI handler
-        logger.info("Loading FastAPI handler...")
-        handler = get_landing_handler()
-        return handler(event, context)
+        logger.info(f"Loading FastAPI handler for path: {path}")
+        try:
+            handler = get_landing_handler()
+            logger.info("FastAPI handler loaded successfully, calling with event")
+            result = handler(event, context)
+            logger.info(f"FastAPI handler returned result type: {type(result)}")
+            return result
+        except Exception as fastapi_error:
+            logger.error(f"🚨 FASTAPI HANDLER FAILED: {str(fastapi_error)}", exc_info=True)
+            logger.error(f"🚨 FASTAPI FAILED FOR PATH: {path}")
+            # If FastAPI fails, return a helpful error message
+            return {
+                "statusCode": 500,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({
+                    "error": "FastAPI landing page failed to load",
+                    "message": str(fastapi_error),
+                    "path": path,
+                    "service": "lambda-fastapi-failure"
+                })
+            }
         
     except Exception as e:
-        logger.error(f"Landing handler error: {str(e)}", exc_info=True)
+        logger.error(f"🚨 MAIN LANDING ERROR: {str(e)}", exc_info=True)
+        logger.error(f"🚨 LANDING ERROR FOR PATH: {event.get('rawPath', 'unknown')}")
         # Return proper error format for Lambda Function URLs
         return {
             "statusCode": 500,
@@ -79,8 +105,9 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*"
             },
             "body": json.dumps({
-                "error": "Internal server error",
+                "error": "Main landing handler error",
                 "message": str(e),
-                "service": "lambda"
+                "path": event.get('rawPath', 'unknown'),
+                "service": "lambda-landing-error"
             })
         }
