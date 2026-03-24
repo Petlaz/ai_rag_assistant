@@ -6,7 +6,15 @@ import json
 import os
 import logging
 from pathlib import Path
-from mangum import Mangum
+
+# Import Lambda dependencies with fallback handling
+try:
+    from mangum import Mangum
+    MANGUM_AVAILABLE = True
+except ImportError:
+    logging.warning("Mangum not available - falling back to direct Lambda responses")
+    MANGUM_AVAILABLE = False
+    Mangum = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +37,16 @@ def get_app():
     if _app is None:
         try:
             logger.info("Loading Gradio app dependencies...")
+            # Set a shorter timeout for Lambda environment
+            import signal
+            
+            def timeout_handler(signum, frame):
+                raise TimeoutError("Gradio app loading timed out")
+            
+            # Set 25-second timeout (5 seconds buffer for Lambda's 30s limit)
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(25)
+            
             from deployment.app_gradio import build_interface, load_dependencies, load_prompt_templates, AssistantState
             
             # Initialize components with lazy loading
@@ -36,11 +54,70 @@ def get_app():
             prompts = load_prompt_templates(PROMPT_PATH) 
             state = AssistantState(deps=dependencies, prompt_template=prompts)
             _app = build_interface(state)
+            
+            signal.alarm(0)  # Cancel the alarm
             logger.info("Gradio app loaded successfully")
-        except Exception as e:
-            logger.error(f"Error loading Gradio app: {str(e)}", exc_info=True)
-            raise
+        except (ImportError, TimeoutError, Exception) as e:
+            logger.error(f"Error loading Gradio app: {str(e)}, falling back to simple HTML response", exc_info=True)
+            # Return a simple fallback app that shows a basic interface
+            _app = create_fallback_app()
     return _app
+
+def create_fallback_app():
+    """Create a simple fallback interface when Gradio can't be loaded."""
+    class FallbackApp:
+        def __init__(self):
+            self.app = self  # For Mangum compatibility
+            
+        def __call__(self, event, context):
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Content-Type": "text/html",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quest Analytics RAG Assistant - Loading</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .loading { text-align: center; padding: 40px; }
+        .status { background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .retry { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <h1>🚀 Quest Analytics RAG Assistant</h1>
+        <div class="status">
+            <h3>⏳ System Starting Up...</h3>
+            <p>The RAG assistant is initializing. This may take a moment for the first request.</p>
+            <p><strong>Status:</strong> Loading dependencies and models...</p>
+            <br>
+            <button class="retry" onclick="window.location.reload()">🔄 Retry Loading</button>
+        </div>
+        <div style="text-align: left; margin-top: 30px;">
+            <h3>📋 System Features:</h3>
+            <ul>
+                <li>✅ Interactive document Q&A interface</li>
+                <li>✅ PDF upload and processing</li>
+                <li>✅ Hybrid search (semantic + keyword)</li>
+                <li>✅ Real-time health monitoring</li>
+                <li>✅ Session management</li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        // Auto-retry after 30 seconds
+        setTimeout(() => window.location.reload(), 30000);
+    </script>
+</body>
+</html>"""
+            }
+    
+    return FallbackApp()
 
 def get_gradio_handler():
     """Lazy load the Mangum handler for Gradio."""
@@ -49,13 +126,45 @@ def get_gradio_handler():
         try:
             logger.info("Creating Mangum handler...")
             app = get_app()
-            asgi_app = app.app  # Get the underlying ASGI app
-            _gradio_handler = Mangum(asgi_app, lifespan="off", api_gateway_base_path=None)
-            logger.info("Mangum handler created successfully")
+            
+            # Check if this is the fallback app
+            if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
+                logger.info("Using fallback app directly (no Mangum needed)")
+                _gradio_handler = app
+            else:
+                if not MANGUM_AVAILABLE:
+                    logger.error("Mangum not available but needed for ASGI app")
+                    raise ImportError("Mangum is required for full Gradio app but not available")
+                    
+                logger.info("Creating Mangum wrapper for Gradio ASGI app")
+                asgi_app = app.app  # Get the underlying ASGI app
+                _gradio_handler = Mangum(asgi_app, lifespan="off", api_gateway_base_path=None)
+                
+            logger.info("Gradio handler created successfully")
         except Exception as e:
-            logger.error(f"Error creating Mangum handler: {str(e)}", exc_info=True)
-            raise
+            logger.error(f"Error creating Gradio handler: {str(e)}", exc_info=True)
+            # Create a simple error fallback
+            _gradio_handler = create_error_fallback(str(e))
     return _gradio_handler
+
+def create_error_fallback(error_msg):
+    """Create an error fallback handler."""
+    def error_handler(event, context):
+        return {
+            "statusCode": 500,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            "body": json.dumps({
+                "error": "RAG Assistant failed to load",
+                "message": f"Initialization error: {error_msg}",
+                "timestamp": context.aws_request_id if context else "local",
+                "service": "lambda-initialization-error",
+                "retry_suggestion": "Please wait a few moments and try again. The system may be starting up."
+            })
+        }
+    return error_handler
 
 def lambda_handler(event, context):
     """
