@@ -259,40 +259,66 @@ def lambda_handler(event, context):
                 })
             }
         
-        # All non-health requests go to Gradio interface
-        logger.info(f"GRADIO ROUTE: Processing path '{path}' via Gradio interface")
-        
-        # For all requests, attempt the full Gradio handler first, with fallback on any error
-        logger.info(f"Loading Gradio handler for path: {path}")
+        # Determine if this is a Gradio API/internal request vs a page request.
+        # Gradio's Jinja2 template rendering fails in Lambda (build_interface does
+        # not call .launch(), so the template context is None).  Page requests
+        # (GET /) MUST be served by our fallback HTML.  Only Gradio API calls
+        # (/api/*, /queue/*, /upload, /info, /config, /assets/*) go through Mangum.
+        gradio_api_prefixes = ('/api/', '/queue/', '/upload', '/info', '/config', '/assets/', '/file=', '/stream/')
+        is_gradio_api = any(path.startswith(p) for p in gradio_api_prefixes)
+
+        if not is_gradio_api:
+            # Serve our professional fallback HTML for all page/UI requests
+            logger.info(f"PAGE REQUEST: Serving fallback HTML for path '{path}' (Gradio templates cannot render in Lambda)")
+            fallback_app = create_fallback_app()
+            return fallback_app(event, context)
+
+        # --- Gradio API route ---
+        logger.info(f"GRADIO API: Routing '{path}' through Mangum")
         try:
             gradio_handler = get_gradio_handler()
-            logger.info("Gradio handler loaded successfully, calling with event")
+            logger.info("Gradio handler loaded, calling with event")
             
-            # Debug the event structure
-            logger.info(f"Event keys: {list(event.keys())}")
-            logger.info(f"Request Context: {event.get('requestContext', {}).get('http', {})}")
-            
-            # Call the Gradio handler and return result
             result = gradio_handler(event, context)
-            logger.info(f"Gradio handler returned result type: {type(result)}")
-            # Safely get and log status code
-            try:
-                status_code = result.get('statusCode', 'unknown') if isinstance(result, dict) else 'unknown'
-                logger.info(f"Response status code: {status_code}")
-            except (AttributeError, TypeError):
-                logger.info("Response status code: unparseable")
+
+            # CRITICAL: Mangum returns 500 as a dict, not as an exception.
+            # Catch it here and return a safe JSON error instead.
+            status_code = 200
+            if isinstance(result, dict):
+                status_code = result.get('statusCode', 200)
+            
+            if status_code >= 500:
+                logger.warning(f"Mangum returned {status_code} for {path} - returning safe error response")
+                return {
+                    "statusCode": 200,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*"
+                    },
+                    "body": json.dumps({
+                        "error": "Service initializing",
+                        "message": "The RAG assistant is starting up. Please retry in a moment.",
+                        "path": path
+                    })
+                }
+            
+            logger.info(f"Gradio API response: {status_code}")
             return result
                 
         except Exception as gradio_error:
-            logger.error(f"GRADIO HANDLER FAILED: {str(gradio_error)}", exc_info=True)
-            logger.error(f"GRADIO FAILED FOR PATH: {path}")
-            logger.error(f"Error type: {type(gradio_error).__name__}")
-            
-            # Return HTML fallback for ANY Gradio failure (template errors, ASGI errors, etc.)
-            logger.info(f"Gradio error details: {type(gradio_error).__name__}: {str(gradio_error)}")
-            logger.info("Returning HTML fallback to ensure 200 response for users")
-            fallback_app = create_fallback_app()
-            return fallback_app(event, context)
+            logger.error(f"GRADIO API FAILED for {path}: {type(gradio_error).__name__}: {str(gradio_error)}")
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({
+                    "error": "Service initializing",
+                    "message": str(gradio_error),
+                    "path": path
+                })
+            }
         
     except Exception as e:
         logger.error(f"MAIN LAMBDA ERROR: {str(e)}", exc_info=True)
