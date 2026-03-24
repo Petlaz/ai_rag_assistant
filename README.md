@@ -15,7 +15,7 @@
 
 A **production-deployed Retrieval-Augmented Generation** system designed for research teams to intelligently query and analyze scientific literature. Built with hybrid search capabilities, document session isolation, real-time health monitoring, enterprise-grade deployment architecture, and comprehensive MLOps infrastructure.
 
-**Current Status: Production Deployed**  
+**Current Status: Production Deployed** | [**Live Demo**](https://k4mtt3o2lvjpo7f673h7yqq3ou0vixyy.lambda-url.us-east-1.on.aws/)  
 **Performance**: 87.5% precision with 224ms response time (40% faster than baseline)  
 **MLOps Infrastructure**: Complete CI/CD pipeline with automated testing, model validation, blue-green deployment, production monitoring, cost estimation, security scanning, and rollback systems
 
@@ -138,7 +138,8 @@ See [`scripts/deployment/README.md`](scripts/deployment/README.md) for complete 
 
 ### Production-Deployed Enterprise RAG System
 
-**Current Status**: Live deployment at $7.24/month on AWS infrastructure
+**Current Status**: Live deployment at $4-13/month on AWS infrastructure  
+**Live App**: [https://k4mtt3o2lvjpo7f673h7yqq3ou0vixyy.lambda-url.us-east-1.on.aws/](https://k4mtt3o2lvjpo7f673h7yqq3ou0vixyy.lambda-url.us-east-1.on.aws/)
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -470,7 +471,8 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 ### Production Deployment
 
-**Live on AWS Lambda Function URLs ($4-13/month):**
+**Live on AWS Lambda Function URLs ($4-13/month):**  
+**App URL**: [https://k4mtt3o2lvjpo7f673h7yqq3ou0vixyy.lambda-url.us-east-1.on.aws/](https://k4mtt3o2lvjpo7f673h7yqq3ou0vixyy.lambda-url.us-east-1.on.aws/)
 
 Deployment is fully automated via GitHub Actions. Push to `main` triggers the CI/CD pipeline which builds Docker images, provisions infrastructure with Terraform, and runs post-deploy smoke tests.
 
