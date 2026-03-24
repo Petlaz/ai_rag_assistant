@@ -32,29 +32,49 @@ _app = None
 _gradio_handler = None
 
 def get_app():
-    """Lazy load the Gradio app to avoid cold start timeouts."""
+    """Lazy load the Gradio app with robust fallback for Lambda environment."""
     global _app
     if _app is None:
+        logger.info("🚀 Attempting to load Gradio app for Lambda...")
+        
+        # Check if we're in Lambda cold start - if so, use fallback immediately
+        lambda_context = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+        remaining_time = os.environ.get('AWS_LAMBDA_REMAINING_TIME_IN_MILLIS')
+        
+        if lambda_context:
+            logger.info(f"🔍 Lambda context detected: {lambda_context}")
+            if remaining_time:
+                remaining_ms = int(remaining_time)
+                logger.info(f"⏱️ Remaining execution time: {remaining_ms}ms")
+                if remaining_ms < 45000:  # Less than 45 seconds remaining
+                    logger.warning("⚠️ Insufficient time for Gradio load, using fallback")
+                    _app = create_fallback_app()
+                    return _app
+        
         try:
-            logger.info("🚀 Loading Gradio app dependencies (no timeout - Lambda handles this)...")
+            # Quick environment check
+            required_env_vars = ['OPENSEARCH_HOST', 'OLLAMA_BASE_URL']
+            missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+            if missing_vars:
+                logger.warning(f"⚠️ Missing environment variables: {missing_vars}, using fallback")
+                _app = create_fallback_app()
+                return _app
             
+            logger.info("📦 Loading Gradio dependencies...")
             from deployment.app_gradio import build_interface, load_dependencies, load_prompt_templates, AssistantState
             
-            # Initialize components with lazy loading
-            logger.info("📦 Loading dependencies...")
+            logger.info("🔧 Initializing components...")
             dependencies = load_dependencies()
-            
-            logger.info("📝 Loading prompt templates...")
             prompts = load_prompt_templates(PROMPT_PATH) 
-            
-            logger.info("🔧 Building interface...")
             state = AssistantState(deps=dependencies, prompt_template=prompts)
+            
+            logger.info("🎨 Building interface...")
             _app = build_interface(state)
             
             logger.info("✅ Gradio app loaded successfully!")
-        except (ImportError, Exception) as e:
-            logger.error(f"❌ Error loading Gradio app: {str(e)}, falling back to loading page", exc_info=True)
-            # Return a simple fallback app that shows a loading interface
+        except Exception as e:
+            logger.error(f"❌ Gradio loading failed: {str(e)}")
+            logger.error(f"🔄 Using fallback HTML interface")
             _app = create_fallback_app()
     return _app
 
@@ -221,11 +241,27 @@ def lambda_handler(event, context):
             }
         
         # Log when we are NOT returning health check to confirm routing
-        logger.info(f"🚀 GRADIO ROUTE: Path '{path}' is NOT '/health' - proceeding to Gradio interface")
+        logger.info(f"🚀 GRADIO ROUTE: Path '{path}' is NOT '/health' - proceeding to interface")
         
-        # For all other requests (Gradio interface), use the full Gradio handler
-        # This will only be loaded when actually accessing the Gradio interface
-        logger.info(f"🚀 Loading Gradio handler for path: {path}")
+        # For Lambda cold starts or resource constraints, prefer fallback HTML
+        # Check if this is likely a cold start or resource-constrained environment
+        lambda_context = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+        trace_id = os.environ.get('_X_AMZN_TRACE_ID')  # Present in Lambda
+        
+        if lambda_context and trace_id:
+            logger.info("🔍 Lambda environment detected, checking resource constraints...")
+            
+            # Check if essential environment variables are missing (indicates cold start issues)
+            essential_vars = ['OPENSEARCH_HOST', 'OLLAMA_BASE_URL']
+            missing_vars = [var for var in essential_vars if not os.environ.get(var)]
+            
+            if missing_vars:
+                logger.warning(f"⚠️ Missing essential variables ({missing_vars}), using fallback")
+                fallback_app = create_fallback_app()
+                return fallback_app(event, context)
+        
+        # For all other requests (Gradio interface), attempt full handler with aggressive fallback
+        logger.info(f"🔧 Loading Gradio handler for path: {path}")
         try:
             gradio_handler = get_gradio_handler()
             logger.info("✅ Gradio handler loaded successfully, calling with event")
@@ -243,31 +279,10 @@ def lambda_handler(event, context):
             logger.error(f"🚨 GRADIO FAILED FOR PATH: {path}")
             logger.error(f"🚨 Error type: {type(gradio_error).__name__}")
             
-            # Return the appropriate fallback based on error type
-            error_message = str(gradio_error)
-            
-            # Check if this is a loading issue and return fallback HTML
-            if "import" in error_message.lower() or "module" in error_message.lower():
-                logger.info("🔄 Import/module error detected, returning HTML fallback")
-                fallback = create_fallback_app()
-                return fallback(event, context)
-            
-            # Otherwise return JSON error
-            logger.info("🔄 Returning JSON error response")
-            return {
-                "statusCode": 500,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
-                },
-                "body": json.dumps({
-                    "error": "Gradio interface failed to load",
-                    "message": error_message,
-                    "path": path,
-                    "service": "lambda-gradio-failure",
-                    "error_type": type(gradio_error).__name__
-                })
-            }
+            # ALWAYS return the HTML fallback for any Gradio failure in Lambda
+            logger.info("🔄 Gradio failed in Lambda environment, returning HTML fallback")
+            fallback_app = create_fallback_app()
+            return fallback_app(event, context)
         
     except Exception as e:
         logger.error(f"🚨 MAIN LAMBDA ERROR: {str(e)}", exc_info=True)
