@@ -36,30 +36,25 @@ def get_app():
     global _app
     if _app is None:
         try:
-            logger.info("Loading Gradio app dependencies...")
-            # Set a shorter timeout for Lambda environment
-            import signal
-            
-            def timeout_handler(signum, frame):
-                raise TimeoutError("Gradio app loading timed out")
-            
-            # Set 25-second timeout (5 seconds buffer for Lambda's 30s limit)
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(25)
+            logger.info("🚀 Loading Gradio app dependencies (no timeout - Lambda handles this)...")
             
             from deployment.app_gradio import build_interface, load_dependencies, load_prompt_templates, AssistantState
             
             # Initialize components with lazy loading
+            logger.info("📦 Loading dependencies...")
             dependencies = load_dependencies()
+            
+            logger.info("📝 Loading prompt templates...")
             prompts = load_prompt_templates(PROMPT_PATH) 
+            
+            logger.info("🔧 Building interface...")
             state = AssistantState(deps=dependencies, prompt_template=prompts)
             _app = build_interface(state)
             
-            signal.alarm(0)  # Cancel the alarm
-            logger.info("Gradio app loaded successfully")
-        except (ImportError, TimeoutError, Exception) as e:
-            logger.error(f"Error loading Gradio app: {str(e)}, falling back to simple HTML response", exc_info=True)
-            # Return a simple fallback app that shows a basic interface
+            logger.info("✅ Gradio app loaded successfully!")
+        except (ImportError, Exception) as e:
+            logger.error(f"❌ Error loading Gradio app: {str(e)}, falling back to loading page", exc_info=True)
+            # Return a simple fallback app that shows a loading interface
             _app = create_fallback_app()
     return _app
 
@@ -92,11 +87,11 @@ def create_fallback_app():
     <div class="loading">
         <h1>🚀 Quest Analytics RAG Assistant</h1>
         <div class="status">
-            <h3>⏳ System Starting Up...</h3>
-            <p>The RAG assistant is initializing. This may take a moment for the first request.</p>
-            <p><strong>Status:</strong> Loading dependencies and models...</p>
+            <h3>⏳ System Initializing...</h3>
+            <p>The RAG assistant is loading core dependencies. On first start this may take a moment.</p>
+            <p><strong>Status:</strong> Loading Gradio and ML models...</p>
             <br>
-            <button class="retry" onclick="window.location.reload()">🔄 Retry Loading</button>
+            <button class="retry" onclick="window.location.reload()">🔄 Try Again</button>
         </div>
         <div style="text-align: left; margin-top: 30px;">
             <h3>📋 System Features:</h3>
@@ -107,11 +102,12 @@ def create_fallback_app():
                 <li>✅ Real-time health monitoring</li>
                 <li>✅ Session management</li>
             </ul>
+            <p><small>💡 <em>If this page continues to show, dependencies may be installing. Please wait and refresh.</em></small></p>
         </div>
     </div>
     <script>
-        // Auto-retry after 30 seconds
-        setTimeout(() => window.location.reload(), 30000);
+        // Auto-retry every 45 seconds
+        setTimeout(() => window.location.reload(), 45000);
     </script>
 </body>
 </html>"""
