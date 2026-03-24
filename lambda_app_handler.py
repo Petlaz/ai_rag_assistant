@@ -32,49 +32,27 @@ _app = None
 _gradio_handler = None
 
 def get_app():
-    """Lazy load the Gradio app with robust fallback for Lambda environment."""
+    """Lazy load the Gradio app with fallback only on actual failures."""
     global _app
     if _app is None:
-        logger.info("🚀 Attempting to load Gradio app for Lambda...")
-        
-        # Check if we're in Lambda cold start - if so, use fallback immediately
-        lambda_context = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
-        remaining_time = os.environ.get('AWS_LAMBDA_REMAINING_TIME_IN_MILLIS')
-        
-        if lambda_context:
-            logger.info(f"🔍 Lambda context detected: {lambda_context}")
-            if remaining_time:
-                remaining_ms = int(remaining_time)
-                logger.info(f"⏱️ Remaining execution time: {remaining_ms}ms")
-                if remaining_ms < 45000:  # Less than 45 seconds remaining
-                    logger.warning("⚠️ Insufficient time for Gradio load, using fallback")
-                    _app = create_fallback_app()
-                    return _app
+        logger.info("Attempting to load Gradio app for Lambda environment...")
         
         try:
-            # Quick environment check
-            required_env_vars = ['OPENSEARCH_HOST', 'OLLAMA_BASE_URL']
-            missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
-            if missing_vars:
-                logger.warning(f"⚠️ Missing environment variables: {missing_vars}, using fallback")
-                _app = create_fallback_app()
-                return _app
-            
-            logger.info("📦 Loading Gradio dependencies...")
+            logger.info("Loading Gradio dependencies...")
             from deployment.app_gradio import build_interface, load_dependencies, load_prompt_templates, AssistantState
             
-            logger.info("🔧 Initializing components...")
+            logger.info("Initializing components...")
             dependencies = load_dependencies()
             prompts = load_prompt_templates(PROMPT_PATH) 
             state = AssistantState(deps=dependencies, prompt_template=prompts)
             
-            logger.info("🎨 Building interface...")
+            logger.info("Building Gradio interface...")
             _app = build_interface(state)
             
-            logger.info("✅ Gradio app loaded successfully!")
+            logger.info("Gradio app loaded successfully!")
         except Exception as e:
-            logger.error(f"❌ Gradio loading failed: {str(e)}")
-            logger.error(f"🔄 Using fallback HTML interface")
+            logger.error(f"Gradio loading failed: {str(e)}")
+            logger.error(f"Using fallback HTML interface")
             _app = create_fallback_app()
     return _app
 
@@ -105,29 +83,29 @@ def create_fallback_app():
 </head>
 <body>
     <div class="loading">
-        <h1>🚀 Quest Analytics RAG Assistant</h1>
+        <h1>Quest Analytics RAG Assistant</h1>
         <div class="status">
-            <h3>⏳ System Initializing...</h3>
+            <h3>System Initializing...</h3>
             <p>The RAG assistant is loading core dependencies. On first start this may take a moment.</p>
             <p><strong>Status:</strong> Loading Gradio and ML models...</p>
             <br>
-            <button class="retry" onclick="window.location.reload()">🔄 Try Again</button>
+            <button class="retry" onclick="window.location.reload()">Try Again</button>
         </div>
         <div style="text-align: left; margin-top: 30px;">
-            <h3>📋 System Features:</h3>
+            <h3>System Features:</h3>
             <ul>
-                <li>✅ Interactive document Q&A interface</li>
-                <li>✅ PDF upload and processing</li>
-                <li>✅ Hybrid search (semantic + keyword)</li>
-                <li>✅ Real-time health monitoring</li>
-                <li>✅ Session management</li>
+                <li>Interactive document Q&A interface</li>
+                <li>PDF upload and processing</li>
+                <li>Hybrid search (semantic + keyword)</li>
+                <li>Real-time health monitoring</li>
+                <li>Session management</li>
             </ul>
-            <p><small>💡 <em>If this page continues to show, dependencies may be installing. Please wait and refresh.</em></small></p>
+            <p><small>If you're seeing this page, the full interface is loading. This typically happens on first access or during system updates.</small></p>
         </div>
     </div>
     <script>
-        // Auto-retry every 45 seconds
-        setTimeout(() => window.location.reload(), 45000);
+        // Auto-retry every 15 seconds for faster transitions
+        setTimeout(() => window.location.reload(), 15000);
     </script>
 </body>
 </html>"""
@@ -140,36 +118,36 @@ def get_gradio_handler():
     global _gradio_handler
     if _gradio_handler is None:
         try:
-            logger.info("🔧 Creating Gradio handler for Lambda...")
+            logger.info("Creating Gradio handler for Lambda...")
             app = get_app()
             
             # Check if this is the fallback app
             if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
-                logger.info("✅ Using fallback HTML app directly (no Mangum needed)")
+                logger.info("Using fallback HTML app directly (no Mangum needed)")
                 _gradio_handler = app
             else:
                 if not MANGUM_AVAILABLE:
-                    logger.error("❌ Mangum not available but needed for ASGI app")
+                    logger.error("Mangum not available but needed for ASGI app")
                     raise ImportError("Mangum is required for full Gradio app but not available")
                     
-                logger.info("🚀 Creating Mangum wrapper for Gradio ASGI app...")
+                logger.info("Creating Mangum wrapper for Gradio ASGI app...")
                 
                 # Try different methods to access ASGI app from Gradio 6.x
                 asgi_app = None
                 if hasattr(app, 'app'):
-                    logger.info("📱 Found app.app attribute")
+                    logger.info("Found app.app attribute")
                     asgi_app = app.app
                 elif hasattr(app, 'fastapi_app'):
-                    logger.info("📱 Found app.fastapi_app attribute")
+                    logger.info("Found app.fastapi_app attribute")
                     asgi_app = app.fastapi_app
                 elif callable(app):
-                    logger.info("📱 Using Gradio Blocks object directly as ASGI app")
+                    logger.info("Using Gradio Blocks object directly as ASGI app")
                     asgi_app = app
                 else:
-                    logger.error(f"❌ Cannot find ASGI app in Gradio object. Available attributes: {dir(app)}")
+                    logger.error(f"Cannot find ASGI app in Gradio object. Available attributes: {dir(app)}")
                     raise AttributeError(f"Cannot access ASGI app from Gradio Blocks object. Type: {type(app)}")
                 
-                logger.info(f"🔗 ASGI app type: {type(asgi_app)}")
+                logger.info(f"ASGI app type: {type(asgi_app)}")
                 _gradio_handler = Mangum(
                     asgi_app, 
                     lifespan="off", 
@@ -225,7 +203,7 @@ def lambda_handler(event, context):
         
         # Handle health check requests ONLY for EXACT /health path - return simple JSON response  
         if path == '/health' and http_method == 'GET':
-            logger.info("✅ HEALTH CHECK: Returning health response for EXACT /health path")
+            logger.info("HEALTH CHECK: Returning health response for EXACT /health path")
             return {
                 "statusCode": 200,
                 "headers": {
@@ -241,52 +219,35 @@ def lambda_handler(event, context):
             }
         
         # Log when we are NOT returning health check to confirm routing
-        logger.info(f"🚀 GRADIO ROUTE: Path '{path}' is NOT '/health' - proceeding to interface")
+        logger.info(f"GRADIO ROUTE: Path '{path}' is NOT '/health' - proceeding to interface")
         
-        # For Lambda cold starts or resource constraints, prefer fallback HTML
-        # Check if this is likely a cold start or resource-constrained environment
-        lambda_context = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
-        trace_id = os.environ.get('_X_AMZN_TRACE_ID')  # Present in Lambda
-        
-        if lambda_context and trace_id:
-            logger.info("🔍 Lambda environment detected, checking resource constraints...")
-            
-            # Check if essential environment variables are missing (indicates cold start issues)
-            essential_vars = ['OPENSEARCH_HOST', 'OLLAMA_BASE_URL']
-            missing_vars = [var for var in essential_vars if not os.environ.get(var)]
-            
-            if missing_vars:
-                logger.warning(f"⚠️ Missing essential variables ({missing_vars}), using fallback")
-                fallback_app = create_fallback_app()
-                return fallback_app(event, context)
-        
-        # For all other requests (Gradio interface), attempt full handler with aggressive fallback
-        logger.info(f"🔧 Loading Gradio handler for path: {path}")
+        # For all requests, attempt the full Gradio handler first, with fallback on any error
+        logger.info(f"Loading Gradio handler for path: {path}")
         try:
             gradio_handler = get_gradio_handler()
-            logger.info("✅ Gradio handler loaded successfully, calling with event")
+            logger.info("Gradio handler loaded successfully, calling with event")
             
             # Debug the event structure
-            logger.info(f"🔍 Event keys: {list(event.keys())}")
-            logger.info(f"🔍 Request Context: {event.get('requestContext', {}).get('http', {})}")
+            logger.info(f"Event keys: {list(event.keys())}")
+            logger.info(f"Request Context: {event.get('requestContext', {}).get('http', {})}")
             
             result = gradio_handler(event, context)
-            logger.info(f"✅ Gradio handler returned result type: {type(result)}")
-            logger.info(f"✅ Response status code: {result.get('statusCode', 'unknown')}")
+            logger.info(f"Gradio handler returned result type: {type(result)}")
+            logger.info(f"Response status code: {result.get('statusCode', 'unknown')}")
             return result
         except Exception as gradio_error:
-            logger.error(f"🚨 GRADIO HANDLER FAILED: {str(gradio_error)}", exc_info=True)
-            logger.error(f"🚨 GRADIO FAILED FOR PATH: {path}")
-            logger.error(f"🚨 Error type: {type(gradio_error).__name__}")
+            logger.error(f"GRADIO HANDLER FAILED: {str(gradio_error)}", exc_info=True)
+            logger.error(f"GRADIO FAILED FOR PATH: {path}")
+            logger.error(f"Error type: {type(gradio_error).__name__}")
             
-            # ALWAYS return the HTML fallback for any Gradio failure in Lambda
-            logger.info("🔄 Gradio failed in Lambda environment, returning HTML fallback")
+            # Return HTML fallback for any Gradio failure (ensures no 500 errors)
+            logger.info("Gradio failed, returning HTML fallback for better UX")
             fallback_app = create_fallback_app()
             return fallback_app(event, context)
         
     except Exception as e:
-        logger.error(f"🚨 MAIN LAMBDA ERROR: {str(e)}", exc_info=True)
-        logger.error(f"🚨 ERROR OCCURRED FOR PATH: {event.get('rawPath', 'unknown')}")
+        logger.error(f"MAIN LAMBDA ERROR: {str(e)}", exc_info=True)
+        logger.error(f"ERROR OCCURRED FOR PATH: {event.get('rawPath', 'unknown')}")
         # Return proper error format for Lambda Function URLs - NEVER health check
         return {
             "statusCode": 500,
