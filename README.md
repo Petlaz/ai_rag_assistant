@@ -7,6 +7,10 @@
 [![Ollama](https://img.shields.io/badge/Ollama-Latest-000000?style=flat&logo=ollama&logoColor=white)](https://ollama.ai/)
 [![Gradio](https://img.shields.io/badge/Gradio-6.2.0-FF6C37?style=flat&logo=gradio&logoColor=white)](https://gradio.app/)
 [![LangChain](https://img.shields.io/badge/LangChain-1.2.0-121212?style=flat)](https://github.com/langchain-ai/langchain)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![AWS Lambda](https://img.shields.io/badge/AWS%20Lambda-Deployed-FF9900?style=flat&logo=awslambda&logoColor=white)](https://aws.amazon.com/lambda/)
+[![MLOps](https://img.shields.io/badge/MLOps-MLflow%20%7C%20Monitoring-8B5CF6?style=flat)](https://mlflow.org/)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A **production-deployed Retrieval-Augmented Generation** system designed for research teams to intelligently query and analyze scientific literature. Built with hybrid search capabilities, document session isolation, real-time health monitoring, enterprise-grade deployment architecture, and comprehensive MLOps infrastructure.
@@ -175,7 +179,7 @@ See [`scripts/deployment/README.md`](scripts/deployment/README.md) for complete 
 
 ### Core Architecture Principles
 
-**Monolithic Design**: Single-process deployment optimized for cost-effectiveness and operational simplicity
+**Serverless-First Design**: AWS Lambda Function URLs with container images, optimized for cost-effectiveness ($4-13/month) and zero-maintenance operations
 
 **Hybrid Search**: Combines vector similarity and BM25 keyword search for optimal retrieval performance
 
@@ -185,6 +189,8 @@ See [`scripts/deployment/README.md`](scripts/deployment/README.md) for complete 
 
 **Security-First**: API authentication, rate limiting, input validation, and threat detection
 
+**CI/CD Automated**: GitHub Actions pipeline handles build, Terraform infrastructure, ECR image deployment, and post-deploy smoke tests
+
 ### Technology Stack
 
 | Layer | Technology | Purpose |
@@ -193,15 +199,18 @@ See [`scripts/deployment/README.md`](scripts/deployment/README.md) for complete 
 | **RAG Engine** | LangChain, SentenceTransformers | Document processing, embedding generation |
 | **Vector Search** | OpenSearch 2.18 | Hybrid search, metadata indexing |
 | **LLM Runtime** | Ollama | Local model execution, health monitoring |
-| **Infrastructure** | Docker, Docker Compose | Containerization, service orchestration |
+| **Infrastructure** | Docker, Terraform, Lambda | Containerization, IaC, serverless deployment |
+| **CI/CD** | GitHub Actions | Automated build, deploy, and smoke test pipeline |
 | **Monitoring** | CloudWatch, Custom Scripts | Production monitoring, alerting |
 
 ### Deployment Architecture
 
-**Current**: Production-deployed monolithic architecture ($7.24/month AWS)
-- Optimized for cost and operational simplicity
-- Comprehensive monitoring and automated deployment
-- Blue-green deployment capability with rollback systems
+**Current**: Production-deployed serverless architecture on AWS Lambda Function URLs
+- **3 Lambda functions**: App (Gradio), Landing (FastAPI), Worker
+- **Terraform-managed infrastructure** in `infra/terraform/` with S3 state backend
+- **GitHub Actions CI/CD**: 5-job pipeline (validate -> build -> infra -> deploy -> test)
+- **Container images**: Built via Docker, pushed to GHCR, mirrored to ECR
+- **Cost**: $4-13/month depending on usage
 
 **Future Evolution**: Microservices transition planned as scale requirements grow
 - Kubernetes orchestration
@@ -461,135 +470,204 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 ### Production Deployment
 
-**Currently Deployed at $7.24/month - Management Resources:**
-- **[DEPLOY NOW - Quick Start](documentation/DEPLOY_NOW.md)**: Immediate action steps (15 minutes to production)
-- **[Production Deployment Roadmap](documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete 4-week deployment guide
-- **[Deployment Checklist](documentation/DEPLOYMENT_CHECKLIST.md)**: Track your progress step-by-step
+**Live on AWS Lambda Function URLs ($4-13/month):**
 
-**Advanced Deployment Resources:**
-- **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Complete deployment guide with three cost-optimized modes
-- **[Pre-Deployment Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic 8-week optimization and testing plan
-- **Docker Compose**: Local development configurations
+Deployment is fully automated via GitHub Actions. Push to `main` triggers the CI/CD pipeline which builds Docker images, provisions infrastructure with Terraform, and runs post-deploy smoke tests.
+
+- **[DEPLOY NOW - Quick Start](documentation/DEPLOY_NOW.md)**: Step-by-step guide to deploy in minutes
+- **[Production Deployment Roadmap](documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete deployment guide
+- **[Lessons Learned](documentation/LESSONS_LEARNED.md)**: What worked, what didn't, and why
+- **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Detailed AWS configuration reference
+- **[Pre-Deployment Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic optimization and testing plan
+- **Infrastructure**: Terraform configs in `infra/terraform/`, Lambda handlers at project root
+- **Docker Compose**: Local development via `deployment/aws/docker/docker-compose.dev.yml`
 
 ## Project Structure
 
 ```
 ai_rag_assistant/
-├── .env                      # Environment variables (local)
-├── .git/                     # Git repository metadata
-├── .github/                  # GitHub configuration
-│   └── workflows/            # GitHub Actions workflows (infrastructure ready)
-├── .gitignore               # Git ignore rules with privacy protection
-├── LICENSE                  # MIT License
-├── README.md                # This comprehensive documentation
-├── configs/                  # Configuration management
-│   ├── ab_testing_config.yaml      # A/B testing configuration
-│   ├── alerting.yaml               # Multi-channel alerting configuration
-│   ├── alerting_rules.yaml         # CloudWatch alerting rules configuration
-│   ├── baseline_config.json        # Baseline evaluation configuration
-│   ├── log_analysis.yaml           # Log analysis configuration
-│   ├── monitoring.yaml             # Production monitoring settings
-│   ├── monitoring_config.yaml      # Production monitoring configuration
-│   ├── optimization_config.yaml    # Model optimization configuration
-│   ├── retrieval_variants.yaml     # Retrieval strategy variants
-│   └── security_config.yaml        # Security settings configuration
-├── data/                     # Data storage
-│   ├── analytics.csv         # Analytics data
-│   ├── processed/            # Processed documents
-│   ├── raw/                  # Raw document storage
-│   └── samples/              # Sample queries and test data
-│       └── queries.jsonl     # Sample evaluation queries
-├── deployment/               # Web interface & deployment
-│   ├── __init__.py           # Python package initialization
-│   ├── app_gradio.py         # Main Gradio application with security enhancements
-│   └── aws/                  # AWS deployment system
-│       ├── AWS_DEPLOYMENT_GUIDE.md  # Consolidated deployment guide
-│       └── docker/           # Docker deployment configurations
-│           ├── docker-compose.dev.yml # Development with health checks
-│           ├── Dockerfile.app       # Application container
-│           ├── Dockerfile.worker    # Worker container
-│           └── Dockerfile.landing   # Landing page container
-├── documentation/            # Project documentation
-│   ├── LESSONS_LEARNED.md        # Comprehensive success/failure analysis
-│   ├── PRE_DEPLOYMENT_TESTING_PLAN.md   # Optimization methodology
-│   ├── PROBLEM_STATEMENT.md      # Project problem statement and objectives
-│   └── TECH_STACK.md             # Technology stack reference
-├── guides/                   # Implementation guides
-│   ├── BASELINE_EVALUATION_GUIDE.md # Baseline testing framework
-│   ├── MODEL_OPTIMIZATION_GUIDE.md # Model optimization guide
-│   └── SECURITY_GUIDE.md           # Security implementation and setup guide
-├── landing/                  # Professional landing page
+├── .env                              # Environment variables (local, git-ignored)
+├── .github/                          # GitHub configuration
+│   ├── CI_CD_IMPLEMENTATION_CHECKLIST.md
+│   └── workflows/                    # CI/CD pipelines
+│       ├── cicd-01-ml-pipeline.yml         # ML pipeline automation
+│       ├── cicd-02-model-validation.yml    # Model validation checks
+│       └── cicd-03-aws-deployment.yml      # AWS Lambda deployment pipeline
+├── .gitignore                        # Git ignore rules
+├── AI_RAG_PRODUCTION_CHECKLIST.md    # Production readiness checklist
+├── create_bucket.sh                  # S3 Terraform state bucket creation helper
+├── DEPLOY_TRIGGER.txt                # CI/CD deployment trigger file
+├── lambda_app_handler.py             # AWS Lambda handler for Gradio app (Function URL)
+├── lambda_landing_handler.py         # AWS Lambda handler for landing page (Function URL)
+├── LICENSE                           # MIT License
+├── pyproject.toml                    # Project configuration
+├── QUEST_ANALYTICS_RAG_IMPLEMENTATION_GUIDE.md  # RAG implementation guide
+├── README.md                         # This documentation
+├── requirements.txt                  # Python dependencies
+├── requirements-lambda.txt           # Lambda dependencies (awslambdaric, mangum)
+├── TECH_STACK_REFERENCE.md           # Technology stack quick reference
+│
+├── configs/                          # Configuration management
+│   ├── ab_testing_config.yaml              # A/B testing configuration
+│   ├── alerting.yaml                       # Multi-channel alerting
+│   ├── alerting_rules.yaml                 # CloudWatch alerting rules
+│   ├── app_settings.yaml                   # Application settings
+│   ├── baseline_config.json                # Baseline evaluation config
+│   ├── expected_usage.yaml                 # Expected usage patterns
+│   ├── log_analysis.yaml                   # Log analysis configuration
+│   ├── logging.yaml                        # Logging configuration
+│   ├── mlflow_config.yaml                  # MLflow tracking configuration
+│   ├── monitoring.yaml                     # Production monitoring settings
+│   ├── monitoring_config.yaml              # Monitoring configuration
+│   ├── optimization_config.yaml            # Model optimization config
+│   ├── performance_thresholds.yaml         # Performance thresholds
+│   ├── retrieval_variants.yaml             # Retrieval strategy variants
+│   ├── secrets.template.env                # Template for .env secrets
+│   └── security_config.yaml                # Security settings
+│
+├── data/                             # Data storage
+│   ├── evaluation/                   # Evaluation datasets
+│   ├── samples/                      # Sample queries and test data
+│   └── training/                     # Training data
+│
+├── deployment/                       # Web interface & deployment
 │   ├── __init__.py
-│   ├── main.py               # FastAPI app with modern lifespan events
-│   ├── secure_main.py        # Security-enhanced FastAPI app with analytics
-│   └── templates/            # HTML templates
-│       └── index.html        # Professional landing page
-├── llm_ollama/               # Ollama client & adapters
-│   ├── adapters.py           # Enhanced Ollama integration
-│   ├── client.py             # LLM client with health monitoring
-│   ├── README.md             # Comprehensive Ollama documentation
-│   └── notes/                # Implementation notes
-│       └── 2025_10_ollama_success.md  # Implementation notes
-├── logs/                     # Application logs
-├── mlruns/                   # MLflow experiment tracking data
-├── models/                   # Model storage and artifacts
-├── monitoring/               # Monitoring data and reports
-├── pyproject.toml           # Project configuration
-├── rag_pipeline/              # Core RAG components
+│   ├── app_gradio.py                 # Main Gradio application
+│   └── aws/                          # AWS deployment system
+│       ├── AWS_DEPLOYMENT_GUIDE.md         # Consolidated deployment guide
+│       └── docker/                         # Docker configurations
+│           ├── .dockerignore
+│           ├── .env / .env.example          # Docker environment config
+│           ├── docker-compose.dev.yml       # Development with health checks
+│           ├── Dockerfile.app               # App container (Lambda runtime)
+│           ├── Dockerfile.landing           # Landing page container
+│           └── Dockerfile.worker            # Worker container
+│
+├── docs/                             # Internal code analysis documentation
+│   ├── code_analysis_baseline/       # Baseline evaluation code analysis
+│   └── code_analysis_optimization/   # Optimization code analysis
+│
+├── documentation/                    # Project documentation
+│   ├── DEPLOY_NOW.md                       # Quick-start deployment guide
+│   ├── LESSONS_LEARNED.md                  # Comprehensive success/failure analysis
+│   ├── PRE_DEPLOYMENT_TESTING_PLAN.md      # Optimization methodology
+│   ├── PROBLEM_STATEMENT.md                # Project problem statement
+│   ├── PRODUCTION_DEPLOYMENT_ROADMAP.md    # Complete deployment roadmap
+│   └── TECH_STACK.md                       # Technology stack reference
+│
+├── guides/                           # Implementation guides
+│   ├── BASELINE_EVALUATION_GUIDE.md        # Baseline testing framework
+│   ├── MODEL_OPTIMIZATION_GUIDE.md         # Model optimization guide
+│   └── SECURITY_GUIDE.md                   # Security implementation guide
+│
+├── infra/                            # Infrastructure as Code
+│   └── terraform/                    # Terraform configurations
+│       ├── lambda.tf                 # Lambda functions, Function URLs, IAM
+│       ├── main.tf                   # S3 backend, AWS provider, locals
+│       ├── outputs.tf                # App/landing URLs, function names
+│       └── variables.tf              # Environment, image URIs, region
+│
+├── landing/                          # Professional landing page
 │   ├── __init__.py
-│   ├── embeddings/           # Sentence transformer wrappers
+│   ├── main.py                       # FastAPI app with lifespan events
+│   ├── secure_main.py                # Security-enhanced FastAPI app
+│   └── templates/
+│       └── index.html                # Landing page template
+│
+├── llm_ollama/                       # Ollama client & adapters
+│   ├── adapters.py                   # Enhanced Ollama integration
+│   ├── client.py                     # LLM client with health monitoring
+│   ├── README.md                     # Ollama documentation
+│   └── notes/
+│       └── 2025_10_ollama_success.md
+│
+├── logs/                             # Application logs (git-ignored)
+├── mlruns/                           # MLflow experiment tracking data
+├── models/                           # Model storage and artifacts
+├── monitoring/                       # Monitoring data and reports
+│
+├── rag_pipeline/                     # Core RAG components
+│   ├── __init__.py
+│   ├── security.py                   # API auth, rate limiting, input sanitization
+│   ├── embeddings/                   # Sentence transformer wrappers
 │   │   ├── __init__.py
-│   │   └── sentence_transformer.py  # Embedding model interface
-│   ├── indexing/             # OpenSearch integration & schema
+│   │   └── sentence_transformer.py
+│   ├── indexing/                     # OpenSearch integration & schema
 │   │   ├── __init__.py
-│   │   ├── hybrid_indexer.py        # Added clear_previous support
-│   │   ├── opensearch_client.py     # Index management functions
-│   │   └── schema.json              # OpenSearch mapping schema
-│   ├── ingestion/            # PDF processing & metadata extraction
+│   │   ├── hybrid_indexer.py
+│   │   ├── opensearch_client.py
+│   │   └── schema.json
+│   ├── ingestion/                    # PDF processing & metadata extraction
 │   │   ├── __init__.py
-│   │   ├── metadata_extractor.py    # Document metadata extraction
-│   │   ├── pdf_ocr_pipeline.py      # Enhanced PDF processing
-│   │   └── pipeline.py              # Updated with session isolation
-│   ├── prompts/              # Research-focused prompt templates
-│   │   ├── guardrails.yaml          # Safety guardrails config
-│   │   └── research_qa_prompt.yaml  # QA prompt templates
-│   ├── retrieval/            # Hybrid search & reranking
-│   │   ├── __init__.py
-│   │   ├── reranker.py              # Result reranking logic
-│   │   └── retriever.py             # BM25 + vector search
-│   └── security.py           # Security module (API auth, rate limiting, input sanitization)
-├── requirements.txt         # Python dependencies
-├── results/                  # MLOps evaluation results
-│   ├── baseline_evaluation/# Baseline statistical analysis outputs
-│   └── optimization/           # Model optimization results
-│       ├── combined_analysis.json        # Aggregated metrics
-│       ├── embedding_comparison.json     # P@5: 0.4, MRR: 1.0
-│       ├── optimization_summary_report.json    # Executive summary
-│       └── reranking_evaluation.json     # Cross-encoder P@5: 0.4, Hybrid P@5: 0.4
-├── scripts/                  # Operational utilities & MLOps infrastructure
-│   ├── README.md                   # Script organization guide
-│   ├── bootstrap_opensearch.sh     # OpenSearch setup script
-│   ├── eval_retrieval.py           # Traditional retrieval quality evaluation
-│   ├── ingest_watch.py             # File watcher for ingestion
-│   ├── run_ingestion.py            # Batch processing pipeline
-│   ├── smoke_test.py               # End-to-end system testing
-│   ├── deployment/                 # Production Deployment Infrastructure
-│   │   ├── README.md               # Comprehensive deployment documentation
-│   │   └── deploy_optimized_config.py # Deploy A/B tested configurations
-│   └── mlops/                      # MLOps Infrastructure  
-│       ├── README.md               # MLOps infrastructure documentation
-│       └── initialize_mlflow.py    # MLflow experiment setup and baseline logging
-├── tests/                    # Unit & integration tests
-│   ├── conftest.py           # Test configuration
-│   ├── test_app_endpoints.py # API endpoint testing
-│   ├── test_ingestion.py     # PDF processing tests
-│   ├── test_ollama_client.py # LLM integration tests
-│   ├── test_retrieval.py     # Search functionality tests
-│   └── fixtures/             # Test data and fixtures
-│       └── sample_docs/      # Sample documents for testing
-└── training/                 # Training data and scripts
-
-Note: docs/ contains internal code analysis documentation and may be excluded from public repository
+│   │   ├── metadata_extractor.py
+│   │   ├── pdf_ocr_pipeline.py
+│   │   └── pipeline.py
+│   ├── prompts/                      # Research-focused prompt templates
+│   │   ├── guardrails.yaml
+│   │   └── research_qa_prompt.yaml
+│   └── retrieval/                    # Hybrid search & reranking
+│       ├── __init__.py
+│       ├── reranker.py
+│       └── retriever.py
+│
+├── results/                          # MLOps evaluation results
+│   ├── ab_testing/                   # A/B test results
+│   ├── baseline_evaluation/          # Baseline statistical analysis
+│   └── optimization/                 # Model optimization results
+│
+├── scripts/                          # Operational utilities & MLOps infrastructure
+│   ├── README.md                     # Script organization guide
+│   ├── eval_retrieval.py             # Retrieval quality evaluation
+│   ├── ingest_watch.py               # File watcher for ingestion
+│   ├── m1_optimization.py            # M1/M2 Mac optimization
+│   ├── run_ingestion.py              # Batch processing pipeline
+│   ├── security_manager.py           # Security management utilities
+│   ├── smoke_test.py                 # End-to-end system testing
+│   ├── ab_testing/                   # A/B testing scripts
+│   │   ├── ab_test_retrieval.py
+│   │   ├── experiment_pipeline.py
+│   │   ├── select_best_config.py
+│   │   ├── statistical_analysis.py
+│   │   └── test_framework.py
+│   ├── deployment/                   # Production deployment infrastructure
+│   │   ├── blue_green_deploy.py
+│   │   ├── deploy_optimized_config.py
+│   │   ├── estimate_aws_costs.py
+│   │   ├── production_validation.py
+│   │   └── rollback_system.py
+│   ├── evaluation/                   # Baseline evaluation scripts
+│   │   ├── analyze_eval_results.py
+│   │   ├── baseline_evaluation.py
+│   │   ├── create_domain_queries.py
+│   │   ├── domain_performance_analysis.py
+│   │   ├── generate_test_queries.py
+│   │   └── run_baseline_evaluation.py
+│   ├── mlops/                        # MLOps infrastructure
+│   │   ├── automated_retraining.py
+│   │   ├── initialize_mlflow.py
+│   │   ├── model_monitoring.py
+│   │   └── setup_mlops_pipeline.py
+│   ├── monitoring/                   # Production monitoring scripts
+│   │   ├── alerting_system.py
+│   │   ├── log_analysis.py
+│   │   └── production_monitoring.py
+│   └── optimization/                 # Model optimization scripts
+│       ├── analyze_embedding_tradeoffs.py
+│       ├── embedding_model_comparison.py
+│       ├── performance_cost_analysis.py
+│       ├── reranking_cost_analysis.py
+│       ├── reranking_evaluation.py
+│       └── run_model_optimization.py
+│
+├── tests/                            # Unit & integration tests
+│   ├── conftest.py
+│   ├── test_ingestion.py
+│   ├── test_ollama_client.py
+│   ├── test_retrieval.py
+│   └── fixtures/
+│       └── sample_docs/
+│
+└── training/                         # Training data and scripts
 ```
 
 ## Testing & Evaluation

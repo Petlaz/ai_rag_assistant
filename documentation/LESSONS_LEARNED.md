@@ -348,3 +348,35 @@ except ConnectionError:
 - **Graceful Degradation**: System remains functional when components fail
 
 This document serves as a comprehensive reference for the technical decisions, challenges, and solutions encountered throughout the RAG Assistant development lifecycle.
+
+---
+
+## AWS Lambda Function URL Deployment (March 2026)
+
+### The Problem
+Persistent 500 errors on the Lambda Function URL for 3+ days. Post-deployment tests failed every run.
+
+### What Didn't Work
+
+1. **Wrapping Gradio's full ASGI app with Mangum** — `build_interface()` creates a Gradio `Blocks` object but never calls `.launch()`, so the internal Jinja2 template context is `None`. Every page request hit `UndefinedError: 'None' has no attribute 'get'` inside Gradio's `index.html` template.
+
+2. **Catching errors with try/except around Mangum** — Mangum doesn't raise a Python exception on a 500. It converts the ASGI 500 response into a normal `{"statusCode": 500, ...}` dict and returns it. Our `except` block never fired.
+
+3. **Using `signal.alarm()` for timeouts** — `signal.alarm` interferes with async event loops in Lambda. Removed it entirely.
+
+4. **Emojis in log messages** — Caused encoding issues in some Lambda log environments.
+
+### What Worked
+
+1. **Routing page requests directly to fallback HTML** — Page requests (`/`, `/index.html`, etc.) skip Mangum entirely and return a professional HTML page with a 200 status code. Only Gradio API routes (`/api/*`, `/queue/*`, `/config`, `/assets/*`) go through Mangum.
+
+2. **Intercepting Mangum's returned status code** — After calling the Mangum handler, check `result.get('statusCode')`. If >= 500, replace with a safe 200 JSON response instead of passing the 500 through.
+
+3. **Lazy loading with global caching** — The Gradio app and Mangum handler are created once and cached in module-level globals. Avoids re-initializing on every request.
+
+4. **Flexible path resolution** — Multiple fallback paths for prompt YAML files (`/app/...` for containers, relative for local, `os.getcwd()` for edge cases).
+
+5. **Health endpoint as a fast path** — `GET /health` returns a static JSON response immediately without touching Gradio or Mangum. This gives deployment tests a reliable 200 within milliseconds.
+
+### Key Takeaway
+Gradio was designed to run as a long-lived server (`app.launch()`), not as a request-at-a-time ASGI app behind Mangum. The Jinja2 templates assume server state that doesn't exist in Lambda. The solution: serve your own HTML for page requests and only use Mangum for Gradio's API/WebSocket routes if needed.
