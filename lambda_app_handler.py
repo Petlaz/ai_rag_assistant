@@ -120,21 +120,42 @@ def get_gradio_handler():
     global _gradio_handler
     if _gradio_handler is None:
         try:
-            logger.info("Creating Mangum handler...")
+            logger.info("🔧 Creating Gradio handler for Lambda...")
             app = get_app()
             
             # Check if this is the fallback app
             if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
-                logger.info("Using fallback app directly (no Mangum needed)")
+                logger.info("✅ Using fallback HTML app directly (no Mangum needed)")
                 _gradio_handler = app
             else:
                 if not MANGUM_AVAILABLE:
-                    logger.error("Mangum not available but needed for ASGI app")
+                    logger.error("❌ Mangum not available but needed for ASGI app")
                     raise ImportError("Mangum is required for full Gradio app but not available")
                     
-                logger.info("Creating Mangum wrapper for Gradio ASGI app")
-                asgi_app = app.app  # Get the underlying ASGI app
-                _gradio_handler = Mangum(asgi_app, lifespan="off", api_gateway_base_path=None)
+                logger.info("🚀 Creating Mangum wrapper for Gradio ASGI app...")
+                
+                # Try different methods to access ASGI app from Gradio 6.x
+                asgi_app = None
+                if hasattr(app, 'app'):
+                    logger.info("📱 Found app.app attribute")
+                    asgi_app = app.app
+                elif hasattr(app, 'fastapi_app'):
+                    logger.info("📱 Found app.fastapi_app attribute")
+                    asgi_app = app.fastapi_app
+                elif callable(app):
+                    logger.info("📱 Using Gradio Blocks object directly as ASGI app")
+                    asgi_app = app
+                else:
+                    logger.error(f"❌ Cannot find ASGI app in Gradio object. Available attributes: {dir(app)}")
+                    raise AttributeError(f"Cannot access ASGI app from Gradio Blocks object. Type: {type(app)}")
+                
+                logger.info(f"🔗 ASGI app type: {type(asgi_app)}")
+                _gradio_handler = Mangum(
+                    asgi_app, 
+                    lifespan="off", 
+                    api_gateway_base_path=None,
+                    text_mime_types=["application/json", "text/*"]
+                )
                 
             logger.info("Gradio handler created successfully")
         except Exception as e:
@@ -204,17 +225,35 @@ def lambda_handler(event, context):
         
         # For all other requests (Gradio interface), use the full Gradio handler
         # This will only be loaded when actually accessing the Gradio interface
-        logger.info(f"Loading Gradio handler for path: {path}")
+        logger.info(f"🚀 Loading Gradio handler for path: {path}")
         try:
             gradio_handler = get_gradio_handler()
-            logger.info("Gradio handler loaded successfully, calling with event")
+            logger.info("✅ Gradio handler loaded successfully, calling with event")
+            
+            # Debug the event structure
+            logger.info(f"🔍 Event keys: {list(event.keys())}")
+            logger.info(f"🔍 Request Context: {event.get('requestContext', {}).get('http', {})}")
+            
             result = gradio_handler(event, context)
-            logger.info(f"Gradio handler returned result type: {type(result)}")
+            logger.info(f"✅ Gradio handler returned result type: {type(result)}")
+            logger.info(f"✅ Response status code: {result.get('statusCode', 'unknown')}")
             return result
         except Exception as gradio_error:
             logger.error(f"🚨 GRADIO HANDLER FAILED: {str(gradio_error)}", exc_info=True)
             logger.error(f"🚨 GRADIO FAILED FOR PATH: {path}")
-            # If Gradio fails, return a helpful error message but DO NOT return health check
+            logger.error(f"🚨 Error type: {type(gradio_error).__name__}")
+            
+            # Return the appropriate fallback based on error type
+            error_message = str(gradio_error)
+            
+            # Check if this is a loading issue and return fallback HTML
+            if "import" in error_message.lower() or "module" in error_message.lower():
+                logger.info("🔄 Import/module error detected, returning HTML fallback")
+                fallback = create_fallback_app()
+                return fallback(event, context)
+            
+            # Otherwise return JSON error
+            logger.info("🔄 Returning JSON error response")
             return {
                 "statusCode": 500,
                 "headers": {
@@ -223,9 +262,10 @@ def lambda_handler(event, context):
                 },
                 "body": json.dumps({
                     "error": "Gradio interface failed to load",
-                    "message": str(gradio_error),
+                    "message": error_message,
                     "path": path,
-                    "service": "lambda-gradio-failure"
+                    "service": "lambda-gradio-failure",
+                    "error_type": type(gradio_error).__name__
                 })
             }
         
