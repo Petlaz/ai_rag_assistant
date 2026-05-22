@@ -21,7 +21,15 @@ def get_landing_handler():
         try:
             logger.info("Loading FastAPI landing page...")
             from landing.main import app
-            _handler = Mangum(app, lifespan="off", api_gateway_base_path=None)
+            # Configure Mangum for Lambda Function URL events
+            # - lifespan="off": Disables lifespan events (not supported in Lambda)
+            # - api_gateway_base_path: Use None for Lambda Function URLs
+            # - backend="aws_alb": Explicitly handle as ALB/Function URL format
+            _handler = Mangum(
+                app,
+                lifespan="off",
+                api_gateway_base_path=None
+            )
             logger.info("FastAPI handler loaded successfully")
         except Exception as e:
             logger.error(f"Error loading FastAPI handler: {str(e)}", exc_info=True)
@@ -34,23 +42,25 @@ def lambda_handler(event, context):
     Handles both health checks and FastAPI landing page
     """
     try:
-        logger.info(f"Landing handler called with event: {json.dumps(event, default=str)[:500]}...")
+        logger.info(f"Landing handler called with event keys: {list(event.keys())}")
         
         # Extract request info - Lambda Function URL format
-        http_method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
+        request_context = event.get('requestContext', {})
+        http_info = request_context.get('http', {})
+        
+        http_method = http_info.get('method', 'GET')
         raw_path = event.get('rawPath', '/')
-        path = event.get('requestContext', {}).get('http', {}).get('path', raw_path)
+        path = http_info.get('path', raw_path)
         
         # Normalize path and ensure it's not empty
         if not path or path == '':
             path = '/'
             
-        logger.info(f"Request: {http_method} {path} (raw_path: {raw_path})")
-        logger.info(f"Full event structure: {json.dumps(event, default=str)[:1000]}")
+        logger.info(f"Request: {http_method} {path}")
         
         # Handle health check requests ONLY for EXACT /health path - return simple JSON response
         if path == '/health' and http_method == 'GET':
-            logger.info("✅ LANDING HEALTH: Returning health response for EXACT /health path")
+            logger.info("✅ LANDING HEALTH: Returning health response")
             return {
                 "statusCode": 200,
                 "headers": {
@@ -59,45 +69,60 @@ def lambda_handler(event, context):
                 },
                 "body": json.dumps({
                     "status": "healthy",
-                    "message": "Quest Analytics Landing Page is running", 
-                    "timestamp": context.aws_request_id if context else "local",
+                    "message": "Quest Analytics Landing Page is running",
                     "service": "lambda"
                 })
             }
         
-        # Log when we are NOT returning health check
-        logger.info(f"🚀 FASTAPI ROUTE: Path '{path}' is NOT '/health' - proceeding to FastAPI interface")
-        
-        # For all other requests (FastAPI interface), use the FastAPI handler
-        logger.info(f"Loading FastAPI handler for path: {path}")
+        # For all other requests, use the FastAPI handler
         try:
+            logger.info(f"Loading FastAPI handler for {http_method} {path}")
             handler = get_landing_handler()
-            logger.info("FastAPI handler loaded successfully, calling with event")
+            logger.info("FastAPI handler loaded, invoking with event")
             result = handler(event, context)
-            logger.info(f"FastAPI handler returned result type: {type(result)}")
+            logger.info(f"FastAPI handler succeeded, returning result")
             return result
+        except RuntimeError as mangum_error:
+            # Handle Mangum inference errors gracefully
+            if "adapter was unable to infer" in str(mangum_error):
+                logger.error(f"Mangum inference error: {str(mangum_error)}")
+                logger.error(f"Event structure: method={http_method}, path={path}")
+                logger.error(f"Raw event: {json.dumps(event, default=str)[:500]}")
+                # Return a helpful error for debugging
+                return {
+                    "statusCode": 502,
+                    "headers": {"Content-Type": "application/json"},
+                    "body": json.dumps({
+                        "error": "Handler inference failed",
+                        "method": http_method,
+                        "path": path,
+                        "debug": "Check Lambda logs for details"
+                    })
+                }
+            else:
+                raise
         except Exception as fastapi_error:
-            logger.error(f"🚨 FASTAPI HANDLER FAILED: {str(fastapi_error)}", exc_info=True)
-            logger.error(f"🚨 FASTAPI FAILED FOR PATH: {path}")
-            # If FastAPI fails, return a helpful error message
+            logger.error(f"FastAPI error: {str(fastapi_error)}", exc_info=True)
             return {
                 "statusCode": 500,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
-                },
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({
-                    "error": "FastAPI landing page failed to load",
+                    "error": "FastAPI landing page failed",
                     "message": str(fastapi_error),
-                    "path": path,
-                    "service": "lambda-fastapi-failure"
+                    "path": path
                 })
             }
         
     except Exception as e:
-        logger.error(f"🚨 MAIN LANDING ERROR: {str(e)}", exc_info=True)
-        logger.error(f"🚨 LANDING ERROR FOR PATH: {event.get('rawPath', 'unknown')}")
-        # Return proper error format for Lambda Function URLs
+        logger.error(f"Main handler error: {str(e)}", exc_info=True)
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({
+                "error": "Landing handler failed",
+                "message": str(e)
+            })
+        }
         return {
             "statusCode": 500,
             "headers": {
