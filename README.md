@@ -528,9 +528,8 @@ ai_rag_assistant/
 │   └── security_config.yaml                # Security settings
 │
 ├── data/                             # Data storage
-│   ├── evaluation/                   # Evaluation datasets
-│   ├── samples/                      # Sample queries and test data
-│   └── training/                     # Training data
+│   ├── evaluation/                   # Evaluation datasets (6 domain-specific JSONL files)
+│   └── samples/                      # Sample queries and test data
 │
 ├── deployment/                       # Web interface & deployment
 │   ├── __init__.py
@@ -668,8 +667,6 @@ ai_rag_assistant/
 │   ├── test_retrieval.py
 │   └── fixtures/
 │       └── sample_docs/
-│
-└── training/                         # Training data and scripts
 ```
 
 ## Testing & Evaluation
