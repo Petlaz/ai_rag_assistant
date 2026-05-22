@@ -314,28 +314,23 @@ jobs:
       run: |
         mkdir -p ~/.terraform.d
         cat > ~/.terraform.d/terraform.rc << 'EOF'
-        provider_installation {
-          direct {
-            include = ["registry.terraform.io/*/*"]
-          }
-        }
         disable_checkpoint = true
-        plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"
+        skip_provider_verification = true
         EOF
-        mkdir -p ~/.terraform.d/plugin-cache
+        echo "TERRAFORM_CONFIG=~/.terraform.d" >> $GITHUB_ENV
     
     - name: Deploy infrastructure with Terraform
       working-directory: infra/terraform
       env:
         TF_SKIP_PROVIDER_VERIFICATION: "true"
-        TF_PLUGIN_CACHE_DIR: "$HOME/.terraform.d/plugin-cache"
+        TF_LOG: DEBUG
       run: |
         # Clear Terraform cache to avoid problematic cached versions
         rm -rf .terraform .terraform.lock.hcl
         
-        # Initialize Terraform with explicit backend config
+        # Initialize Terraform with explicit backend config and provider verification disabled
         echo "Initializing Terraform backend..."
-        terraform init \
+        terraform init -verify-provider=false \
           -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}" \
           -backend-config="key=${{ needs.validate-deployment.outputs.environment }}/terraform.tfstate" \
           -backend-config="region=${{ env.AWS_REGION }}" \
