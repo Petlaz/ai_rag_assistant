@@ -328,12 +328,25 @@ jobs:
       working-directory: infra/terraform
       env:
         TF_SKIP_PROVIDER_VERIFICATION: "true"
+        TF_PLUGIN_CACHE_DIR: "$HOME/.terraform.d/plugin-cache"
       run: |
-        # Initialize Terraform (skip provider signature verification due to expired keys)
+        # Clear Terraform cache to avoid problematic cached versions
+        rm -rf .terraform .terraform.lock.hcl
+        
+        # Initialize Terraform with explicit backend config
+        echo "Initializing Terraform backend..."
         terraform init \
           -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}" \
           -backend-config="key=${{ needs.validate-deployment.outputs.environment }}/terraform.tfstate" \
-          -backend-config="region=${{ env.AWS_REGION }}"
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -reconfigure
+        
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Terraform init failed"
+          exit 1
+        fi
+        
+        echo "Terraform initialized successfully"
         
         # Validate Docker images exist before deployment
         echo "Verifying Docker images are available..."
