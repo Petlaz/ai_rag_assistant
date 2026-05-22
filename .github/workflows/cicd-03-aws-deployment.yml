@@ -310,27 +310,17 @@ jobs:
       with:
         terraform_version: "1.6.0"
     
-    - name: Configure Terraform to skip provider signature verification
-      run: |
-        mkdir -p ~/.terraform.d
-        cat > ~/.terraform.d/terraform.rc << 'EOF'
-        disable_checkpoint = true
-        skip_provider_verification = true
-        EOF
-        echo "TERRAFORM_CONFIG=~/.terraform.d" >> $GITHUB_ENV
-    
     - name: Deploy infrastructure with Terraform
       working-directory: infra/terraform
       env:
         TF_SKIP_PROVIDER_VERIFICATION: "true"
-        TF_LOG: DEBUG
       run: |
         # Clear Terraform cache to avoid problematic cached versions
         rm -rf .terraform .terraform.lock.hcl
         
-        # Initialize Terraform with explicit backend config and provider verification disabled
+        # Initialize Terraform with explicit backend config
         echo "Initializing Terraform backend..."
-        terraform init -verify-provider=false \
+        terraform init \
           -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}" \
           -backend-config="key=${{ needs.validate-deployment.outputs.environment }}/terraform.tfstate" \
           -backend-config="region=${{ env.AWS_REGION }}" \
