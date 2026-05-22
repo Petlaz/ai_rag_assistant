@@ -44,7 +44,7 @@ def generate_api_key(key_type: str = "user") -> str:
     key = create_secure_api_key()
     key_hash = hash_api_key(key)
     
-    print(f"\n🔑 New {key_type.upper()} API Key Generated")
+    print(f"\nNew {key_type.upper()} API Key Generated")
     print(f"{'=' * 50}")
     print(f"API Key: {key}")
     print(f"Hash:    {key_hash}")
@@ -62,9 +62,9 @@ def generate_api_key(key_type: str = "user") -> str:
                 f.write(f"\n# User API Key (Generated {datetime.now().isoformat()})\n")
                 f.write(f"RAG_API_KEY={key}\n")
         
-        print(f"\n✅ API key saved to .env file")
+        print(f"\nAPI key saved to .env file")
     else:
-        print(f"\n⚠️  .env file not found. Please manually set environment variable:")
+        print(f"\n.env file not found. Please manually set environment variable:")
         env_var = "RAG_ADMIN_API_KEY" if key_type == "admin" else "RAG_API_KEY"
         print(f"   export {env_var}={key}")
     
@@ -73,18 +73,18 @@ def generate_api_key(key_type: str = "user") -> str:
 def test_security_components():
     """Test all security components"""
     
-    print("🛡️ Testing Security Components")
+    print("Testing Security Components")
     print("=" * 50)
     
     # Test configuration loading
     try:
         config = SecurityConfig()
-        print("✅ Security configuration loaded successfully")
+        print("Security configuration loaded successfully")
         print(f"   - Authentication: {config.config.get('authentication', {}).get('enabled', False)}")
         print(f"   - Rate limiting: {config.config.get('rate_limiting', {}).get('enabled', False)}")
         print(f"   - Input sanitization: {config.config.get('input_sanitization', {}).get('enabled', False)}")
     except Exception as e:
-        print(f"❌ Configuration loading failed: {e}")
+        print(f"Configuration loading failed: {e}")
         return False
     
     # Test authentication
@@ -92,9 +92,9 @@ def test_security_components():
         auth = APIAuthentication(config)
         test_key = "test_key_123"
         result = auth.verify_api_key(test_key)
-        print(f"✅ Authentication component: {'Working' if not auth.enabled or not result else 'Ready'}")
+        print(f"Authentication component: {'Working' if not auth.enabled or not result else 'Ready'}")
     except Exception as e:
-        print(f"❌ Authentication test failed: {e}")
+        print(f"Authentication test failed: {e}")
     
     # Test input sanitization
     try:
@@ -114,10 +114,10 @@ def test_security_components():
             elif query != test_queries[0] and not is_safe:
                 safe_count += 1
         
-        print(f"✅ Input sanitization: {safe_count}/{len(test_queries)} tests passed")
+        print(f"Input sanitization: {safe_count}/{len(test_queries)} tests passed")
         
     except Exception as e:
-        print(f"❌ Input sanitization test failed: {e}")
+        print(f"Input sanitization test failed: {e}")
     
     # Test rate limiting
     try:
@@ -132,12 +132,12 @@ def test_security_components():
             if is_allowed:
                 allowed_count += 1
         
-        print(f"✅ Rate limiting: {allowed_count}/5 requests allowed (as expected)")
+        print(f"Rate limiting: {allowed_count}/5 requests allowed (as expected)")
         
     except Exception as e:
-        print(f"❌ Rate limiting test failed: {e}")
+        print(f"Rate limiting test failed: {e}")
     
-    print("\n🔍 File validation test")
+    print("\nFile validation test")
     try:
         # Test file validation
         test_files = {
@@ -148,13 +148,13 @@ def test_security_components():
         
         for filename, content in test_files.items():
             is_valid, error = sanitizer.validate_file_upload(filename, len(content), content)
-            status = "✅ Blocked" if not is_valid else "⚠️ Allowed"
+            status = "Blocked" if not is_valid else "Allowed"
             print(f"   {status}: {filename} - {error or 'Valid file'}")
             
     except Exception as e:
-        print(f"❌ File validation test failed: {e}")
+        print(f"File validation test failed: {e}")
     
-    print(f"\n✅ Security component testing completed")
+    print(f"\nSecurity component testing completed")
     return True
 
 def configure_security(enable_auth: bool = None, rate_limit: int = None, 
@@ -163,11 +163,11 @@ def configure_security(enable_auth: bool = None, rate_limit: int = None,
     
     config_path = ROOT_DIR / "configs" / "security_config.yaml"
     
-    print("⚙️  Configuring Security Settings")
+    print("Configuring Security Settings")
     print("=" * 50)
     
     if not config_path.exists():
-        print(f"❌ Security configuration not found at {config_path}")
+        print(f"Security configuration not found at {config_path}")
         return
     
     # Load current configuration
@@ -194,18 +194,18 @@ def configure_security(enable_auth: bool = None, rate_limit: int = None,
         with open(config_path, 'w') as f:
             yaml.dump(config, f, default_flow_style=False, indent=2)
         
-        print("✅ Configuration updated:")
+        print("Configuration updated:")
         for change in changes:
             print(f"   - {change}")
         
-        print(f"\n📝 Configuration saved to {config_path}")
+        print(f"\nConfiguration saved to {config_path}")
     else:
-        print("ℹ️  No configuration changes specified")
+        print("No configuration changes specified")
 
 def monitor_security():
     """Monitor security events and logs"""
     
-    print("📊 Security Monitoring")
+    print("Security Monitoring")
     print("=" * 50)
     
     # Check for security log files
@@ -220,17 +220,17 @@ def monitor_security():
         if log_file.exists():
             found_logs.append(log_file)
             size = log_file.stat().st_size / 1024  # KB
-            print(f"📋 {log_file.name}: {size:.1f} KB")
+            print(f"{log_file.name}: {size:.1f} KB")
     
     if not found_logs:
-        print("ℹ️  No security log files found")
+        print("No security log files found")
         print("   Security events will be logged to console")
     
     # Show recent configuration
     config_path = ROOT_DIR / "configs" / "security_config.yaml"
     if config_path.exists():
         config = SecurityConfig()
-        print(f"\n🛡️ Current Security Status:")
+        print(f"\nCurrent Security Status:")
         print(f"   - Authentication: {config.config.get('authentication', {}).get('enabled', False)}")
         print(f"   - Rate limiting: {config.config.get('rate_limiting', {}).get('enabled', False)}") 
         print(f"   - Input sanitization: {config.config.get('input_sanitization', {}).get('enabled', False)}")
@@ -240,12 +240,12 @@ def monitor_security():
     api_key = os.getenv("RAG_API_KEY")
     admin_key = os.getenv("RAG_ADMIN_API_KEY") 
     
-    print(f"\n🔑 API Key Status:")
+    print(f"\nAPI Key Status:")
     print(f"   - User API Key: {'Configured' if api_key else 'Not set'}")
     print(f"   - Admin API Key: {'Configured' if admin_key else 'Not set'}")
     
     if not api_key and not admin_key:
-        print(f"   ⚠️  No API keys configured. Run 'generate-key' to create them.")
+        print(f"   No API keys configured. Run 'generate-key' to create them.")
 
 def main():
     """Main CLI interface"""
@@ -294,7 +294,7 @@ Examples:
         parser.print_help()
         return
     
-    print(f"🛡️ Quest Analytics RAG Assistant - Security Manager")
+    print(f"Quest Analytics RAG Assistant - Security Manager")
     print(f"Time: {datetime.now().isoformat()}")
     print()
     
@@ -325,9 +325,9 @@ Examples:
             monitor_security()
             
     except KeyboardInterrupt:
-        print(f"\n🛑 Interrupted by user")
+        print(f"\nInterrupted by user")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
