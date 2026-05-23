@@ -22,8 +22,8 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    ports:
-      - "11434:11434"
+    # Do not publish the Ollama port on the host by default to avoid local port conflicts.
+    # The app and worker use the internal Docker network hostname `ollama:11434`.
     volumes:
       - ${HOME}/.ollama:/root/.ollama
     security_opt:

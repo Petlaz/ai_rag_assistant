@@ -1,0 +1,85 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+
+# Testing
+.tox/
+htmlcov/
+
+# Documentation
+docs/_build/
+site/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Data (keep configs, exclude large datasets)
+data/samples/*
+data/evaluation/*
+mlruns/
+results/
+monitoring/
+
+# AWS/Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Node modules (if any frontend)
+node_modules/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Development-specific
+*.backup
+*.temp
+docker-compose.override.yaml

@@ -1255,7 +1255,19 @@ def update_llm_settings(
     if timeout <= 0:
         return state, "ERROR: Timeout must be greater than zero."
 
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    # Load OLLAMA_BASE_URL with safety checks
+    base_url = os.getenv("OLLAMA_BASE_URL")
+    if not base_url:
+        environment = os.getenv("ENVIRONMENT", "local")
+        if environment == "production":
+            return state, (
+                "ERROR: OLLAMA_BASE_URL environment variable is required. "
+                "Set it to the Ollama service URL (e.g., from AWS or container orchestration)."
+            )
+        # Local development fallback
+        base_url = "http://localhost:11434"
+        logger.warning(f"OLLAMA_BASE_URL not set. Using local fallback: {base_url}")
+    
     current_primary = (
         getattr(getattr(state.deps.chat_adapter, "client", None), "config", None).model
         if hasattr(state.deps.chat_adapter, "client")

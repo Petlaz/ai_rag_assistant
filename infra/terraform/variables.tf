@@ -56,6 +56,71 @@ variable "worker_image_uri" {
   default     = "ghcr.io/petlaz/rag-worker:latest"
 }
 
+# Service Configuration Variables
+variable "ollama_base_url" {
+  description = "Ollama server URL (e.g., http://ollama-service:11434 or https://ollama.example.com)"
+  type        = string
+  default     = ""  # Must be set for production deployment
+  sensitive   = false
+}
+
+variable "opensearch_host" {
+  description = "OpenSearch domain endpoint (e.g., my-domain.us-east-1.es.amazonaws.com:9200)"
+  type        = string
+  default     = ""  # Must be set for production deployment
+  sensitive   = false
+}
+
+variable "opensearch_username" {
+  description = "OpenSearch master username"
+  type        = string
+  default     = "admin"
+  sensitive   = true
+}
+
+variable "opensearch_password" {
+  description = "OpenSearch master password"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "ollama_model" {
+  description = "Primary Ollama model name"
+  type        = string
+  default     = "llama2"
+}
+
+variable "ollama_fallback_model" {
+  description = "Fallback Ollama model name"
+  type        = string
+  default     = "mistral"
+}
+
+variable "embedding_model_name" {
+  description = "Sentence transformer model for embeddings"
+  type        = string
+  default     = "all-MiniLM-L6-v2"
+}
+
+variable "opensearch_index_name" {
+  description = "OpenSearch index name for RAG documents"
+  type        = string
+  default     = "quest-research"
+}
+
+variable "security_enabled" {
+  description = "Enable security middleware (rate limiting, input validation)"
+  type        = bool
+  default     = true
+}
+
+variable "enable_analytics" {
+  description = "Enable analytics tracking"
+  type        = bool
+  default     = false
+}
+
 # Resource sizing based on deployment mode
 locals {
   deployment_config = {

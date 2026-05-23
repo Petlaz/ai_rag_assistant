@@ -71,7 +71,22 @@ resource "aws_lambda_function" "app" {
 
   environment {
     variables = {
-      ENVIRONMENT = var.environment
+      ENVIRONMENT              = var.environment
+      OLLAMA_BASE_URL          = var.ollama_base_url
+      OLLAMA_MODEL             = var.ollama_model
+      OLLAMA_FALLBACK_MODEL    = var.ollama_fallback_model
+      OLLAMA_TIMEOUT           = "60"
+      OPENSEARCH_HOST          = var.opensearch_host
+      OPENSEARCH_USERNAME      = var.opensearch_username
+      OPENSEARCH_PASSWORD      = var.opensearch_password
+      OPENSEARCH_INDEX         = var.opensearch_index_name
+      OPENSEARCH_TLS_VERIFY    = var.opensearch_host != "" && startswith(var.opensearch_host, "https") ? "true" : "false"
+      EMBEDDING_MODEL_NAME     = var.embedding_model_name
+      SECURITY_ENABLED         = var.security_enabled ? "true" : "false"
+      ENABLE_ANALYTICS         = var.enable_analytics ? "true" : "false"
+      GRADIO_SERVER_PORT       = "7860"
+      GRADIO_SERVER_NAME       = "0.0.0.0"
+      GRADIO_SHARE_LINK        = "false"
     }
   }
 
@@ -91,8 +106,10 @@ resource "aws_lambda_function" "landing" {
 
   environment {
     variables = {
-      ENVIRONMENT = var.environment
-      APP_URL     = aws_lambda_function_url.app.function_url
+      ENVIRONMENT      = var.environment
+      APP_URL          = aws_lambda_function_url.app.function_url
+      LANDING_PORT     = "3000"
+      ENABLE_ANALYTICS = var.enable_analytics ? "true" : "false"
     }
   }
 

@@ -1,5 +1,6 @@
 # Quest Analytics RAG Assistant - Landing Page Container
 # Lightweight container for the FastAPI landing page service
+# Supports both local development and AWS Lambda deployment
 
 FROM python:3.11-slim
 
@@ -21,9 +22,15 @@ RUN pip install --no-cache-dir -r requirements.txt -r requirements-lambda.txt
 COPY . /app
 COPY lambda_landing_handler.py /app/
 
-ENV LANDING_PORT=3000
+# Environment defaults - can be overridden at runtime
+# CRITICAL: APP_URL must be explicitly set in production (Lambda, etc.)
+ENV ENVIRONMENT=local \
+    APP_URL= \
+    LANDING_PORT=3000 \
+    ENABLE_ANALYTICS=false
 
 EXPOSE 3000
 
 # Use AWS Lambda Runtime Interface Client for Lambda container execution
+# Falls back to direct Python execution for local/Docker Compose use
 CMD ["python", "-m", "awslambdaric", "lambda_landing_handler.lambda_handler"]

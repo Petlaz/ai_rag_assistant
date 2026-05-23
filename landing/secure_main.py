@@ -47,7 +47,19 @@ logger = logging.getLogger(__name__)
 # Initialize security
 security_middleware = SecurityMiddleware()
 security = HTTPBearer(auto_error=False)
-APP_URL = os.getenv("APP_URL", "http://localhost:7860")
+
+# Load APP_URL with safety checks
+APP_URL = os.getenv("APP_URL")
+if not APP_URL:
+    environment = os.getenv("ENVIRONMENT", "local")
+    if environment == "production":
+        raise ValueError(
+            "APP_URL environment variable is required in production. "
+            "Set it to the Lambda app function URL in Terraform."
+        )
+    # Local development fallback
+    APP_URL = "http://localhost:7860"
+    logger.warning(f"APP_URL not set. Using local fallback: {APP_URL}")
 
 # FastAPI app initialization
 app = FastAPI(

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -37,8 +38,20 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+logger = logging.getLogger(__name__)
 
-APP_URL = os.getenv("APP_URL", "http://localhost:7860")
+APP_URL = os.getenv("APP_URL")
+if not APP_URL:
+    # In production (Lambda), APP_URL must be explicitly set
+    environment = os.getenv("ENVIRONMENT", "local")
+    if environment == "production":
+        raise ValueError(
+            "APP_URL environment variable is required in production. "
+            "Set it to the Lambda app function URL in Terraform."
+        )
+    # Local development fallback
+    APP_URL = "http://localhost:7860"
+    logger.warning(f"APP_URL not set. Using local fallback: {APP_URL}")
 LANDING_PORT = int(os.getenv("LANDING_PORT", "3000"))
 ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", "false").lower() in {"1", "true", "yes"}
 ANALYTICS_PROVIDER = os.getenv("ANALYTICS_PROVIDER", "plausible").lower()

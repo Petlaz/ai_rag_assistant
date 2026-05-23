@@ -1,0 +1,106 @@
+# Terraform Variables for Quest Analytics RAG Assistant
+# Copy this to infra/terraform/terraform.tfvars and update with your values
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================================
+
+# Deployment environment: "staging" or "production"
+environment = "staging"
+
+# Deployment mode: "ultra-budget", "balanced", or "full-scale"
+# - ultra-budget: Minimal resources, lowest cost, for testing
+# - balanced: Recommended for production
+# - full-scale: Maximum performance, highest cost
+deployment_mode = "balanced"
+
+# AWS region
+aws_region = "us-east-1"
+
+# ============================================================================
+# CONTAINER IMAGE URIS
+# ============================================================================
+# Update these after building and pushing Docker images to your registry
+
+app_image_uri      = "ghcr.io/petlaz/rag-assistant:latest"
+landing_image_uri  = "ghcr.io/petlaz/rag-landing:latest"
+worker_image_uri   = "ghcr.io/petlaz/rag-worker:latest"
+
+# ============================================================================
+# CRITICAL: EXTERNAL SERVICE CONFIGURATION
+# ============================================================================
+# These MUST be set for the application to work on AWS Lambda
+
+# Ollama LLM Service
+# Options:
+#   1. EC2 instance with Ollama: "http://ollama-instance.internal:11434"
+#   2. ECS Fargate service: "http://ollama-service.internal:11434"
+#   3. Managed service URL: "https://ollama.your-domain.com"
+# Required: YES
+ollama_base_url = ""  # TODO: Set this to your Ollama service URL
+
+# OpenSearch Vector Database
+# Format: "domain-name.region.es.amazonaws.com:9200"
+# Example: "my-rag-domain.us-east-1.es.amazonaws.com:9200"
+# Note: Must be publicly accessible or in same VPC as Lambda
+# Required: YES
+opensearch_host = ""  # TODO: Set this to your OpenSearch endpoint
+
+# OpenSearch Authentication
+opensearch_username = "admin"
+opensearch_password = ""  # TODO: Set this to your OpenSearch master password
+
+# ============================================================================
+# OPTIONAL: SERVICE CONFIGURATION
+# ============================================================================
+
+# Ollama Models
+ollama_model          = "llama2"       # Primary model for responses
+ollama_fallback_model = "mistral"      # Fallback if primary fails
+
+# Embeddings Model (HuggingFace)
+embedding_model_name = "all-MiniLM-L6-v2"
+
+# OpenSearch Index
+opensearch_index_name = "quest-research"
+
+# ============================================================================
+# OPTIONAL: FEATURE FLAGS
+# ============================================================================
+
+# Enable security middleware (rate limiting, input validation)
+security_enabled = true
+
+# Enable analytics tracking
+enable_analytics = false
+
+# ============================================================================
+# IMPORTANT NOTES
+# ============================================================================
+#
+# 1. BEFORE DEPLOYING:
+#    - Provision Ollama service (EC2, ECS, or managed)
+#    - Provision OpenSearch domain on AWS
+#    - Set ollama_base_url and opensearch_host above
+#
+# 2. TESTING LOCALLY FIRST:
+#    - Use docker-compose.yaml for local testing
+#    - Services use internal hostnames: "ollama:11434", "opensearch:9200"
+#    - This terraform.tfvars is for AWS Lambda deployment
+#
+# 3. SECURITY:
+#    - Use AWS Secrets Manager for passwords in production
+#    - Never commit real passwords to version control
+#    - Restrict OpenSearch domain access to Lambda security group
+#
+# 4. DEPLOYMENT:
+#    cd infra/terraform
+#    terraform init
+#    terraform plan -var-file=terraform.tfvars
+#    terraform apply -var-file=terraform.tfvars
+#
+# 5. TROUBLESHOOTING:
+#    - If Lambda function times out, increase lambda_memory in deployment_mode
+#    - If cold start is slow, consider pre-warming with scheduled invocation
+#    - Check Lambda logs: aws logs tail /aws/lambda/FUNCTION_NAME --follow
+#
