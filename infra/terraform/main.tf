@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.50, <= 5.99"
+      version = "5.40.0"
     }
   }
   
@@ -15,7 +15,6 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  skip_provider_verification = true
   
   default_tags {
     tags = {

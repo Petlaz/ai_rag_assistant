@@ -51,7 +51,7 @@ jobs:
       can-deploy: ${{ steps.validation.outputs.can-deploy }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Set environment
       id: set-env
@@ -135,10 +135,10 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.1.0
       with:
         python-version: '3.11'
     
@@ -189,7 +189,7 @@ jobs:
       actions: read
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Set lowercase repository owner
       id: repo
@@ -292,7 +292,7 @@ jobs:
     environment: ${{ needs.validate-deployment.outputs.environment }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -309,6 +309,14 @@ jobs:
       uses: hashicorp/setup-terraform@v4
       with:
         terraform_version: "1.6.0"
+    
+    - name: Configure Terraform for provider installation
+      run: |
+        mkdir -p ~/.terraform.d
+        cat > ~/.terraform.d/terraformrc << 'EOF'
+        disable_checkpoint = true
+        EOF
+        echo "TERRAFORM_CONFIG=~/.terraform.d/terraformrc" >> $GITHUB_ENV
     
     - name: Deploy infrastructure with Terraform
       working-directory: infra/terraform
@@ -407,10 +415,10 @@ jobs:
     needs: [validate-deployment, deploy-infrastructure]
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.1.0
       with:
         python-version: '3.11'
     
@@ -460,10 +468,10 @@ jobs:
     if: always() && needs.deploy-application.result == 'success'
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.1.0
       with:
         python-version: '3.11'
     
@@ -543,10 +551,10 @@ jobs:
     if: always() && (needs.deploy-application.result == 'failure' || needs.post-deployment-tests.result == 'failure')
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.1.7
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.1.0
       with:
         python-version: '3.11'
     
