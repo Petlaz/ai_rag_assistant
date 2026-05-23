@@ -47,6 +47,7 @@ logger = logging.getLogger(__name__)
 # Initialize security
 security_middleware = SecurityMiddleware()
 security = HTTPBearer(auto_error=False)
+APP_URL = os.getenv("APP_URL", "http://localhost:7860")
 
 # FastAPI app initialization
 app = FastAPI(
@@ -336,7 +337,7 @@ async def landing_page(request: Request):
             <div class="cta">
                 <h3>🚀 Get Started</h3>
                 <p>Experience the power of secure, enterprise-grade RAG technology</p>
-                <a href="http://localhost:7860" class="button">Launch Assistant</a>
+                <a href="__APP_URL__" class="button">Launch Assistant</a>
                 <a href="/api/health" class="button">System Status</a>
                 <a href="/api/security-info" class="button">Security Info</a>
             </div>
@@ -350,7 +351,7 @@ async def landing_page(request: Request):
     </html>
     """
     
-    return html_content
+    return html_content.replace("__APP_URL__", APP_URL)
 
 # Health check endpoint
 @app.get("/api/health")
@@ -370,7 +371,7 @@ async def health_check(request: Request):
         },
         "components": {
             "fastapi": True,
-            "gradio": "http://localhost:7860",
+            "gradio": APP_URL,
             "security_middleware": True
         }
     }

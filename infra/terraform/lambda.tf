@@ -92,6 +92,7 @@ resource "aws_lambda_function" "landing" {
   environment {
     variables = {
       ENVIRONMENT = var.environment
+      APP_URL     = aws_lambda_function_url.app.function_url
     }
   }
 

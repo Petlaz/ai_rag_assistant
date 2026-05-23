@@ -537,6 +537,39 @@ jobs:
           echo "WARNING: App URL not available, skipping smoke tests"
         fi
 
+    - name: Validate landing page launch URL
+      run: |
+        LANDING_URL="${{ needs.deploy-infrastructure.outputs.landing-url }}"
+        APP_URL="${{ needs.deploy-infrastructure.outputs.app-url }}"
+        
+        if [ "$LANDING_URL" = "pending" ] || [ "$LANDING_URL" = "" ]; then
+          echo "WARNING: Landing URL not available, skipping landing page validation"
+          exit 0
+        fi
+        
+        response_code=$(curl -s -o /tmp/landing-response.html -w "%{http_code}" --max-time 45 "$LANDING_URL" || echo "000")
+        response_content=$(cat /tmp/landing-response.html 2>/dev/null || echo "")
+        
+        echo "Landing response code: $response_code"
+        echo "Landing response preview: ${response_content:0:100}..."
+        
+        if [ "$response_code" -ne "200" ]; then
+          echo "ERROR: Landing page did not return HTTP 200"
+          exit 1
+        fi
+        
+        if echo "$response_content" | grep -Fq "http://localhost:7860"; then
+          echo "ERROR: Landing page still points Launch App to localhost"
+          exit 1
+        fi
+        
+        if [ "$APP_URL" != "pending" ] && [ "$APP_URL" != "" ] && ! echo "$response_content" | grep -Fq "$APP_URL"; then
+          echo "ERROR: Landing page does not contain the deployed app URL"
+          exit 1
+        fi
+        
+        echo "SUCCESS: Landing page Launch App URL points to the deployed app"
+
   rollback-on-failure:
     runs-on: ubuntu-latest
     needs: [validate-deployment, deploy-application, post-deployment-tests]
