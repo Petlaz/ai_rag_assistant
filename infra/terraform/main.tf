@@ -15,7 +15,6 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  skip_provider_verification = true
   
   default_tags {
     tags = {
