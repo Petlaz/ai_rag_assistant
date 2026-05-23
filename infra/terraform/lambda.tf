@@ -64,8 +64,8 @@ resource "aws_lambda_function" "app" {
   package_type = "Image"
   image_uri    = var.app_image_uri
   
-  memory_size = local.config.lambda_memory
-  timeout     = 60  # Increased timeout for container initialization
+  memory_size = max(local.config.lambda_memory, 1024)
+  timeout     = 180  # Allow Gradio container cold starts to finish
   
   reserved_concurrent_executions = local.config.lambda_reserved
 

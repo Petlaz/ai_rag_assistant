@@ -492,9 +492,11 @@ jobs:
             
             # Check for successful responses
             if [ "$response_code" -eq "200" ]; then
-              # Check if it's HTML (Gradio interface or fallback) or JSON (health check)
-              if echo "$response_content" | grep -q -i "html\|gradio\|quest analytics\|<!doctype" || echo "$response_content" | grep -q "status.*healthy"; then
-                echo "SUCCESS: Lambda is serving valid content (HTML interface or health JSON)"
+              if echo "$response_content" | grep -Fq "System Initializing"; then
+                echo "WARNING: Lambda returned the fallback loading page instead of the app UI"
+              # Check if it's HTML (Gradio interface) or JSON (health check)
+              elif echo "$response_content" | grep -q -i "gradio-app\|window.gradio_config\|<!doctype" || echo "$response_content" | grep -q "status.*healthy"; then
+                echo "SUCCESS: Lambda is serving the Gradio interface or health JSON"
                 echo "Content type detected: $(echo "$response_content" | head -1)"
                 break
               else
@@ -516,7 +518,11 @@ jobs:
             
             # Final attempt handling
             if [ $attempt -eq 10 ]; then
-              if [ "$response_code" -eq "200" ] || [ "$response_code" -eq "302" ]; then
+              if [ "$response_code" -eq "200" ] && echo "$response_content" | grep -Fq "System Initializing"; then
+                echo "ERROR: Lambda is still serving the fallback loading page after all retries"
+                echo "Final content: ${response_content:0:300}..."
+                exit 1
+              elif [ "$response_code" -eq "200" ] || [ "$response_code" -eq "302" ]; then
                 echo "SUCCESS: Lambda is responding (code: $response_code)"
                 exit 0
               elif [ "$response_code" -eq "500" ] && echo "$response_content" | grep -q "error.*message"; then

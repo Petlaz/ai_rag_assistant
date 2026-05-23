@@ -66,9 +66,6 @@ if str(ROOT_DIR) not in sys.path:
 from rag_pipeline.ingestion.pipeline import ingest_and_index_document
 from rag_pipeline.retrieval.retriever import HybridRetriever
 from rag_pipeline.retrieval.reranker import PassThroughReranker
-from rag_pipeline.embeddings.sentence_transformer import (
-    SentenceTransformerEmbeddings,
-)
 from rag_pipeline.indexing.opensearch_client import OpenSearchConfig, create_client, ensure_index
 from rag_pipeline.security import SecurityMiddleware, get_client_ip
 from llm_ollama.adapters import OllamaChatAdapter
@@ -1140,13 +1137,21 @@ def load_dependencies() -> AssistantDependencies:
     ollama_model = os.getenv("OLLAMA_MODEL")
     ollama_fallback = os.getenv("OLLAMA_FALLBACK_MODEL")
 
-    try:
-        embedding_backend = SentenceTransformerEmbeddings(model_name=embedding_model_name)
-        embedding_model = embedding_backend
-        query_embedder = embedding_backend
-    except Exception as exc:  # pragma: no cover - defensive fallback
-        embedding_model = NotImplementedStub("Embedding Model", f"Embedding backend failed to load ({exc}).")
-        query_embedder = NotImplementedStub("Query Embedder", f"Query embedding backend failed to load ({exc}).")
+    if opensearch_host:
+        try:
+            from rag_pipeline.embeddings.sentence_transformer import (
+                SentenceTransformerEmbeddings,
+            )
+
+            embedding_backend = SentenceTransformerEmbeddings(model_name=embedding_model_name)
+            embedding_model = embedding_backend
+            query_embedder = embedding_backend
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            embedding_model = NotImplementedStub("Embedding Model", f"Embedding backend failed to load ({exc}).")
+            query_embedder = NotImplementedStub("Query Embedder", f"Query embedding backend failed to load ({exc}).")
+    else:
+        embedding_model = NotImplementedStub("Embedding Model", "OPENSEARCH_HOST not configured")
+        query_embedder = NotImplementedStub("Query Embedder", "OPENSEARCH_HOST not configured")
 
     class StubChatAdapter:
         def __init__(self, detail: str):

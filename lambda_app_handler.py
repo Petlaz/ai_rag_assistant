@@ -259,22 +259,10 @@ def lambda_handler(event, context):
                 })
             }
         
-        # Determine if this is a Gradio API/internal request vs a page request.
-        # Gradio's Jinja2 template rendering fails in Lambda (build_interface does
-        # not call .launch(), so the template context is None).  Page requests
-        # (GET /) MUST be served by our fallback HTML.  Only Gradio API calls
-        # (/api/*, /queue/*, /upload, /info, /config, /assets/*) go through Mangum.
-        gradio_api_prefixes = ('/api/', '/queue/', '/upload', '/info', '/config', '/assets/', '/file=', '/stream/')
-        is_gradio_api = any(path.startswith(p) for p in gradio_api_prefixes)
-
-        if not is_gradio_api:
-            # Serve our professional fallback HTML for all page/UI requests
-            logger.info(f"PAGE REQUEST: Serving fallback HTML for path '{path}' (Gradio templates cannot render in Lambda)")
-            fallback_app = create_fallback_app()
-            return fallback_app(event, context)
-
-        # --- Gradio API route ---
-        logger.info(f"GRADIO API: Routing '{path}' through Mangum")
+        # Route UI, assets, and API requests through Gradio. If Gradio cannot
+        # render under Lambda for a specific request, the error handling below
+        # still returns the fallback HTML instead of exposing a 500.
+        logger.info(f"GRADIO ROUTE: Routing '{path}' through Mangum")
         try:
             gradio_handler = get_gradio_handler()
             logger.info("Gradio handler loaded, calling with event")
