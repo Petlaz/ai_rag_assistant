@@ -86,8 +86,8 @@ resource "aws_lambda_function" "landing" {
   package_type = "Image"
   image_uri    = var.landing_image_uri
   
-  memory_size = 256
-  timeout     = 60  # Increased from 10 to 60 seconds
+  memory_size = 512  # Increased from 256 to 512 for better cold start performance
+  timeout     = 120  # Increased to 120 seconds for FastAPI initialization
 
   environment {
     variables = {
