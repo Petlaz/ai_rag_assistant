@@ -6,7 +6,9 @@ import json
 import os
 import logging
 import re
+import math
 from pathlib import Path
+from typing import Any
 
 # Import Lambda dependencies with fallback handling
 try:
@@ -135,6 +137,82 @@ def create_fallback_app():
     
     return FallbackApp()
 
+def _json_safe(value: Any) -> Any:
+    """Convert Gradio config objects into JSON-safe values for script embedding."""
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    if callable(value):
+        return str(value)
+    try:
+        json.dumps(value)
+        return value
+    except (TypeError, ValueError):
+        return str(value)
+
+def _load_gradio_frontend_assets() -> tuple[str, str]:
+    """Read Gradio's packaged frontend asset names so the shell tracks upgrades."""
+    try:
+        import gradio
+
+        template_path = Path(gradio.__file__).resolve().parent / "templates" / "frontend" / "index.html"
+        template = template_path.read_text(encoding="utf-8")
+        js_match = re.search(r'src="\.\/assets\/([^"]+\.js)"', template)
+        css_match = re.search(r'href="\.\/assets\/([^"]+\.css)"', template)
+        if js_match and css_match:
+            return js_match.group(1), css_match.group(1)
+    except Exception as exc:  # pragma: no cover - defensive fallback
+        logger.warning("Could not inspect Gradio frontend assets: %s", exc)
+    return "index-Dw8Uzof1.js", "index-qRhMeKhs.css"
+
+def render_gradio_shell(app) -> str:
+    """Render a minimal Gradio browser shell without using Gradio's broken root template."""
+    config = _json_safe(app.get_config_file())
+    api_info = _json_safe(app.get_api_info())
+    js_asset, css_asset = _load_gradio_frontend_assets()
+    title = config.get("title") or "Quest Analytics AI RAG Assistant"
+    config_json = json.dumps(config, separators=(",", ":"))
+    api_info_json = json.dumps(api_info, separators=(",", ":"))
+
+    return f"""<!doctype html>
+<html lang="en" style="margin:0;padding:0;min-height:100%;display:flex;flex-direction:column">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta property="og:title" content="{title}" />
+  <meta name="twitter:title" content="{title}" />
+  <title>{title}</title>
+  <style>
+    :root {{ --bg: white; --col: #27272a; --bg-dark: #0f0f11; --col-dark: #f4f4f5; }}
+    body {{ background: var(--bg); color: var(--col); font-family: Arial, Helvetica, sans-serif; }}
+    @media (prefers-color-scheme: dark) {{ body {{ background: var(--bg-dark); color: var(--col-dark); }} }}
+  </style>
+  <script>window.gradio_config = {config_json};</script>
+  <script>window.gradio_api_info = {api_info_json};</script>
+  <script data-gradio-mode>
+    window.__gradio_mode__ = "app";
+    window.iFrameResizer = {{ autoResize: false, sizeWidth: false }};
+    window.parent?.postMessage({{ type: "SET_SCROLLING", enabled: false }}, "*");
+  </script>
+  <link rel="manifest" href="/manifest.json" />
+  <script type="module" crossorigin src="/assets/{js_asset}"></script>
+  <link rel="stylesheet" crossorigin href="/assets/{css_asset}">
+</head>
+<body style="width:100%;margin:0;padding:0;display:flex;flex-direction:column;flex-grow:1">
+  <gradio-app control_page_title="true" embed="false" eager="true" style="display:flex;flex-direction:column;flex-grow:1"></gradio-app>
+  <script>
+    const ce = document.getElementsByTagName("gradio-app");
+    if (ce[0]) {{
+      ce[0].addEventListener("domchange", () => {{ document.body.style.padding = "0"; }});
+      document.body.style.padding = "0";
+    }}
+  </script>
+</body>
+</html>"""
+
 def get_gradio_handler():
     """Lazy load the Mangum handler for Gradio."""
     global _gradio_handler
@@ -259,9 +337,32 @@ def lambda_handler(event, context):
                 })
             }
         
-        # Route UI, assets, and API requests through Gradio. If Gradio cannot
-        # render under Lambda for a specific request, the error handling below
-        # still returns the fallback HTML instead of exposing a 500.
+        # Gradio's packaged root template expects `.launch()` state that Lambda
+        # does not have. Serve a small shell for root page requests and let
+        # Gradio handle config, assets, manifest, and API routes below.
+        if http_method == 'GET' and path in {'/', '/index.html'}:
+            try:
+                app = get_app()
+                if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
+                    logger.info("ROOT: Gradio app unavailable, returning fallback shell")
+                    return app(event, context)
+                logger.info("ROOT: Serving Lambda-compatible Gradio shell")
+                return {
+                    "statusCode": 200,
+                    "headers": {
+                        "Content-Type": "text/html",
+                        "Access-Control-Allow-Origin": "*"
+                    },
+                    "body": render_gradio_shell(app)
+                }
+            except Exception as shell_error:
+                logger.error("ROOT shell failed: %s", shell_error, exc_info=True)
+                fallback_app = create_fallback_app()
+                return fallback_app(event, context)
+
+        # Route assets and API requests through Gradio. If Gradio cannot render
+        # under Lambda for a specific request, the error handling below still
+        # returns a safe JSON response instead of exposing a 500.
         logger.info(f"GRADIO ROUTE: Routing '{path}' through Mangum")
         try:
             gradio_handler = get_gradio_handler()
