@@ -439,9 +439,9 @@ python scripts/smoke_test.py --pdf sample.pdf --question "research question"
 | `OPENSEARCH_INDEX` | Index name for documents | `quest-research` | Updated |
 | `OPENSEARCH_TLS_VERIFY` | TLS certificate verification | `false` (dev) | New |
 | `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` | Updated |
-| `OLLAMA_MODEL` | Primary LLM model | `mistral` | Updated |
+| `OLLAMA_MODEL` | Primary LLM model | `gemma3:1b` | Updated |
 | `OLLAMA_FALLBACK_MODEL` | Fallback model for errors | `phi3:mini` | Updated |
-| `OLLAMA_TIMEOUT` | Request timeout (seconds) | `120` | New |
+| `OLLAMA_TIMEOUT` | Request timeout (seconds) | `240` | New |
 | `EMBEDDING_MODEL_NAME` | Sentence transformer model | `all-MiniLM-L6-v2` | Updated |
 | `GRADIO_SERVER_PORT` | Web interface port | `7860` | New |
 
@@ -449,7 +449,7 @@ python scripts/smoke_test.py --pdf sample.pdf --question "research question"
 
 | Use Case | Primary Model | Fallback Model | RAM Requirements |
 |----------|--------------|----------------|-----------------|
-| **Development/Testing** | `phi3:mini` | `gemma3:1b` | 4GB+ |
+| **Development/Testing** | `gemma3:1b` | `phi3:mini` | 4GB+ |
 | **Research (Balanced)** | `mistral:latest` | `phi3:mini` | 8GB+ |
 | **Production (Quality)** | `llama3:8b` | `mistral:latest` | 16GB+ |
 

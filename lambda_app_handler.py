@@ -53,11 +53,12 @@ PROMPT_PATH = resolve_prompt_path()
 
 # Global variables for lazy loading
 _app = None
+_app_state = None
 _gradio_handler = None
 
 def get_app():
     """Lazy load the Gradio app with fallback only on actual failures."""
-    global _app
+    global _app, _app_state
     if _app is None:
         logger.info("Attempting to load Gradio app for Lambda environment...")
         
@@ -72,6 +73,7 @@ def get_app():
             
             logger.info("Building Gradio interface...")
             _app = build_interface(state)
+            _app_state = state
             
             logger.info("Gradio app loaded successfully!")
         except Exception as e:
@@ -320,7 +322,7 @@ def lambda_handler(event, context):
         except (TypeError, ValueError):
             logger.info("Event structure not serializable")
         
-        # Handle health check requests ONLY for EXACT /health path - return simple JSON response  
+        # Handle health check requests ONLY for EXACT /health path - return simple JSON response
         if path == '/health' and http_method == 'GET':
             logger.info("HEALTH CHECK: Returning health response for EXACT /health path")
             return {
@@ -336,7 +338,58 @@ def lambda_handler(event, context):
                     "service": "lambda"
                 })
             }
-        
+
+        # Provide a Lambda-friendly status endpoint for the Gradio app directly.
+        if path == '/status' and http_method == 'GET':
+            logger.info("STATUS CHECK: Returning model status for /status path")
+            try:
+                app = get_app()
+                status_payload = {
+                    "model": "unknown",
+                    "status": "unknown",
+                    "latency_ms": None,
+                    "request_id": safe_get_request_id(context),
+                }
+                if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
+                    status_payload.update({
+                        "message": "Fallback interface active",
+                        "service": "fallback"
+                    })
+                else:
+                    from deployment.app_gradio import current_model_name, initial_health_state, run_health_check
+                    if _app_state is not None:
+                        model = current_model_name(_app_state)
+                        status_payload["model"] = model
+                        health_state = initial_health_state(model)
+                        health_state, _ = run_health_check(_app_state, health_state, force=True)
+                        status_payload["status"] = health_state.get("status", "unknown")
+                        status_payload["latency_ms"] = health_state.get("last_latency")
+                        status_payload["service"] = "gradio"
+                return {
+                    "statusCode": 200,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*"
+                    },
+                    "body": json.dumps(status_payload)
+                }
+            except Exception as exc:
+                logger.error("STATUS CHECK failed: %s", exc, exc_info=True)
+                return {
+                    "statusCode": 200,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*"
+                    },
+                    "body": json.dumps({
+                        "model": "unknown",
+                        "status": "unknown",
+                        "latency_ms": None,
+                        "error": str(exc),
+                        "request_id": safe_get_request_id(context),
+                    })
+                }
+
         # Gradio's packaged root template expects `.launch()` state that Lambda
         # does not have. Serve a small shell for root page requests and let
         # Gradio handle config, assets, manifest, and API routes below.

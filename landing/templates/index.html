@@ -207,6 +207,13 @@
           Launch the assistant, drop in your research documents, and receive grounded answers with
           citations in seconds.
         </p>
+        <div style="margin-bottom:12px; text-align:left;">
+          <strong style="display:block; margin-bottom:6px;">LLM Status</strong>
+          <div id="llm-status" style="display:flex;align-items:center;gap:10px;">
+            <div id="llm-indicator" style="width:12px;height:12px;border-radius:50%;background:#9CA3AF;"></div>
+            <div id="llm-status-text" style="color:#374151;">Checking…</div>
+          </div>
+        </div>
         <button class="launch-button" id="launch-btn">
           <span aria-hidden="true"></span>
           <span id="launch-text">Launch App</span>
@@ -259,6 +266,39 @@
           launchSpinner.style.display = "none";
         }, 1200);
       });
+
+      // Poll the app /status endpoint to update LLM status on the landing page
+      const statusIndicator = document.getElementById("llm-indicator");
+      const statusText = document.getElementById("llm-status-text");
+
+      async function updateStatus() {
+        try {
+          const res = await fetch(appUrl.replace(/\/$/, "") + "/status", { method: "GET" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          const model = json.model || "unknown";
+          const status = json.status || "unknown";
+          const latency = json.latency_ms ? ` • ${Math.round(json.latency_ms)}ms` : "";
+
+          statusText.textContent = `Model: ${model}${latency}`;
+          if (status === "green") {
+            statusIndicator.style.background = "#10b981"; // green
+          } else if (status === "amber") {
+            statusIndicator.style.background = "#f59e0b"; // amber
+          } else if (status === "red") {
+            statusIndicator.style.background = "#ef4444"; // red
+          } else {
+            statusIndicator.style.background = "#9CA3AF"; // gray
+          }
+        } catch (err) {
+          statusText.textContent = `Model: unknown`;
+          statusIndicator.style.background = "#9CA3AF";
+        }
+      }
+
+      // Initial check and periodic refresh
+      updateStatus();
+      setInterval(updateStatus, 5000);
     </script>
   </body>
 </html>

@@ -41,12 +41,11 @@ from fastapi.templating import Jinja2Templates
 logger = logging.getLogger(__name__)
 
 APP_URL = os.getenv("APP_URL")
+environment = os.getenv("ENVIRONMENT", "local")
 if not APP_URL:
-    # In production (Lambda), APP_URL must be explicitly set
-    environment = os.getenv("ENVIRONMENT", "local")
-    if environment == "production":
+    if environment != "local":
         raise ValueError(
-            "APP_URL environment variable is required in production. "
+            "APP_URL environment variable is required in non-local environments. "
             "Set it to the Lambda app function URL in Terraform."
         )
     # Local development fallback
