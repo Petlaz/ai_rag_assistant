@@ -88,12 +88,14 @@ variable "opensearch_password" {
 variable "ollama_model" {
   description = "Primary Ollama model name"
   type        = string
-  default     = "llama2"
+  # Default changed to gemma3:1b to match local development and README
+  default     = "gemma3:1b"
 }
 
 variable "ollama_fallback_model" {
   description = "Fallback Ollama model name"
   type        = string
+  # Keep a lightweight fallback; adjust in terraform vars for production if needed
   default     = "mistral"
 }
 
