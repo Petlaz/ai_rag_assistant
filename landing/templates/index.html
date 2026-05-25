@@ -273,9 +273,35 @@
 
       async function updateStatus() {
         try {
-          const res = await fetch(appUrl.replace(/\/$/, "") + "/status", { method: "GET" });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          // Validate app URL is configured
+          if (!appUrl || appUrl === "{{ app_url }}") {
+            console.warn("[Status] App URL not properly configured:", appUrl);
+            statusText.textContent = "Model: App URL not configured";
+            statusIndicator.style.background = "#9CA3AF";
+            return;
+          }
+
+          // Construct status endpoint URL
+          const statusUrl = appUrl.replace(/\/$/, "") + "/status";
+          console.log("[Status] Fetching from:", statusUrl);
+
+          // Fetch with CORS mode for cross-origin requests
+          const res = await fetch(statusUrl, {
+            method: "GET",
+            mode: "cors",
+            headers: {
+              "Accept": "application/json"
+            }
+          });
+
+          if (!res.ok) {
+            console.warn(`[Status] HTTP ${res.status} from ${statusUrl}`);
+            throw new Error(`HTTP ${res.status}`);
+          }
+
           const json = await res.json();
+          console.log("[Status] Received:", json);
+
           const model = json.model || "unknown";
           const status = json.status || "unknown";
           const latency = json.latency_ms ? ` • ${Math.round(json.latency_ms)}ms` : "";
@@ -291,7 +317,8 @@
             statusIndicator.style.background = "#9CA3AF"; // gray
           }
         } catch (err) {
-          statusText.textContent = `Model: unknown`;
+          console.error("[Status] Error:", err.message);
+          statusText.textContent = `Model: Error - ${err.message}`;
           statusIndicator.style.background = "#9CA3AF";
         }
       }
