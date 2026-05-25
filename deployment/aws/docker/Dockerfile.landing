@@ -22,10 +22,13 @@ RUN pip install --no-cache-dir -r requirements.txt -r requirements-lambda.txt
 COPY . /app
 COPY lambda_landing_handler.py /app/
 
-# Environment defaults - can be overridden at runtime
-# CRITICAL: APP_URL must be explicitly set in production (Lambda, etc.)
+# Environment defaults - can be overridden at runtime via Lambda configuration
+# CRITICAL: APP_URL must be explicitly set in Lambda environment variables via Terraform
+# - In local dev: http://localhost:7860
+# - In Lambda: Set via Terraform landing function environment variables
+# - Format: https://<function-id>.lambda-url.us-east-1.on.aws
 ENV ENVIRONMENT=local \
-    APP_URL= \
+    APP_URL="" \
     LANDING_PORT=3000 \
     ENABLE_ANALYTICS=false
 

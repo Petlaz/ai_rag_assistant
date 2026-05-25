@@ -51,6 +51,10 @@ if not APP_URL:
     # Local development fallback
     APP_URL = "http://localhost:7860"
     logger.warning(f"APP_URL not set. Using local fallback: {APP_URL}")
+
+# Log configuration at startup for debugging
+logger.info(f"[CONFIG] Environment: {environment}")
+logger.info(f"[CONFIG] APP_URL: {APP_URL}")
 LANDING_PORT = int(os.getenv("LANDING_PORT", "3000"))
 ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", "false").lower() in {"1", "true", "yes"}
 ANALYTICS_PROVIDER = os.getenv("ANALYTICS_PROVIDER", "plausible").lower()

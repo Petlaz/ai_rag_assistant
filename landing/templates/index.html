@@ -226,8 +226,12 @@
     </footer>
 
     <script>
-      const appUrl = "{{ app_url }}";
+      const appUrl = "{{ app_url }}" || "";
       const enableAnalytics = {{ "true" if enable_analytics else "false" }};
+      
+      // Log configuration at page load for debugging deployment issues
+      console.log("[Config] App URL:", appUrl || "<empty>");
+      console.log("[Config] Enable Analytics:", enableAnalytics);
 
       const launchButton = document.getElementById("launch-btn");
       const launchText = document.getElementById("launch-text");
@@ -273,9 +277,18 @@
 
       async function updateStatus() {
         try {
+          // Detect Jinja2 rendering issues
+          if (appUrl === "{{ app_url }}") {
+            console.error("[Status] Jinja2 template not rendered! Raw template string found");
+            statusText.textContent = "Model: Template rendering error";
+            statusIndicator.style.background = "#9CA3AF";
+            return;
+          }
+
           // Validate app URL is configured
-          if (!appUrl || appUrl === "{{ app_url }}") {
-            console.warn("[Status] App URL not properly configured:", appUrl);
+          if (!appUrl || appUrl.trim() === "") {
+            console.warn("[Status] App URL not configured in Lambda environment");
+            console.warn("[Status] Check ENVIRONMENT and APP_URL variables in Terraform");
             statusText.textContent = "Model: App URL not configured";
             statusIndicator.style.background = "#9CA3AF";
             return;

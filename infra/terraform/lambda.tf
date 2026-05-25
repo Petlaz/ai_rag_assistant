@@ -113,6 +113,9 @@ resource "aws_lambda_function" "landing" {
     }
   }
 
+  # Explicit dependency: landing function needs app function URL to be created first
+  depends_on = [aws_lambda_function_url.app]
+
   tags = local.common_tags
 }
 
