@@ -72,6 +72,11 @@ jobs:
         env:
           discovery.type: single-node
           OPENSEARCH_INITIAL_ADMIN_PASSWORD: TestPassword123!
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
         ports:
           - 9200:9200
           
@@ -115,7 +120,7 @@ jobs:
     
     - name: Initialize services
       run: |
-        python scripts/bootstrap_opensearch.sh
+        python scripts/bootstrap_opensearch.py
         mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 0.0.0.0 &
         sleep 5
     
