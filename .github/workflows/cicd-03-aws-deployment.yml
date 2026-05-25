@@ -36,7 +36,6 @@ on:
         type: boolean
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   AWS_REGION: 'us-east-1'
   CONTAINER_REGISTRY: 'ghcr.io'
   IMAGE_TAG: ${{ github.sha }}
@@ -51,7 +50,7 @@ jobs:
       can-deploy: ${{ steps.validation.outputs.can-deploy }}
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Set environment
       id: set-env
@@ -131,11 +130,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate-deployment
     if: needs.validate-deployment.outputs.can-deploy == 'true'  # Re-enabled for cost monitoring
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v5.1.0
@@ -189,7 +186,7 @@ jobs:
       actions: read
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Set lowercase repository owner
       id: repo
@@ -292,7 +289,7 @@ jobs:
     environment: ${{ needs.validate-deployment.outputs.environment }}
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -407,7 +404,7 @@ jobs:
     needs: [validate-deployment, deploy-infrastructure]
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v5.1.0
@@ -460,7 +457,7 @@ jobs:
     if: always() && needs.deploy-application.result == 'success'
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v5.1.0
@@ -582,7 +579,7 @@ jobs:
     if: always() && (needs.deploy-application.result == 'failure' || needs.post-deployment-tests.result == 'failure')
     
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v5.1.0
