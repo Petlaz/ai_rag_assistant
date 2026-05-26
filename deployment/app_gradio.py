@@ -506,7 +506,7 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
     embedding generation, and indexing into OpenSearch for retrieval.
     
     Args:
-        files: List of file paths to process
+        files: List of file paths to process (can be None/empty in some Gradio versions)
         clear_previous: If True, clear all previous documents before adding new ones
         state: Current application state with dependencies
         
@@ -516,7 +516,23 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
     Note:
         This function processes documents through the full ingestion pipeline
         including text extraction, metadata generation, and search indexing.
+        Lambda-compatible: Handles edge cases where files might be None or improperly formatted.
     """
+    
+    # Defensive check: handle None, empty, or improperly formatted files parameter
+    # (Workaround for Gradio 6.2.0 file handling inconsistencies in Lambda)
+    if files is None:
+        logger.warning("Ingest_files called with files=None")
+        return "Error: No files provided", state
+    
+    # Handle case where files might be a dict or other non-list type (Gradio quirk)
+    if not isinstance(files, (list, tuple)):
+        logger.warning(f"Files parameter is not a list: {type(files)} = {files}")
+        try:
+            files = list(files) if files else []
+        except Exception as e:
+            logger.error(f"Cannot convert files to list: {e}")
+            return f"Error: Invalid file format: {type(files)}", state
     
     # Security checks
     if SECURITY_ENABLED and security_middleware:
@@ -550,6 +566,7 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
     if not files:
         return "No file uploaded yet.", state
 
+    logger.info(f"Starting ingestion of {len(files)} file(s)")
     messages: List[str] = []
     progress = gr.Progress(track_tqdm=True)
     
@@ -558,6 +575,7 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
 
     for idx, file_path in enumerate(files, start=1):
         path = Path(file_path)
+        logger.info(f"Processing file {idx}/{len(files)}: {path.name}")
         progress(
             (idx - 1) / max(len(files), 1),
             desc=f"Ingesting {path.name}",
@@ -575,15 +593,20 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
             if should_clear:
                 messages.append("Index cleared successfully.")
             messages.append(f"Ingestion succeeded for {path.name}.")
+            logger.info(f"Successfully ingested {path.name}")
         except NotImplementedError as error:
             messages.append(
                 f"Warning: Ingestion not implemented yet for {path.name}: {str(error)}"
             )
         except Exception as exc:  # pragma: no cover - defensive logging only
-            messages.append(f"ERROR: Failed to ingest {path.name}: {exc}")
+            error_msg = f"ERROR: Failed to ingest {path.name}: {exc}"
+            messages.append(error_msg)
+            logger.error(error_msg, exc_info=True)
 
     progress(1.0, desc="Ingestion complete")
-    return "\n".join(messages), state
+    result = "\n".join(messages)
+    logger.info(f"Ingestion complete. Result: {result[:200]}...")
+    return result, state
 
 
 def answer_question(
@@ -898,13 +921,17 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                             Upload PDF documents to build your knowledge base. Our system will process and index them for intelligent searching.
                         """)
                         
+                        # Gradio 6.2.0 file upload configuration
+                        # Note: type="filepath" returns paths, type="binary" returns file contents
+                        # Using filepath for Lambda compatibility and to avoid multipart serialization issues
                         file_uploader = gr.File(
                             label="Select PDF Files",
                             file_types=[".pdf"],
                             file_count="multiple",
                             type="filepath",
                             elem_classes=["upload-section"],
-                            height=200
+                            height=200,
+                            interactive=True
                         )
                         
                         clear_previous_checkbox = gr.Checkbox(
@@ -1064,6 +1091,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
     # without launching the interactive UI. This helps the landing page show
     # accurate status when deployed as separate functions.
     try:
+        from starlette.middleware.cors import CORSMiddleware
         starlette_app = getattr(demo, "app", None)
 
         def _status_endpoint():
@@ -1071,6 +1099,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                 model = current_model_name(state)
                 hs = initial_health_state(model)
                 hs, _ = run_health_check(state, hs, force=True)
+                logger.info(f"Status endpoint returning: model={model}, status={hs.get('status')}")
                 return JSONResponse({
                     "model": hs.get("model", "unknown"),
                     "status": hs.get("status", "unknown"),
@@ -1082,8 +1111,17 @@ def build_interface(state: AssistantState) -> gr.Blocks:
 
         if starlette_app is not None:
             starlette_app.add_api_route("/status", _status_endpoint, methods=["GET"])
-    except Exception:
-        logger.debug("Failed to attach /status endpoint to Gradio app")
+            # Ensure CORS is enabled for /status endpoint (critical for Lambda cross-origin)
+            if not any(isinstance(m, CORSMiddleware) for m in starlette_app.user_middleware):
+                starlette_app.add_middleware(
+                    CORSMiddleware,
+                    allow_origins=["*"],
+                    allow_methods=["*"],
+                    allow_headers=["*"]
+                )
+            logger.info("Status endpoint attached to Gradio app with CORS enabled")
+    except Exception as e:
+        logger.warning(f"Failed to attach /status endpoint to Gradio app: {e}")
     
     return demo
 
