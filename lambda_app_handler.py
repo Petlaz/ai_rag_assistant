@@ -339,56 +339,9 @@ def lambda_handler(event, context):
                 })
             }
 
-        # Provide a Lambda-friendly status endpoint for the Gradio app directly.
-        if path == '/status' and http_method == 'GET':
-            logger.info("STATUS CHECK: Returning model status for /status path")
-            try:
-                app = get_app()
-                status_payload = {
-                    "model": "unknown",
-                    "status": "unknown",
-                    "latency_ms": None,
-                    "request_id": safe_get_request_id(context),
-                }
-                if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
-                    status_payload.update({
-                        "message": "Fallback interface active",
-                        "service": "fallback"
-                    })
-                else:
-                    from deployment.app_gradio import current_model_name, initial_health_state, run_health_check
-                    if _app_state is not None:
-                        model = current_model_name(_app_state)
-                        status_payload["model"] = model
-                        health_state = initial_health_state(model)
-                        health_state, _ = run_health_check(_app_state, health_state, force=True)
-                        status_payload["status"] = health_state.get("status", "unknown")
-                        status_payload["latency_ms"] = health_state.get("last_latency")
-                        status_payload["service"] = "gradio"
-                return {
-                    "statusCode": 200,
-                    "headers": {
-                        "Content-Type": "application/json",
-                        "Access-Control-Allow-Origin": "*"
-                    },
-                    "body": json.dumps(status_payload)
-                }
-            except Exception as exc:
-                logger.error("STATUS CHECK failed: %s", exc, exc_info=True)
-                return {
-                    "statusCode": 200,
-                    "headers": {
-                        "Content-Type": "application/json",
-                        "Access-Control-Allow-Origin": "*"
-                    },
-                    "body": json.dumps({
-                        "model": "unknown",
-                        "status": "unknown",
-                        "latency_ms": None,
-                        "error": str(exc),
-                        "request_id": safe_get_request_id(context),
-                    })
-                }
+        # Status endpoint is now handled by the Gradio app's /status route
+        # with proper throttling to prevent timeouts (see deployment/app_gradio.py)
+        # Lambda handler passes all other requests through to Gradio
 
         # Gradio's packaged root template expects `.launch()` state that Lambda
         # does not have. Serve a small shell for root page requests and let
