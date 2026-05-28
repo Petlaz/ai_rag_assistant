@@ -30,6 +30,7 @@ env:
   PYTHON_VERSION: '3.11'
   MLFLOW_TRACKING_URI: 'sqlite:///mlflow.db'
   EVALUATION_DATASET_PATH: './data/samples/queries.jsonl'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   setup-evaluation:

@@ -136,14 +136,14 @@ locals {
     "balanced" = {
       lambda_memory    = 1024
       lambda_timeout   = 60
-      lambda_reserved  = 5
+      lambda_reserved  = -1  # No reservation to avoid AWS account minimum concurrency requirements
       opensearch_instance = "t3.small"
       opensearch_nodes = 2
     }
     "full-scale" = {
       lambda_memory    = 2048
       lambda_timeout   = 120
-      lambda_reserved  = 10
+      lambda_reserved  = -1  # No reservation to avoid account minimum concurrency restrictions
       opensearch_instance = "t3.medium"
       opensearch_nodes = 3
     }
