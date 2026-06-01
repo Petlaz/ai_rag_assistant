@@ -1,0 +1,43 @@
+# Local development requirements (CPU-only, lightweight)
+# This file excludes heavy GPU/ CUDA packages like `torch`/`sentence-transformers`
+# Use this for local Docker builds on low-resource machines.
+
+langchain>=1.2.0,<1.3.0
+langchain-community>=0.4.1,<0.5.0
+opensearch-py>=2.4.0,<3.0.0
+
+# Web Interface & API
+gradio>=6.2.0,<6.3.0
+fastapi>=0.104.0,<1.0.0
+uvicorn[standard]>=0.24.0,<1.0.0
+jinja2>=3.1.0,<4.0.0
+
+# Security & Authentication
+passlib>=1.7.4,<2.0.0
+python-jose[cryptography]>=3.3.0,<4.0.0
+python-multipart>=0.0.6,<1.0.0
+werkzeug>=3.0.0,<4.0.0
+bcrypt>=4.0.0,<5.0.0
+
+# Document Processing (keep lightweight ones)
+pypdf>=3.17.0,<4.0.0
+pytesseract>=0.3.10,<1.0.0
+Pillow>=10.0.0,<11.0.0
+python-magic>=0.4.27
+
+# Data Validation & Configuration
+pydantic>=2.5.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+pyyaml>=6.0.1,<7.0.0
+
+# HTTP & Networking
+requests>=2.31.0,<3.0.0
+httpx>=0.25.0,<1.0.0
+
+# Scientific Computing (smaller footprint)
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+
+# Note: heavy ML packages (sentence-transformers, transformers, torch)
+# are intentionally omitted here for local builds. For full ML features,
+# use `requirements.txt` in production or a machine with GPU support.
