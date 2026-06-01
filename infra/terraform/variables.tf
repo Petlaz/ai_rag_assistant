@@ -62,6 +62,11 @@ variable "ollama_base_url" {
   type        = string
   default     = ""  # Must be set for production deployment
   sensitive   = false
+
+  validation {
+    condition     = trim(var.ollama_base_url) != ""
+    error_message = "ollama_base_url must be set to a reachable Ollama service URL before deploying."
+  }
 }
 
 variable "opensearch_host" {
