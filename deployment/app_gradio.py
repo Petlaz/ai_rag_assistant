@@ -49,6 +49,7 @@ except ImportError:
 import random
 import statistics
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -94,7 +95,7 @@ HEALTH_RED_TOAST_MESSAGE = (
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "prompts" / "research_qa_prompt.yaml"
 GUARDRAILS_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "prompts" / "guardrails.yaml"
-SCHEMA_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "indexing" / "schema.yaml"
+SCHEMA_PATH = Path(__file__).resolve().parent.parent / "rag_pipeline" / "indexing" / "schema.json"
 
 
 @dataclass
@@ -498,7 +499,7 @@ def load_guardrails(path: Path) -> Dict[str, Any]:
         return yaml.safe_load(handle)
 
 
-def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) -> Tuple[str, AssistantState]:
+def ingest_files(files: Any, clear_previous: bool, state: AssistantState, health_state: Optional[Dict[str, Any]] = None) -> Tuple[str, AssistantState, Dict[str, Any], str]:
     """
     Process uploaded files through the RAG ingestion pipeline.
     
@@ -506,34 +507,84 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
     embedding generation, and indexing into OpenSearch for retrieval.
     
     Args:
-        files: List of file paths to process (can be None/empty in some Gradio versions)
+        files: Uploaded files payload from Gradio; may be None, a path string,
+               a list of paths, a file-like object, or a dict payload.
         clear_previous: If True, clear all previous documents before adding new ones
         state: Current application state with dependencies
-        
+        health_state: Optional cached health state to refresh after ingestion
+
     Returns:
-        Tuple of (status_message, updated_state)
+        Tuple of (status_message, updated_state, updated_health_state, status_html)
         
     Note:
         This function processes documents through the full ingestion pipeline
         including text extraction, metadata generation, and search indexing.
         Lambda-compatible: Handles edge cases where files might be None or improperly formatted.
     """
-    
-    # Defensive check: handle None, empty, or improperly formatted files parameter
-    # (Workaround for Gradio 6.2.0 file handling inconsistencies in Lambda)
-    if files is None:
-        logger.warning("Ingest_files called with files=None")
-        return "Error: No files provided", state
-    
-    # Handle case where files might be a dict or other non-list type (Gradio quirk)
-    if not isinstance(files, (list, tuple)):
-        logger.warning(f"Files parameter is not a list: {type(files)} = {files}")
+
+    def _normalize_uploaded_files(payload: Any) -> List[Any]:
+        if payload is None:
+            return []
+        if isinstance(payload, (str, Path)):
+            return [str(payload)]
+        if isinstance(payload, dict):
+            return [payload]
+        if hasattr(payload, "read"):
+            return [payload]
+        if isinstance(payload, (list, tuple)):
+            normalized = []
+            for item in payload:
+                if isinstance(item, (str, Path, dict)) or hasattr(item, "read"):
+                    normalized.append(item)
+                else:
+                    normalized.append(item)
+            return normalized
+        return [payload]
+
+    def _resolve_uploaded_file(item: Any, idx: int) -> Path:
+        if isinstance(item, (str, Path)):
+            return Path(item)
+
+        if isinstance(item, dict):
+            filename = item.get("name") or item.get("filename") or f"uploaded_{idx}.pdf"
+            content = item.get("data") or item.get("content")
+            if content is None:
+                raise ValueError("Uploaded file payload missing content")
+        elif hasattr(item, "read"):
+            filename = getattr(item, "name", f"uploaded_{idx}.pdf")
+            content = item.read()
+        else:
+            raise ValueError(f"Unsupported uploaded file type: {type(item)}")
+
+        if isinstance(content, str):
+            content = content.encode("utf-8")
+        if not isinstance(content, (bytes, bytearray)):
+            raise ValueError("Uploaded file content must be bytes or string")
+
+        suffix = Path(filename).suffix or ".pdf"
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        temp_file.write(content)
+        temp_file.flush()
+        temp_file.close()
+        return Path(temp_file.name)
+
+    # Defensive normalization for Gradio file upload payload variations
+    files = _normalize_uploaded_files(files)
+    if not files:
+        logger.warning("Ingest_files called with files=None or empty payload")
+        return "Error: No files provided", state, health_state or initial_health_state(current_model_name(state)), render_model_status(current_model_name(state), "unknown", None)
+
+    # Resolve all uploaded files to actual local paths before validation
+    resolved_files: List[Path] = []
+    for idx, file_item in enumerate(files, start=1):
         try:
-            files = list(files) if files else []
-        except Exception as e:
-            logger.error(f"Cannot convert files to list: {e}")
-            return f"Error: Invalid file format: {type(files)}", state
-    
+            path = _resolve_uploaded_file(file_item, idx)
+            resolved_files.append(path)
+        except Exception as exc:
+            error_msg = f"ERROR: Failed to process uploaded file payload: {exc}"
+            logger.error(error_msg, exc_info=True)
+            return error_msg, state, health_state or initial_health_state(current_model_name(state)), render_model_status(current_model_name(state), "unknown", None)
+
     # Security checks
     if SECURITY_ENABLED and security_middleware:
         # Rate limiting check for file uploads
@@ -543,70 +594,82 @@ def ingest_files(files: List[str], clear_previous: bool, state: AssistantState) 
         )
         if not is_allowed:
             error_message = f"Upload rate limit exceeded. {limit_info.get('error', '')}"
-            return error_message, state
+            return error_message, state, health_state or initial_health_state(current_model_name(state)), render_model_status(current_model_name(state), "unknown", None)
             
         # Validate each uploaded file
-        for file_path in files:
-            if file_path:
-                path = Path(file_path)
-                try:
-                    file_size = path.stat().st_size
-                    file_content = path.read_bytes()
-                    
-                    is_valid, error_msg = security_middleware.sanitizer.validate_file_upload(
-                        path.name, file_size, file_content
-                    )
-                    if not is_valid:
-                        return f"File validation failed: {error_msg}", state
+        for path in resolved_files:
+            try:
+                file_size = path.stat().st_size
+                file_content = path.read_bytes()
+                
+                is_valid, error_msg = security_middleware.sanitizer.validate_file_upload(
+                    path.name, file_size, file_content
+                )
+                if not is_valid:
+                    return f"File validation failed: {error_msg}", state, health_state or initial_health_state(current_model_name(state)), render_model_status(current_model_name(state), "unknown", None)
                         
-                except Exception as e:
-                    return f"File validation error: {str(e)}", state
+            except Exception as e:
+                return f"File validation error: {str(e)}", state, health_state or initial_health_state(current_model_name(state)), render_model_status(current_model_name(state), "unknown", None)
 
     # Cache progress object to avoid repeated instantiation
-    if not files:
-        return "No file uploaded yet.", state
+    if not resolved_files:
+        return "No file uploaded yet.", state, health_state or initial_health_state(current_model_name(state)), render_model_status(current_model_name(state), "unknown", None)
 
-    logger.info(f"Starting ingestion of {len(files)} file(s)")
+    logger.info(f"Starting ingestion of {len(resolved_files)} file(s)")
     messages: List[str] = []
     progress = gr.Progress(track_tqdm=True)
     
-    if clear_previous and files:
+    if clear_previous and resolved_files:
         messages.append("Clearing previous documents from index...")
 
-    for idx, file_path in enumerate(files, start=1):
-        path = Path(file_path)
-        logger.info(f"Processing file {idx}/{len(files)}: {path.name}")
-        progress(
-            (idx - 1) / max(len(files), 1),
-            desc=f"Ingesting {path.name}",
-        )
-        try:
-            # Clear previous documents only for the first file in the batch
-            should_clear = clear_previous and idx == 1
-            ingest_and_index_document(
-                path=path,
-                embedding_model=state.deps.embedding_model,
-                opensearch_client=state.deps.opensearch_client,
-                index_name=state.deps.index_name,
-                clear_previous=should_clear,
+    temp_paths: List[Path] = []
+    try:
+        for idx, path in enumerate(resolved_files, start=1):
+            if path not in temp_paths and path.exists():
+                temp_paths.append(path)
+
+            logger.info(f"Processing file {idx}/{len(resolved_files)}: {path.name}")
+            progress(
+                (idx - 1) / max(len(files), 1),
+                desc=f"Ingesting {path.name}",
             )
-            if should_clear:
-                messages.append("Index cleared successfully.")
-            messages.append(f"Ingestion succeeded for {path.name}.")
-            logger.info(f"Successfully ingested {path.name}")
-        except NotImplementedError as error:
-            messages.append(
-                f"Warning: Ingestion not implemented yet for {path.name}: {str(error)}"
-            )
-        except Exception as exc:  # pragma: no cover - defensive logging only
-            error_msg = f"ERROR: Failed to ingest {path.name}: {exc}"
-            messages.append(error_msg)
-            logger.error(error_msg, exc_info=True)
+            try:
+                # Clear previous documents only for the first file in the batch
+                should_clear = clear_previous and idx == 1
+                ingest_and_index_document(
+                    path=path,
+                    embedding_model=state.deps.embedding_model,
+                    opensearch_client=state.deps.opensearch_client,
+                    index_name=state.deps.index_name,
+                    clear_previous=should_clear,
+                )
+                if should_clear:
+                    messages.append("Index cleared successfully.")
+                messages.append(f"Ingestion succeeded for {path.name}.")
+                logger.info(f"Successfully ingested {path.name}")
+            except NotImplementedError as error:
+                messages.append(
+                    f"Warning: Ingestion not implemented yet for {path.name}: {str(error)}"
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging only
+                error_msg = f"ERROR: Failed to ingest {path.name}: {exc}"
+                messages.append(error_msg)
+                logger.error(error_msg, exc_info=True)
+    finally:
+        for temp_path in temp_paths:
+            if temp_path.exists() and temp_path.name.startswith("tmp"):
+                try:
+                    temp_path.unlink()
+                except Exception:
+                    pass
 
     progress(1.0, desc="Ingestion complete")
     result = "\n".join(messages)
     logger.info(f"Ingestion complete. Result: {result[:200]}...")
-    return result, state
+    if health_state is None:
+        health_state = initial_health_state(current_model_name(state))
+    health_state, status_html = run_health_check(state, health_state, force=True)
+    return result, state, health_state, status_html
 
 
 def answer_question(
@@ -950,8 +1013,8 @@ def build_interface(state: AssistantState) -> gr.Blocks:
 
                 file_uploader.upload(
                     fn=ingest_files,
-                    inputs=[file_uploader, clear_previous_checkbox, assistant_state],
-                    outputs=[ingestion_status, assistant_state],
+                    inputs=[file_uploader, clear_previous_checkbox, assistant_state, health_state],
+                    outputs=[ingestion_status, assistant_state, health_state, model_status_html],
                 )
 
             with gr.Tab("Research Chat", id="chat_tab") as chat_tab:
@@ -1092,57 +1155,57 @@ def build_interface(state: AssistantState) -> gr.Blocks:
     # accurate status when deployed as separate functions.
     try:
         starlette_app = getattr(demo, "app", None)
-
-        def _status_endpoint():
-            """Simple status endpoint for landing page polling.
-            
-            Returns JSON with model name, health status, and latency.
-            Does NOT perform health check to avoid timeout issues.
-            """
-            try:
-                model = current_model_name(state)
-                # Get last known status without forcing a new health check
-                # (prevents 180s Lambda timeout)
-                hs = initial_health_state(model)
-                
-                # Only run health check if we haven't checked recently
-                # to avoid stacking timeouts
-                last_check = getattr(_status_endpoint, '_last_check_time', 0)
-                current_time = time.time()
-                
-                if current_time - last_check > 10:  # Check every 10 seconds max
-                    try:
-                        # Use timeout to prevent hangs
-                        hs, _ = run_health_check(state, hs, force=False)
-                        _status_endpoint._last_check_time = current_time
-                    except Exception as hc_err:
-                        logger.warning(f"Health check failed: {hc_err}")
-                        # Use last known state on health check failure
-                
-                logger.debug(f"Status returning: model={model}, status={hs.get('status')}")
-                return JSONResponse({
-                    "model": hs.get("model", "unknown"),
-                    "status": hs.get("status", "unknown"),
-                    "latency_ms": hs.get("last_latency"),
-                })
-            except Exception as exc:  # pragma: no cover - defensive
-                logger.exception("/status endpoint error: %s", exc)
-                return JSONResponse({
-                    "model": "unknown",
-                    "status": "unknown",
-                    "error": str(exc)
-                }, status_code=500)
-
         if starlette_app is not None:
-            # Simply add the endpoint without middleware complexity
-            starlette_app.add_api_route("/status", _status_endpoint, methods=["GET"])
-            logger.info("Status endpoint attached to Gradio app")
+            attach_status_endpoint(starlette_app, state)
         else:
             logger.warning("Gradio app object not available for status endpoint")
     except Exception as e:
         logger.warning(f"Failed to attach /status endpoint to Gradio app: {e}", exc_info=True)
     
     return demo
+
+
+def attach_status_endpoint(starlette_app: Any, state: AssistantState) -> None:
+    """Attach a lightweight status endpoint to the Gradio Starlette app."""
+
+    if starlette_app is None:
+        return
+
+    if any(getattr(route, "path", None) == "/status" for route in starlette_app.routes):
+        return
+
+    def _status_endpoint():
+        try:
+            model = current_model_name(state)
+            hs = initial_health_state(model)
+            last_check = getattr(_status_endpoint, "_last_check_time", 0)
+            current_time = time.time()
+
+            if current_time - last_check > 10:
+                try:
+                    hs, _ = run_health_check(state, hs, force=False)
+                    _status_endpoint._last_check_time = current_time
+                except Exception as hc_err:
+                    logger.warning(f"Health check failed: {hc_err}")
+
+            logger.debug(f"Status returning: model={model}, status={hs.get('status')}")
+            return JSONResponse(
+                {
+                    "model": hs.get("model", "unknown"),
+                    "status": hs.get("status", "unknown"),
+                    "latency_ms": hs.get("last_latency"),
+                }
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.exception("/status endpoint error: %s", exc)
+            return JSONResponse(
+                {"model": "unknown", "status": "unknown", "error": str(exc)},
+                status_code=500,
+            )
+
+    starlette_app.add_api_route("/status", _status_endpoint, methods=["GET"])
+    starlette_app.add_api_route("/health", lambda: JSONResponse({"status": "ok"}), methods=["GET"])
+    logger.info("Status endpoint attached to Gradio app")
 
 
 def load_dependencies() -> AssistantDependencies:
@@ -1445,11 +1508,19 @@ def main() -> None:
     state = AssistantState(deps=dependencies, prompt_template=prompts)
     app = build_interface(state)
     share_env = os.getenv("GRADIO_SHARE_LINK", "false").lower()
-    app.launch(
+    server_app, local_url, share_url = app.launch(
         server_name="0.0.0.0",
         server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
-        share=share_env in {"1", "true", "yes"}
+        share=share_env in {"1", "true", "yes"},
+        prevent_thread_lock=True,
     )
+    attach_status_endpoint(server_app, state)
+
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

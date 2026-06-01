@@ -192,18 +192,26 @@ MLFLOW_TRACKING_URI: 'sqlite:///mlflow.db'
 
 ### Manual Deployment
 
+GitHub Actions workflow file: `.github/workflows/cicd-03-aws-deployment.yml`
+
 ```bash
-# Deploy to staging with ultra-budget mode
-gh workflow run deploy-aws.yml \
+# Ensure GitHub CLI is authenticated first
+gh auth login
+
+# Deploy to staging with balanced mode
+gh workflow run cicd-03-aws-deployment.yml \
   -f environment=staging \
-  -f deployment_mode=ultra-budget
+  -f deployment_mode=balanced \
+  -f force_deploy=false
 
 # Force production deployment (skip validation)
-gh workflow run deploy-aws.yml \
+gh workflow run cicd-03-aws-deployment.yml \
   -f environment=production \
   -f deployment_mode=balanced \
   -f force_deploy=true
 ```
+
+> Required GitHub secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `TERRAFORM_STATE_BUCKET`
 
 ### Model Evaluation
 
