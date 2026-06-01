@@ -198,7 +198,7 @@ Note: Gradio does not use `.launch()` in Lambda, so we return HTML through our o
 | Terraform state error | Confirm `TERRAFORM_STATE_BUCKET` matches your S3 bucket name |
 | 500 from Function URL | Check CloudWatch logs in the Lambda console |
 | Workflow fails | Review the GitHub Actions run logs and ensure secrets are set |
-| App shows `LLM Status: Checking...` | Confirm the app Function URL is correct and `OLLAMA_BASE_URL` is reachable from Lambda |
+| App shows `LLM Status: Checking...` | Confirm the app Function URL is correct and `OLLAMA_BASE_URL` is reachable from Lambda; check `/status` for `error` details. |
 | Image push failure | Ensure GitHub Container Registry and AWS ECR credentials are available |
 
 ---

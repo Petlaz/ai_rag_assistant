@@ -281,6 +281,76 @@ def safe_get_request_id(context):
     except (AttributeError, TypeError):
         return "local"
 
+
+def _lambda_status_response():
+    """Return a stable Lambda-level /status JSON response."""
+    try:
+        app = get_app()
+        if hasattr(app, '__class__') and app.__class__.__name__ == 'FallbackApp':
+            return {
+                "statusCode": 503,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                },
+                "body": json.dumps({
+                    "model": "unknown",
+                    "status": "unknown",
+                    "error": "Gradio app failed to initialize",
+                }),
+            }
+
+        from deployment.app_gradio import current_model_name, initial_health_state, run_health_check
+
+        if _app_state is None:
+            return {
+                "statusCode": 503,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                },
+                "body": json.dumps({
+                    "model": "unknown",
+                    "status": "unknown",
+                    "error": "Application state not available yet",
+                }),
+            }
+
+        health_state = initial_health_state(current_model_name(_app_state))
+        health_state, _ = run_health_check(_app_state, health_state, force=True)
+        response_payload = {
+            "model": health_state.get("model", "unknown"),
+            "status": health_state.get("status", "unknown"),
+            "latency_ms": health_state.get("last_latency"),
+            "status_code": health_state.get("last_status_code"),
+        }
+        if health_state.get("error"):
+            response_payload["error"] = health_state.get("error")
+
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
+            "body": json.dumps(response_payload),
+        }
+    except Exception as exc:
+        logger.exception("Lambda /status helper failed: %s", exc)
+        return {
+            "statusCode": 500,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
+            "body": json.dumps({
+                "model": "unknown",
+                "status": "unknown",
+                "error": str(exc),
+            }),
+        }
+
+
 def lambda_handler(event, context):
     """
     AWS Lambda handler for Function URLs
@@ -338,6 +408,11 @@ def lambda_handler(event, context):
                     "service": "lambda"
                 })
             }
+
+        # Handle Lambda-level /status requests directly for reliability
+        if path == '/status' and http_method == 'GET':
+            logger.info("STATUS CHECK: Returning Lambda-level /status response")
+            return _lambda_status_response()
 
         # Status endpoint is now handled by the Gradio app's /status route
         # with proper throttling to prevent timeouts (see deployment/app_gradio.py)

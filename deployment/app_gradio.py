@@ -300,6 +300,8 @@ def initial_health_state(model_name: str) -> Dict[str, Any]:
         "status_since": now,
         "last_checked": None,
         "last_latency": None,
+        "last_status_code": None,
+        "error": None,
         "latencies": [],
         "next_allowed": 0.0,
         "consecutive_failures": 0,
@@ -422,9 +424,13 @@ def run_health_check(
 
     # If the adapter is a stub or contains an error_detail field, capture it
     adapter_error: Optional[str] = None
+    if health_result is not None:
+        adapter_error = getattr(health_result, "error", None)
+
     try:
         # Some fallback stubs expose `error_detail` or `service_name` for diagnostics
-        adapter_error = getattr(adapter, "error_detail", None) or getattr(adapter, "service_name", None)
+        if not adapter_error:
+            adapter_error = getattr(adapter, "error_detail", None) or getattr(adapter, "service_name", None)
         # Normalize long messages
         if isinstance(adapter_error, str) and len(adapter_error) > 240:
             adapter_error = adapter_error[:237] + "..."
@@ -442,6 +448,8 @@ def run_health_check(
     health_state["model"] = model_name
     health_state["last_checked"] = now
     health_state["last_latency"] = latency_ms
+    health_state["last_status_code"] = getattr(health_result, "status_code", None)
+    health_state["error"] = adapter_error
 
     if status == "red":
         health_state["consecutive_failures"] = health_state.get("consecutive_failures", 0) + 1
@@ -1199,9 +1207,13 @@ def attach_status_endpoint(starlette_app: Any, state: AssistantState) -> None:
                 "model": health_state.get("model", "unknown"),
                 "status": health_state.get("status", "unknown"),
                 "latency_ms": health_state.get("last_latency"),
+                "status_code": health_state.get("last_status_code"),
             }
+            status_error = health_state.get("error")
             if error_detail:
-                response_payload["error"] = error_detail
+                status_error = error_detail
+            if status_error:
+                response_payload["error"] = status_error
 
             logger.debug(
                 "Status returning: model=%s, status=%s, error=%s",
