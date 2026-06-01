@@ -64,7 +64,7 @@ variable "ollama_base_url" {
   sensitive   = false
 
   validation {
-    condition     = trim(var.ollama_base_url) != ""
+    condition     = trimspace(var.ollama_base_url) != ""
     error_message = "ollama_base_url must be set to a reachable Ollama service URL before deploying."
   }
 }
