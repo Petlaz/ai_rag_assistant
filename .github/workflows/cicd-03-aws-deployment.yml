@@ -113,6 +113,13 @@ jobs:
             echo "ERROR: ollama_base_url is unset in infra/terraform/terraform.tfvars"
             can_deploy="false"
           fi
+
+          if [ "${{ steps.set-env.outputs.environment }}" != "local" ]; then
+            if grep -qE '^[[:space:]]*ollama_base_url[[:space:]]*=[[:space:]]*"[[:space:]]*(http://localhost:11434|http://127\.0\.0\.1[:/]?)[[:space:]]*"[[:space:]]*$' infra/terraform/terraform.tfvars; then
+              echo "ERROR: ollama_base_url uses localhost or 127.0.0.1. Use a reachable Ollama service URL in staging/production."
+              can_deploy="false"
+            fi
+          fi
         else
           echo "ERROR: infra/terraform/terraform.tfvars file not found"
           can_deploy="false"
