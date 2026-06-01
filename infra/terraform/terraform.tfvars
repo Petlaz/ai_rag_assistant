@@ -24,7 +24,7 @@ worker_image_uri   = "ghcr.io/petlaz/rag-worker:latest"
 
 ollama_base_url = "https://ollama.example.com"  # Set to a reachable Ollama service URL (not localhost)
 
-opensearch_host = ""  # TODO: Set your OpenSearch endpoint
+opensearch_host = "https://opensearch.example.com:9200"  # Set to a reachable OpenSearch endpoint (not localhost)
 
 opensearch_username = "admin"
 opensearch_password = ""  # TODO: Set your OpenSearch password
