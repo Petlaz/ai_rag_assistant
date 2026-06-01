@@ -29,7 +29,10 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any, Dict, Iterable
+
+logger = logging.getLogger(__name__)
 
 try:
     from opensearchpy import OpenSearch
@@ -78,8 +81,29 @@ def create_client(config: OpenSearchConfig):
 def ensure_index(client: Any, index_name: str, mapping: Dict[str, Any]) -> None:
     """Create the index with the provided mapping if it does not already exist."""
 
-    if not client.indices.exists(index=index_name):
-        client.indices.create(index=index_name, body=mapping)
+    if client.indices.exists(index=index_name):
+        try:
+            existing_mapping = client.indices.get_mapping(index=index_name)
+            index_mapping = existing_mapping.get(index_name, {}).get("mappings", {})
+            props = index_mapping.get("properties", {})
+            embedding_type = props.get("embedding", {}).get("type")
+            if embedding_type != "knn_vector":
+                logger.warning(
+                    "Existing index '%s' has embedding field type %s; recreating index with correct schema.",
+                    index_name,
+                    embedding_type,
+                )
+                client.indices.delete(index=index_name)
+                client.indices.create(index=index_name, body=mapping)
+        except Exception as exc:
+            logger.warning(
+                "Failed to verify or recreate existing index '%s': %s",
+                index_name,
+                exc,
+            )
+        return
+
+    client.indices.create(index=index_name, body=mapping)
 
 
 def bulk_index_documents(

@@ -29,16 +29,14 @@ services:
     security_opt:
       - seccomp:unconfined
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      disable: true
 
   rag-app:
     build:
       context: ../../..
       dockerfile: deployment/aws/docker/Dockerfile.app
+      args:
+        DEV: "1"
     ports:
       - "7860:7860"
     depends_on:
@@ -67,6 +65,7 @@ services:
       start_period: 120s
 
   rag-worker:
+    profiles: ["worker"]
     build:
       context: ../../..
       dockerfile: deployment/aws/docker/Dockerfile.worker
@@ -88,6 +87,8 @@ services:
     build:
       context: ../../..
       dockerfile: deployment/aws/docker/Dockerfile.landing
+      args:
+        DEV: "1"
     ports:
       - "3000:3000"
     environment:

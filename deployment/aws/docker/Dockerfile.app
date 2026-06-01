@@ -22,8 +22,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt requirements-lambda.txt ./
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-lambda.txt
+ARG DEV=0
+COPY requirements.txt requirements-lambda.txt requirements.local.txt ./
+RUN if [ "$DEV" = "1" ]; then \
+            pip install --no-cache-dir -r requirements.local.txt -r requirements-lambda.txt ; \
+        else \
+            pip install --no-cache-dir -r requirements.txt -r requirements-lambda.txt ; \
+        fi
 
 COPY . /app
 COPY lambda_app_handler.py /app/
