@@ -22,7 +22,7 @@ worker_image_uri   = "ghcr.io/petlaz/rag-worker:latest"
 # CRITICAL: EXTERNAL SERVICE CONFIGURATION
 # ============================================================================
 
-ollama_base_url = ""  # TODO: Set your Ollama service URL
+ollama_base_url = "https://ollama.example.com"  # Set to a reachable Ollama service URL (not localhost)
 
 opensearch_host = ""  # TODO: Set your OpenSearch endpoint
 
