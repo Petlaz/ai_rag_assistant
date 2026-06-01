@@ -1350,12 +1350,10 @@ def load_dependencies() -> AssistantDependencies:
             "Ollama Chat",
             f"Ollama configuration error: {exc}. Set OLLAMA_BASE_URL and OLLAMA_MODEL."
         )
-        # In non-production environments, provide a safe mock adapter so the
-        # landing page and UI show a healthy LLM status even when Ollama isn't
-        # reachable. This avoids a broken user experience in staging while
-        # keeping production strict about configuration.
+        # Only allow the mock adapter in local development. Staging and
+        # production must have a reachable Ollama endpoint configured.
         environment = os.getenv("ENVIRONMENT", "local")
-        if environment != "production":
+        if environment == "local":
             try:
                 # Lightweight mock client mimicking OllamaClient interface
                 class _MockClient:
@@ -1471,9 +1469,9 @@ def update_llm_settings(
     base_url = os.getenv("OLLAMA_BASE_URL")
     if not base_url:
         environment = os.getenv("ENVIRONMENT", "local")
-        if environment == "production":
+        if environment not in {"local", "development"}:
             return state, (
-                "ERROR: OLLAMA_BASE_URL environment variable is required. "
+                "ERROR: OLLAMA_BASE_URL environment variable is required for staging and production. "
                 "Set it to the Ollama service URL (e.g., from AWS or container orchestration)."
             )
         # Local development fallback

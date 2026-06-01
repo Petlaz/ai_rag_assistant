@@ -159,6 +159,8 @@ Expected response: HTTP `200`.
 
 > If the app page loads but the model status stays stuck on `Checking...`, verify the Lambda app URL is the correct `app` function URL and that `OLLAMA_BASE_URL` points to a reachable Ollama service from Lambda.
 >
+> In staging or production deployments, `OLLAMA_BASE_URL` must be set in `infra/terraform/terraform.tfvars` or passed through your Terraform variables. `http://localhost:11434` will not work from Lambda.
+>
 > The live landing page may use a different Function URL than the actual Gradio app URL.
 
 ---
