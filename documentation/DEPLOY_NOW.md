@@ -25,93 +25,165 @@ Each function gets a **Function URL** with `NONE` authorization (public access).
 
 ---
 
-## **Prerequisites (One-Time Setup)**
+## **Beginner AWS Setup: Start Over from Scratch**
 
-### Step 1: AWS Account + IAM User (10 minutes)
+If you are new to AWS, follow these step-by-step instructions to create the IAM user, access key, secret key, and S3 bucket required by this project.
+
+### Step 1: Create an AWS Account
+1. Go to https://aws.amazon.com/ and sign up for a new AWS account.
+2. Complete the registration steps, including email verification and phone number verification.
+3. Add a payment method when prompted. The Free Tier is suitable for this project.
+
+### Step 2: Create an IAM User for Deployment
+1. Open the AWS Console: https://console.aws.amazon.com/
+2. Search for **IAM** and open the IAM service.
+3. In the left menu, click **Users**.
+4. Click **Add users**.
+5. Enter a user name, such as `ai-rag-assistant-deployer`.
+6. Under **Select AWS access type**, check **Programmatic access**.
+7. Click **Next: Permissions**.
+8. Choose **Attach existing policies directly**.
+9. Search for and select **AdministratorAccess**.
+   - This gives the user full permissions for deployment.
+   - For a stricter setup later, use least-privilege permissions.
+10. Click **Next: Tags** (optional), then **Next: Review**.
+11. Click **Create user**.
+12. Download the CSV file or copy both values:
+   - `Access key ID`
+   - `Secret access key`
+
+> Save these values securely. The secret access key is shown only once.
+
+### Step 3: Create an S3 Bucket for Terraform State
+Terraform stores the deployment state in an S3 bucket. Create one now.
+
+1. In the AWS Console, search for **S3** and open the S3 dashboard.
+2. Click **Create bucket**.
+3. For **Bucket name**, choose a globally unique name, for example:
+   - `ai-rag-assistant-terraform-123456`
+4. For **Region**, select `us-east-1`.
+5. Under **Object Ownership**, choose **ACLs disabled**.
+6. Leave **Block all public access** enabled.
+7. Click **Create bucket**.
+
+### Step 4: Install and Configure AWS CLI (Optional)
+If you want to use AWS CLI locally, install it and configure your credentials.
+
 ```bash
-# 1. Create AWS account: https://aws.amazon.com/
-# 2. Create IAM user: AWS Console -> IAM -> Users -> Create User
-#    Name: ai-rag-assistant-deployer
-#    Policy: AdministratorAccess
-#    Create access key (CLI use case) -> Download CSV immediately
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+sudo installer -pkg AWSCLIV2.pkg -target /
 ```
 
-### Step 2: S3 Bucket for Terraform State
+Then run:
+
 ```bash
-# AWS Console -> S3 -> Create bucket
-#   Name: ai-rag-assistant-terraform-<random-number>
-#   Region: us-east-1
-#   Block all public access: YES
-#   Versioning: Enabled
+aws configure
 ```
 
-### Step 3: GitHub Secrets (5 minutes)
-Go to `https://github.com/Petlaz/ai_rag_assistant` -> Settings -> Secrets -> Actions
+Enter:
+- `AWS Access Key ID`: your IAM access key ID
+- `AWS Secret Access Key`: your secret access key
+- `Default region name`: `us-east-1`
+- `Default output format`: `json`
+
+### Step 5: Add GitHub Secrets for CI/CD
+Your GitHub Actions workflow needs the AWS credentials and S3 bucket name.
+
+1. Open your repository on GitHub: `https://github.com/Petlaz/ai_rag_assistant`
+2. Go to **Settings** -> **Secrets and variables** -> **Actions**.
+3. Click **New repository secret**.
+4. Create these secrets:
 
 | Secret | Value |
 |--------|-------|
-| `AWS_ACCESS_KEY_ID` | From CSV (starts with `AKIA...`) |
-| `AWS_SECRET_ACCESS_KEY` | From CSV (40-char string) |
-| `TERRAFORM_STATE_BUCKET` | `ai-rag-assistant-terraform-<your-number>` |
+| `AWS_ACCESS_KEY_ID` | Your IAM access key ID |
+| `AWS_SECRET_ACCESS_KEY` | Your IAM secret access key |
+| `TERRAFORM_STATE_BUCKET` | Your S3 bucket name, e.g. `ai-rag-assistant-terraform-123456` |
+
+---
+
+## **When to Add Permissions and When to Create Lambda Functions**
+
+As a beginner, it helps to think of these steps in order:
+
+1. **Add permissions first**
+   - Create the IAM deployment user and generate the access key + secret key.
+   - Add those credentials to GitHub Secrets before you deploy.
+   - The deployment user needs permissions so GitHub Actions can create AWS resources.
+
+2. **Create Lambda functions later**
+   - You do not manually create Lambda functions first.
+   - Terraform will create the Lambda functions during deployment.
+   - This happens when the GitHub Actions workflow runs and applies Terraform.
+
+So the safe order is:
+- set up AWS account and IAM user,
+- create the S3 bucket,
+- add GitHub Secrets,
+- then push code and let the workflow create Lambda functions for you.
 
 ---
 
 ## **Deploy**
 
+After setup, deploy by pushing code to GitHub:
+
 ```bash
 git push origin main
 ```
 
-That's it. GitHub Actions runs the full pipeline:
-1. **validate-deployment** — checks required files exist
-2. **build-and-push** — builds 3 Docker images, pushes to GHCR + ECR
-3. **deploy-infrastructure** — `terraform apply` creates Lambda functions + Function URLs
-4. **deploy-application** — runs validation scripts
-5. **post-deployment-tests** — curls the Function URL, expects 200 + HTML
+This triggers the GitHub Actions workflow, which:
+1. Validates the repository and environment
+2. Builds Docker images
+3. Pushes images to GHCR and AWS ECR
+4. Runs Terraform to create/update Lambda functions
+5. Performs post-deployment tests
 
 ### Manual trigger
-Go to Actions -> "Deploy to AWS" -> Run workflow -> pick environment/mode.
+In GitHub Actions, open the **Deploy to AWS** workflow and click **Run workflow**.
+
+---
+
+## **Verify the Deployment**
+
+Use the Lambda Function URL from Terraform output or the AWS Console.
+
+```bash
+APP_URL="https://<your-id>.lambda-url.us-east-1.on.aws/"
+
+curl -s "$APP_URL/health" | python -m json.tool
+curl -s -o /dev/null -w "%{http_code}" "$APP_URL"
+```
+
+Expected response: HTTP `200`.
+
+> If the app page loads but the model status stays stuck on `Checking...`, verify the Lambda app URL is the correct `app` function URL and that `OLLAMA_BASE_URL` points to a reachable Ollama service from Lambda.
+>
+> The live landing page may use a different Function URL than the actual Gradio app URL.
+
+---
+
+## **Start Over Safely**
+
+If you want to reset your deployment and start again:
+1. Delete the Lambda functions in AWS Lambda.
+2. Delete the S3 bucket used for Terraform state.
+3. Delete any project-related ECR repositories.
+4. Remove old GitHub secrets if you want to rotate keys.
+5. Create a new IAM user and a new S3 bucket by repeating the previous steps.
 
 ---
 
 ## **What Happens Inside Lambda**
 
-The app container runs `lambda_app_handler.lambda_handler` via `awslambdaric`.
+The app container runs `lambda_app_handler.lambda_handler` through `awslambdaric`.
 
 **Request routing:**
 - `GET /health` -> 200 JSON (`{"status": "healthy"}`)
-- `GET /` (and other page requests) -> 200 HTML (fallback page)
+- `GET /` -> 200 HTML for the web page
 - `/api/*`, `/queue/*`, `/config` -> Mangum/Gradio ASGI handler
 
-**Key detail:** Gradio's Jinja2 templates don't work in Lambda (no `.launch()` call), so page requests return our own HTML. See `documentation/LESSONS_LEARNED.md` for the full story.
-
----
-
-## **Verify It's Working**
-
-```bash
-# Get your Function URL from Terraform output or AWS Console
-APP_URL="https://<your-id>.lambda-url.us-east-1.on.aws/"
-
-# Health check
-curl -s "$APP_URL/health" | python -m json.tool
-
-# Main page (should return HTML with "Quest Analytics")
-curl -s -o /dev/null -w "%{http_code}" "$APP_URL"
-# Expected: 200
-```
-
----
-
-## **Costs (Ultra-Budget Mode)**
-
-| Service | Monthly Cost |
-|---------|-------------|
-| Lambda | $0-5 (pay per request) |
-| ECR | $1-2 (image storage) |
-| S3 | $0.50 (Terraform state) |
-| CloudWatch | $2-5 (logs) |
-| **Total** | **$4-13/month** |
+Note: Gradio does not use `.launch()` in Lambda, so we return HTML through our own routing layer.
 
 ---
 
@@ -119,20 +191,20 @@ curl -s -o /dev/null -w "%{http_code}" "$APP_URL"
 
 | Problem | Fix |
 |---------|-----|
-| 500 from Function URL | Check CloudWatch logs: Lambda console -> Monitor -> View logs |
-| `000` response code | Cold start timeout — increase Lambda timeout or retry after 30s |
-| Terraform state error | Verify S3 bucket name matches `TERRAFORM_STATE_BUCKET` secret |
-| Image not found | Check GHCR packages are public: github.com -> Packages |
-| Post-deploy test fails | Check if Function URL returns 200 — `curl -v $APP_URL` |
+| Missing AWS keys | Recreate the IAM access key in IAM and re-add GitHub secrets |
+| Terraform state error | Confirm `TERRAFORM_STATE_BUCKET` matches your S3 bucket name |
+| 500 from Function URL | Check CloudWatch logs in the Lambda console |
+| Workflow fails | Review the GitHub Actions run logs and ensure secrets are set |
+| App shows `LLM Status: Checking...` | Confirm the app Function URL is correct and `OLLAMA_BASE_URL` is reachable from Lambda |
+| Image push failure | Ensure GitHub Container Registry and AWS ECR credentials are available |
 
 ---
 
-## **Useful Links**
+## **Helpful Links**
 
-- **Full deployment guide**: `documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md`
-- **Lessons learned**: `documentation/LESSONS_LEARNED.md`
-- **Terraform config**: `infra/terraform/`
-- **Docker configs**: `deployment/aws/docker/`
-- **CI/CD workflow**: `.github/workflows/cicd-03-aws-deployment.yml`
-- **Lambda handler**: `lambda_app_handler.py`
-- **Rollback**: `scripts/deployment/rollback_system.py`
+- `infra/terraform/` — Terraform deployment configuration
+- `.github/workflows/cicd-03-aws-deployment.yml` — CI/CD workflow
+- `deployment/aws/docker/` — Docker files for Lambda images
+- `lambda_app_handler.py` — Lambda entrypoint
+- `documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md` — deployment planning guide
+- `documentation/LESSONS_LEARNED.md` — troubleshooting notes

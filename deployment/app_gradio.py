@@ -1177,25 +1177,39 @@ def attach_status_endpoint(starlette_app: Any, state: AssistantState) -> None:
     def _status_endpoint():
         try:
             model = current_model_name(state)
-            hs = initial_health_state(model)
+            health_state = getattr(_status_endpoint, "_health_state", None)
+            if health_state is None or health_state.get("model") != model:
+                health_state = initial_health_state(model)
+
             last_check = getattr(_status_endpoint, "_last_check_time", 0)
             current_time = time.time()
+            error_detail = None
 
             if current_time - last_check > 10:
                 try:
-                    hs, _ = run_health_check(state, hs, force=False)
-                    _status_endpoint._last_check_time = current_time
+                    health_state, _ = run_health_check(state, health_state, force=False)
                 except Exception as hc_err:
-                    logger.warning(f"Health check failed: {hc_err}")
+                    error_detail = str(hc_err)
+                    logger.warning("Health check failed: %s", hc_err, exc_info=True)
+                finally:
+                    _status_endpoint._last_check_time = current_time
+                    _status_endpoint._health_state = health_state
 
-            logger.debug(f"Status returning: model={model}, status={hs.get('status')}")
-            return JSONResponse(
-                {
-                    "model": hs.get("model", "unknown"),
-                    "status": hs.get("status", "unknown"),
-                    "latency_ms": hs.get("last_latency"),
-                }
+            response_payload = {
+                "model": health_state.get("model", "unknown"),
+                "status": health_state.get("status", "unknown"),
+                "latency_ms": health_state.get("last_latency"),
+            }
+            if error_detail:
+                response_payload["error"] = error_detail
+
+            logger.debug(
+                "Status returning: model=%s, status=%s, error=%s",
+                response_payload["model"],
+                response_payload["status"],
+                response_payload.get("error"),
             )
+            return JSONResponse(response_payload)
         except Exception as exc:  # pragma: no cover - defensive
             logger.exception("/status endpoint error: %s", exc)
             return JSONResponse(
