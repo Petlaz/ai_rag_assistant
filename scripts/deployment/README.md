@@ -148,7 +148,6 @@ Comprehensive system health validation and monitoring suite for production readi
 #### 3. Dependencies
 - **OpenSearch**: Cluster health, response times, shard status
 - **Ollama LLM**: Model availability, response times
-- **External APIs**: AWS Bedrock connectivity (simulated)
 - **Databases**: Connection health, pool status
 
 #### 4. Network Connectivity
@@ -261,7 +260,7 @@ Comprehensive AWS cost analysis and budget optimization for different deployment
 
 ### Key Features
 - **Multi-mode cost estimation**: Ultra-budget, Balanced, Full-scale
-- **Service-specific breakdowns**: Lambda, Bedrock, S3, DynamoDB, CloudWatch
+- **Service-specific breakdowns**: Lambda, S3, DynamoDB, CloudWatch
 - **Usage pattern modeling** with query volume projections
 - **Optimization recommendations** for cost reduction
 - **Budget analysis** with target cost planning
@@ -293,10 +292,9 @@ python scripts/deployment/estimate_aws_costs.py --deployment-mode balanced --que
 ```json
 {
   "deployment_mode": "ultra-budget",
-  "monthly_cost_usd": 12.45,
+  "monthly_cost_usd": 5.95,
   "breakdown": {
     "lambda": 3.20,
-    "bedrock": 6.50, 
     "s3": 1.25,
     "dynamodb": 0.75,
     "cloudwatch": 0.75

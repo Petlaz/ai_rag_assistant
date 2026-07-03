@@ -296,7 +296,7 @@ python scripts/monitoring/production_monitoring.py --high-traffic-mode
 - `deployment/aws/AWS_DEPLOYMENT_GUIDE.md` - Detailed AWS setup
 - `scripts/deployment/README.md` - Deployment automation
 - `scripts/monitoring/README.md` - Monitoring setup
-- `documentation/LESSONS_LEARNED.md` - Common issues and solutions
+- `docs/LESSONS_LEARNED.md` - Common issues and solutions
 
 ---
 

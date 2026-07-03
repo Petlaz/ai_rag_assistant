@@ -101,7 +101,7 @@ jobs:
         curl -fsSL https://ollama.ai/install.sh | sh
         ollama serve &
         sleep 10
-        ollama pull llama3.2:1b
+        ollama pull gemma3:1b
         
     - name: Configure test environment
       run: |
@@ -165,7 +165,7 @@ jobs:
         curl -fsSL https://ollama.ai/install.sh | sh
         ollama serve &
         sleep 10
-        ollama pull llama3.2:1b
+        ollama pull gemma3:1b
     
     - name: Configure environment
       run: |

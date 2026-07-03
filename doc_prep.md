@@ -277,7 +277,7 @@ Instructions:
 
 **Model choice rationale:**
 - `gemma3:1b`: Small, fast (~50ms/token on M1), good quality for general queries
-- Fallback to `mistral` if gemma3 unavailable
+- Fallback to `phi3:mini` if gemma3 unavailable
 - Could use `llama2` for better reasoning, but slower (100ms+/token)
 
 **Tradeoffs:**

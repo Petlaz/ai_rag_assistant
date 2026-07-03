@@ -436,13 +436,6 @@ class ProductionValidator:
             "pool_size": 10
         }
         
-        # External API validations (simulate)
-        dependency_health["external_apis"]["aws_bedrock"] = {
-            "status": "available",
-            "latency_ms": 150,
-            "note": "Simulated - would check actual API in production"
-        }
-        
         return dependency_health
     
     def validate_network_connectivity(self) -> Dict[str, Any]:

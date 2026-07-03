@@ -36,7 +36,10 @@ services:
       context: ../../..
       dockerfile: deployment/aws/docker/Dockerfile.app
       args:
-        DEV: "1"
+        # Must be "0" (full requirements.txt) so sentence-transformers/torch are
+        # installed - this service performs document embedding directly via the
+        # Gradio upload handler and will fail ingestion without them.
+        DEV: "0"
     ports:
       - "7860:7860"
     depends_on:

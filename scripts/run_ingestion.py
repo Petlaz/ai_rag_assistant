@@ -45,6 +45,7 @@ if str(PROJECT_ROOT) not in sys.path:
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 from rag_pipeline.embeddings.sentence_transformer import (
+    DEFAULT_EMBEDDING_MODEL,
     SentenceTransformerEmbeddings,
 )
 from rag_pipeline.indexing.opensearch_client import (
@@ -84,7 +85,7 @@ def _ensure_client(index_name: str):
 def ingest_paths(paths: Iterable[Path], index_name: str) -> None:
     """Ingest each provided PDF path into OpenSearch for retrieval."""
 
-    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", DEFAULT_EMBEDDING_MODEL)
     embedding_model = SentenceTransformerEmbeddings(model_name=embedding_model_name)
     client = _ensure_client(index_name=index_name)
 

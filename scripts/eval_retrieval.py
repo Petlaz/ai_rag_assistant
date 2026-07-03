@@ -46,6 +46,7 @@ if str(PROJECT_ROOT) not in sys.path:
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 from rag_pipeline.embeddings.sentence_transformer import (
+    DEFAULT_EMBEDDING_MODEL,
     SentenceTransformerEmbeddings,
 )
 from rag_pipeline.indexing.opensearch_client import OpenSearchConfig, create_client
@@ -94,7 +95,7 @@ def ensure_retriever(index_name: str) -> HybridRetriever:
     password = os.getenv("OPENSEARCH_PASSWORD", "")
     tls_verify_env = os.getenv("OPENSEARCH_TLS_VERIFY", "true").lower()
     tls_verify = tls_verify_env not in {"false", "0"}
-    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", DEFAULT_EMBEDDING_MODEL)
 
     config = OpenSearchConfig(
         host=host,

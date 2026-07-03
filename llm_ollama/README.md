@@ -32,13 +32,13 @@ The Ollama integration enables cost-effective, privacy-focused language model op
 
 ```bash
 # Primary model for responses
-OLLAMA_MODEL=mistral
+OLLAMA_MODEL=gemma3:1b
 
 # Fallback model (optional)
 OLLAMA_FALLBACK_MODEL=phi3:mini
 
 # Request timeout in seconds
-OLLAMA_TIMEOUT=120
+OLLAMA_TIMEOUT=240
 
 # Ollama server endpoint
 OLLAMA_BASE_URL=http://localhost:11434
@@ -65,7 +65,7 @@ from llm_ollama.client import OllamaClient
 
 # Initialize client
 client = OllamaClient(
-    model="mistral",
+    model="gemma3:1b",
     fallback_model="phi3:mini",
     timeout=120
 )
@@ -83,7 +83,7 @@ from llm_ollama.adapters import OllamaChatAdapter
 
 # Initialize adapter
 adapter = OllamaChatAdapter(
-    primary_model="mistral",
+    primary_model="gemma3:1b",
     fallback_model="phi3:mini"
 )
 
@@ -130,9 +130,9 @@ The integration provides comprehensive health monitoring:
 ### Docker Configuration
 ```yaml
 environment:
-  - OLLAMA_MODEL=mistral
+  - OLLAMA_MODEL=gemma3:1b
   - OLLAMA_FALLBACK_MODEL=phi3:mini
-  - OLLAMA_TIMEOUT=120
+  - OLLAMA_TIMEOUT=240
   - OLLAMA_BASE_URL=http://ollama:11434
 ```
 

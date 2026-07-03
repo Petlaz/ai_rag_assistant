@@ -67,7 +67,7 @@ See [`docs/code_analysis_baseline/`](docs/code_analysis_baseline/) for complete 
 - **18,000+ Lines of Analysis**: Comprehensive model optimization code documentation and architectural analysis
 - **Seven Complete Script Analyses**: Detailed documentation of all model optimization components
 - **Optimization Guide**: Complete [`MODEL_OPTIMIZATION_GUIDE.md`](guides/MODEL_OPTIMIZATION_GUIDE.md) for production implementation
-- **Lessons Learned**: Comprehensive [`LESSONS_LEARNED.md`](documentation/LESSONS_LEARNED.md) documenting successes and failures
+- **Lessons Learned**: Comprehensive [`LESSONS_LEARNED.md`](docs/LESSONS_LEARNED.md) documenting successes and failures
 
 **Complete Testing & Infrastructure Pipeline Example:**
 ```bash
@@ -476,11 +476,11 @@ docker compose -f deployment/aws/docker/docker-compose.dev.yml up
 
 Deployment is fully automated via GitHub Actions. Push to `main` triggers the CI/CD pipeline which builds Docker images, provisions infrastructure with Terraform, and runs post-deploy smoke tests.
 
-- **[DEPLOY NOW - Quick Start](documentation/DEPLOY_NOW.md)**: Step-by-step guide to deploy in minutes
-- **[Production Deployment Roadmap](documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete deployment guide
-- **[Lessons Learned](documentation/LESSONS_LEARNED.md)**: What worked, what didn't, and why
+- **[DEPLOY NOW - Quick Start](docs/DEPLOY_NOW.md)**: Step-by-step guide to deploy in minutes
+- **[Production Deployment Roadmap](docs/PRODUCTION_DEPLOYMENT_ROADMAP.md)**: Complete deployment guide
+- **[Lessons Learned](docs/LESSONS_LEARNED.md)**: What worked, what didn't, and why
 - **[AWS Deployment Guide](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Detailed AWS configuration reference
-- **[Pre-Deployment Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic optimization and testing plan
+- **[Pre-Deployment Testing Plan](docs/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Systematic optimization and testing plan
 - **Infrastructure**: Terraform configs in `infra/terraform/`, Lambda handlers at project root
 - **Docker Compose**: Local development via `deployment/aws/docker/docker-compose.dev.yml`
 
@@ -492,6 +492,7 @@ ai_rag_assistant/
 ├── .github/                          # GitHub configuration
 │   ├── CI_CD_IMPLEMENTATION_CHECKLIST.md
 │   └── workflows/                    # CI/CD pipelines
+│       ├── README.md
 │       ├── cicd-01-ml-pipeline.yml         # ML pipeline automation
 │       ├── cicd-02-model-validation.yml    # Model validation checks
 │       └── cicd-03-aws-deployment.yml      # AWS Lambda deployment pipeline
@@ -499,21 +500,26 @@ ai_rag_assistant/
 ├── AI_RAG_PRODUCTION_CHECKLIST.md    # Production readiness checklist
 ├── create_bucket.sh                  # S3 Terraform state bucket creation helper
 ├── DEPLOY_TRIGGER.txt                # CI/CD deployment trigger file
+├── doc_prep.md                       # Development notes/reflections
+├── docker-start.sh                   # Docker quick-start helper script
+├── DOCKER_DEPLOYMENT_GUIDE.md        # Docker deployment reference
 ├── lambda_app_handler.py             # AWS Lambda handler for Gradio app (Function URL)
 ├── lambda_landing_handler.py         # AWS Lambda handler for landing page (Function URL)
 ├── LICENSE                           # MIT License
 ├── pyproject.toml                    # Project configuration
 ├── QUEST_ANALYTICS_RAG_IMPLEMENTATION_GUIDE.md  # RAG implementation guide
 ├── README.md                         # This documentation
-├── requirements.txt                  # Python dependencies
+├── requirements.txt                  # Python dependencies (full ML stack)
 ├── requirements-lambda.txt           # Lambda dependencies (awslambdaric, mangum)
+├── requirements.local.txt            # Lightweight local/dev dependencies
 ├── TECH_STACK_REFERENCE.md           # Technology stack quick reference
+├── WORKFLOW_AUDIT_RESULTS.md         # Workflow audit notes
 │
 ├── configs/                          # Configuration management
 │   ├── ab_testing_config.yaml              # A/B testing configuration
 │   ├── alerting.yaml                       # Multi-channel alerting
 │   ├── alerting_rules.yaml                 # CloudWatch alerting rules
-│   ├── app_settings.yaml                   # Application settings
+│   ├── app_settings.yaml                   # Application settings (reference only - not loaded at runtime)
 │   ├── baseline_config.json                # Baseline evaluation config
 │   ├── expected_usage.yaml                 # Expected usage patterns
 │   ├── log_analysis.yaml                   # Log analysis configuration
@@ -528,7 +534,8 @@ ai_rag_assistant/
 │   └── security_config.yaml                # Security settings
 │
 ├── data/                             # Data storage
-│   ├── evaluation/                   # Evaluation datasets (6 domain-specific JSONL files)
+│   ├── evaluation/                   # Evaluation datasets (domain-specific JSONL files)
+│   ├── raw/                          # Raw source documents
 │   └── samples/                      # Sample queries and test data
 │
 ├── deployment/                       # Web interface & deployment
@@ -538,17 +545,13 @@ ai_rag_assistant/
 │       ├── AWS_DEPLOYMENT_GUIDE.md         # Consolidated deployment guide
 │       └── docker/                         # Docker configurations
 │           ├── .dockerignore
-│           ├── .env / .env.example          # Docker environment config
+│           ├── .env / .env.example          # Docker Compose variable-substitution env
 │           ├── docker-compose.dev.yml       # Development with health checks
 │           ├── Dockerfile.app               # App container (Lambda runtime)
 │           ├── Dockerfile.landing           # Landing page container
-│           └── Dockerfile.worker            # Worker container
+│           └── Dockerfile.worker            # Worker container (folder-watch ingestion)
 │
-├── docs/                             # Internal code analysis documentation
-│   ├── code_analysis_baseline/       # Baseline evaluation code analysis
-│   └── code_analysis_optimization/   # Optimization code analysis
-│
-├── documentation/                    # Project documentation
+├── docs/                             # Project documentation
 │   ├── DEPLOY_NOW.md                       # Quick-start deployment guide
 │   ├── LESSONS_LEARNED.md                  # Comprehensive success/failure analysis
 │   ├── PRE_DEPLOYMENT_TESTING_PLAN.md      # Optimization methodology
@@ -566,6 +569,8 @@ ai_rag_assistant/
 │       ├── lambda.tf                 # Lambda functions, Function URLs, IAM
 │       ├── main.tf                   # S3 backend, AWS provider, locals
 │       ├── outputs.tf                # App/landing URLs, function names
+│       ├── terraform.tfvars          # Actual deployment values (no real secrets)
+│       ├── terraform.tfvars.example  # Template for terraform.tfvars
 │       └── variables.tf              # Environment, image URIs, region
 │
 ├── landing/                          # Professional landing page
@@ -576,6 +581,7 @@ ai_rag_assistant/
 │       └── index.html                # Landing page template
 │
 ├── llm_ollama/                       # Ollama client & adapters
+│   ├── __init__.py
 │   ├── adapters.py                   # Enhanced Ollama integration
 │   ├── client.py                     # LLM client with health monitoring
 │   ├── README.md                     # Ollama documentation
@@ -604,8 +610,10 @@ ai_rag_assistant/
 │   │   ├── pdf_ocr_pipeline.py
 │   │   └── pipeline.py
 │   ├── prompts/                      # Research-focused prompt templates
+│   │   ├── __init__.py
 │   │   ├── guardrails.yaml
-│   │   └── research_qa_prompt.yaml
+│   │   ├── research_qa_prompt.yaml
+│   │   └── utils.py
 │   └── retrieval/                    # Hybrid search & reranking
 │       ├── __init__.py
 │       ├── reranker.py
@@ -618,6 +626,7 @@ ai_rag_assistant/
 │
 ├── scripts/                          # Operational utilities & MLOps infrastructure
 │   ├── README.md                     # Script organization guide
+│   ├── bootstrap_opensearch.py       # OpenSearch index bootstrap utility
 │   ├── eval_retrieval.py             # Retrieval quality evaluation
 │   ├── ingest_watch.py               # File watcher for ingestion
 │   ├── m1_optimization.py            # M1/M2 Mac optimization
@@ -625,12 +634,14 @@ ai_rag_assistant/
 │   ├── security_manager.py           # Security management utilities
 │   ├── smoke_test.py                 # End-to-end system testing
 │   ├── ab_testing/                   # A/B testing scripts
+│   │   ├── README.md
 │   │   ├── ab_test_retrieval.py
 │   │   ├── experiment_pipeline.py
 │   │   ├── select_best_config.py
 │   │   ├── statistical_analysis.py
 │   │   └── test_framework.py
 │   ├── deployment/                   # Production deployment infrastructure
+│   │   ├── README.md
 │   │   ├── blue_green_deploy.py
 │   │   ├── deploy_optimized_config.py
 │   │   ├── estimate_aws_costs.py
@@ -644,11 +655,13 @@ ai_rag_assistant/
 │   │   ├── generate_test_queries.py
 │   │   └── run_baseline_evaluation.py
 │   ├── mlops/                        # MLOps infrastructure
+│   │   ├── README.md
 │   │   ├── automated_retraining.py
 │   │   ├── initialize_mlflow.py
 │   │   ├── model_monitoring.py
 │   │   └── setup_mlops_pipeline.py
 │   ├── monitoring/                   # Production monitoring scripts
+│   │   ├── README.md
 │   │   ├── alerting_system.py
 │   │   ├── log_analysis.py
 │   │   └── production_monitoring.py
@@ -660,13 +673,11 @@ ai_rag_assistant/
 │       ├── reranking_evaluation.py
 │       └── run_model_optimization.py
 │
-├── tests/                            # Unit & integration tests
-│   ├── conftest.py
-│   ├── test_ingestion.py
-│   ├── test_ollama_client.py
-│   ├── test_retrieval.py
-│   └── fixtures/
-│       └── sample_docs/
+└── tests/                            # Unit & integration tests
+    ├── conftest.py
+    ├── test_ingestion.py
+    ├── test_ollama_client.py
+    └── test_retrieval.py
 ```
 
 ## Testing & Evaluation
@@ -741,14 +752,14 @@ python scripts/deployment/rollback_system.py --help
 - **[Baseline Evaluation Guide](guides/BASELINE_EVALUATION_GUIDE.md)**: Baseline testing framework and methodology
 - **[Model Optimization Guide](guides/MODEL_OPTIMIZATION_GUIDE.md)**: Model optimization implementation guide
 - **[Security Guide](guides/SECURITY_GUIDE.md)**: Security implementation and setup guide
-- **[Lessons Learned](documentation/LESSONS_LEARNED.md)**: Comprehensive success/failure analysis
-- **[Tech Stack Reference](documentation/TECH_STACK.md)**: Complete technology stack documentation
-- **[Problem Statement](documentation/PROBLEM_STATEMENT.md)**: Project objectives and problem definition
+- **[Lessons Learned](docs/LESSONS_LEARNED.md)**: Comprehensive success/failure analysis
+- **[Tech Stack Reference](docs/TECH_STACK.md)**: Complete technology stack documentation
+- **[Problem Statement](docs/PROBLEM_STATEMENT.md)**: Project objectives and problem definition
 
 ### Deployment & Operations
 - **[AWS Deployment](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Three cost-optimized deployment modes
 - **[Deployment Scripts](scripts/deployment/README.md)**: Complete automation framework for production deployment
-- **[Testing Plan](documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Optimization methodology
+- **[Testing Plan](docs/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Optimization methodology
 - **[Monitoring Documentation](scripts/monitoring/README.md)**: Production monitoring infrastructure guide
 
 ## Troubleshooting

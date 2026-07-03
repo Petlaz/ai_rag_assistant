@@ -392,7 +392,7 @@ Successfully deployed the AI RAG Assistant to AWS infrastructure using our ultra
 
 **2. Cost Estimation Pipeline**
 - Real-time AWS cost analysis provided accurate projections ($7.24/month actual vs $8-18 estimated)
-- Service breakdown (Lambda: $0.00, Bedrock: $2.38, Storage: $0.26, CloudWatch: $4.59) helped optimize resource allocation
+- Service breakdown (Lambda: $0.00, Storage: $0.26, CloudWatch: $4.59) helped optimize resource allocation
 - Budget comparison across deployment modes (ultra-budget/balanced/full-scale) enabled informed decisions
 
 **3. Version Control Integration**

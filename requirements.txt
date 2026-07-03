@@ -63,6 +63,10 @@ pytest-asyncio>=0.21.0,<1.0.0
 black>=23.9.0,<24.0.0
 flake8>=6.0.0,<7.0.0
 
-# Optional: GPU acceleration (uncomment if using CUDA)
+# Note: torch is installed separately as a CPU-only wheel in Dockerfile.app /
+# Dockerfile.worker (via --index-url https://download.pytorch.org/whl/cpu) before
+# this file is processed, so sentence-transformers reuses it instead of pulling
+# PyPI's default CUDA-enabled build. For local (non-Docker) GPU setups, install
+# torch manually with CUDA support before installing this file if needed.
 # torch>=2.1.0,<3.0.0
 # torchvision>=0.16.0,<1.0.0

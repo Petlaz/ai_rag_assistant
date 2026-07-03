@@ -25,8 +25,8 @@ Usage:
     # Configure and create client
     config = OllamaConfig(
         base_url="http://localhost:11434",
-        model="llama3:8b",
-        fallback_model="gemma3:1b"
+        model="gemma3:1b",
+        fallback_model="phi3:mini"
     )
     client = OllamaClient(config)
     
@@ -99,8 +99,8 @@ class OllamaConfig:
 
     base_url: str
     model: str
-    timeout: float = 30.0
-    fallback_model: Optional[str] = "gemma3:1b"
+    timeout: float = 240.0
+    fallback_model: Optional[str] = "phi3:mini"
 
 
 class OllamaClient:

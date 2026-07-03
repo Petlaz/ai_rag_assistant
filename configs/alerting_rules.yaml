@@ -174,7 +174,6 @@ cost_alerts:
     
     dimensions:
       Currency: "USD"
-      ServiceName: "AmazonBedrock"
       
     description: "Daily costs approaching budget limit"
     alarm_actions:

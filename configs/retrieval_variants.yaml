@@ -123,11 +123,12 @@ optimized:
   top_k_retrieval: 25
   top_k_final: 5
   
-  # Model configurations (these will be updated based on Phase 2 results)
-  embedding_model: "WINNER_FROM_PHASE2"  # To be replaced with best performing model
-  embedding_model_fallback: "all-MiniLM-L6-v2"  # Fallback if winner unavailable
-  reranker: "WINNER_FROM_PHASE2"  # To be replaced with best performing reranker
-  reranker_fallback: "cross_encoder"  # Fallback reranker
+  # Model configurations (winner identified from Phase 2 evaluation results,
+  # see results/optimization/optimization_summary_report.json)
+  embedding_model: "all-MiniLM-L6-v2"
+  reranker: "cross_encoder"
+  reranker_model: "ms-marco-MiniLM-L-6-v2"
+  reranker_fallback: "passthrough"  # Fallback if cross-encoder unavailable
   
   # Performance targets
   expected_precision_at_5: 0.80
@@ -275,7 +276,7 @@ metadata:
     - "scripts/ab_testing/select_best_config.py"
   
   # Documentation
-  documentation: "documentation/PRE_DEPLOYMENT_TESTING_PLAN.md"
+  documentation: "docs/PRE_DEPLOYMENT_TESTING_PLAN.md"
   section: "Phase 3: Configuration A/B Testing"
   
   # Notes

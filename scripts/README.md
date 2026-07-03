@@ -156,6 +156,6 @@ python scripts/deployment/blue_green_deploy.py --target production
 
 ## Reference Documentation
 
-- **[Pre-Deployment Testing Plan](../documentation/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Comprehensive 8-week optimization methodology
+- **[Pre-Deployment Testing Plan](../docs/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Comprehensive 8-week optimization methodology
 - **[System Design](../docs/system_design.md)**: Overall architecture and component relationships
 - **[Operations Runbook](../docs/ops_runbook.md)**: Production operations and troubleshooting guide

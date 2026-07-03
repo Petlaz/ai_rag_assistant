@@ -48,12 +48,18 @@ except ImportError:  # pragma: no cover - handled during runtime
 # Set up module logger
 logger = logging.getLogger(__name__)
 
+# Single source of truth for the default embedding model name used across
+# the app (Gradio UI), ingestion/evaluation scripts, and this module's
+# dataclass default. Keep this in sync with configs/app_settings.yaml,
+# configs/secrets.template.env, and infra/terraform/variables.tf if changed.
+DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
 
 @dataclass
 class SentenceTransformerEmbeddings:
     """Wraps a sentence-transformer model for document + query embeddings."""
 
-    model_name: str = "all-MiniLM-L6-v2"
+    model_name: str = DEFAULT_EMBEDDING_MODEL
     device: str = "auto"  # auto, cpu, cuda, mps
     _model: SentenceTransformer | None = None
     _device_info: Dict[str, Any] | None = None

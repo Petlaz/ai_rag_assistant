@@ -43,7 +43,6 @@ Examples:
 
 Cost Components Analyzed:
     - AWS Lambda: Function execution and memory costs
-    - Amazon Bedrock: Model inference and token costs  
     - Amazon S3: Document storage and retrieval costs
     - Amazon DynamoDB: Caching and metadata storage
     - Amazon CloudWatch: Monitoring and logging costs
@@ -101,13 +100,6 @@ class AWSCostEstimator:
                 'gb_seconds': 0.0000166667,
                 'free_tier_requests': 1_000_000,
                 'free_tier_gb_seconds': 400_000
-            },
-            'bedrock': {
-                'claude_3_haiku_input_per_1k': 0.00025,
-                'claude_3_haiku_output_per_1k': 0.00125,
-                'titan_embedding_per_1k': 0.0001,
-                'avg_input_tokens': 1500,
-                'avg_output_tokens': 300
             },
             's3': {
                 'standard_storage_gb_month': 0.023,
@@ -186,44 +178,6 @@ class AWSCostEstimator:
                 'avg_execution_time_s': avg_execution_time_seconds
             },
             optimization_potential=self._calculate_lambda_optimization_potential(config, total_cost)
-        )
-
-    def estimate_bedrock_costs(self, deployment_mode: str, queries_per_day: int) -> ServiceCostEstimate:
-        """Estimate Amazon Bedrock costs for LLM inference"""
-        
-        monthly_queries = queries_per_day * 30
-        
-        # Token usage estimates
-        input_tokens_per_query = self.pricing['bedrock']['avg_input_tokens']
-        output_tokens_per_query = self.pricing['bedrock']['avg_output_tokens']
-        
-        monthly_input_tokens = monthly_queries * input_tokens_per_query
-        monthly_output_tokens = monthly_queries * output_tokens_per_query
-        
-        # Calculate costs
-        input_cost = (monthly_input_tokens / 1000) * self.pricing['bedrock']['claude_3_haiku_input_per_1k']
-        output_cost = (monthly_output_tokens / 1000) * self.pricing['bedrock']['claude_3_haiku_output_per_1k']
-        
-        # Embedding costs (assuming some queries need embeddings)
-        embedding_queries = monthly_queries * 0.3  # 30% of queries need new embeddings
-        embedding_cost = (embedding_queries * input_tokens_per_query / 1000) * \
-                        self.pricing['bedrock']['titan_embedding_per_1k']
-        
-        total_cost = input_cost + output_cost + embedding_cost
-        
-        return ServiceCostEstimate(
-            service_name='Amazon Bedrock',
-            monthly_cost=total_cost,
-            unit_cost=total_cost / monthly_queries,
-            usage_units=monthly_queries,
-            cost_factors={
-                'input_tokens': input_cost,
-                'output_tokens': output_cost,
-                'embeddings': embedding_cost,
-                'avg_input_tokens': input_tokens_per_query,
-                'avg_output_tokens': output_tokens_per_query
-            },
-            optimization_potential=self._calculate_bedrock_optimization_potential(deployment_mode, total_cost)
         )
 
     def estimate_storage_costs(self, deployment_mode: str, document_count: int, 
@@ -322,15 +276,6 @@ class AWSCostEstimator:
             potential_savings = current_cost * 0.05  # 5% savings possible
         return potential_savings
 
-    def _calculate_bedrock_optimization_potential(self, deployment_mode: str, current_cost: float) -> float:
-        """Calculate potential Bedrock cost savings"""
-        # Optimization strategies: prompt engineering, caching, model selection
-        if deployment_mode == 'ultra-budget':
-            potential_savings = current_cost * 0.15  # 15% through aggressive caching
-        else:
-            potential_savings = current_cost * 0.25  # 25% through optimization
-        return potential_savings
-
     def _calculate_storage_optimization_potential(self, deployment_mode: str, current_cost: float) -> float:
         """Calculate potential storage cost savings"""
         # S3 storage classes, compression, lifecycle policies
@@ -356,11 +301,10 @@ class AWSCostEstimator:
         
         # Estimate costs for each service
         lambda_costs = self.estimate_lambda_costs(deployment_mode, queries_per_day, avg_execution_time_ms)
-        bedrock_costs = self.estimate_bedrock_costs(deployment_mode, queries_per_day)
         storage_costs = self.estimate_storage_costs(deployment_mode, document_count, avg_doc_size_kb)
         monitoring_costs = self.estimate_monitoring_costs(deployment_mode, queries_per_day)
         
-        service_costs = [lambda_costs, bedrock_costs, storage_costs, monitoring_costs]
+        service_costs = [lambda_costs, storage_costs, monitoring_costs]
         total_monthly_cost = sum(service.monthly_cost for service in service_costs)
         
         # Generate optimization recommendations
@@ -405,7 +349,7 @@ class AWSCostEstimator:
         # Mode-specific recommendations
         if mode == 'ultra-budget':
             recommendations.extend([
-                "Enable aggressive caching to reduce Bedrock API calls",
+                "Enable aggressive caching to reduce repeated LLM inference calls",
                 "Implement query batching to optimize Lambda execution",
                 "Use S3 Intelligent Tiering for document storage",
                 "Reduce monitoring frequency for non-critical metrics"

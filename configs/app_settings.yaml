@@ -12,10 +12,10 @@ gradio:
   theme: default
   title: AI RAG Assistant
 ollama:
-  fallback_model: ${OLLAMA_FALLBACK_MODEL:-gemma2:2b}
+  fallback_model: ${OLLAMA_FALLBACK_MODEL:-phi3:mini}
   host: ${OLLAMA_HOST:-http://localhost:11434}
   max_retries: 3
-  model: ${OLLAMA_MODEL:-llama3.2:1b}
+  model: ${OLLAMA_MODEL:-gemma3:1b}
   timeout: 30
 opensearch:
   host: ${OPENSEARCH_HOST:-localhost}
@@ -38,7 +38,7 @@ performance:
   cache_ttl: 3600
   max_concurrent_queries: 10
 rag:
-  chunk_overlap: 50
+  chunk_overlap: 128
   chunk_size: 512
   embedding_model: sentence-transformers/all-MiniLM-L6-v2
   max_chunks_per_query: 5

@@ -20,10 +20,6 @@ This document provides a comprehensive reference of all technologies, frameworks
   - Model serving with health monitoring
   - Support for multiple models (Mistral, Gemma3:1b, Phi3:mini)
   - Automatic fallback mechanisms
-- **Amazon Bedrock Claude Haiku**
-  - Cloud-based LLM inference for production
-  - Cost-effective text generation
-  - Integrated with AWS ultra-budget deployment
 
 ### ML Frameworks & Libraries
 - **LangChain 1.2.0**
@@ -173,9 +169,6 @@ This document provides a comprehensive reference of all technologies, frameworks
   - Response caching with 24-hour TTL
   - Cost-effective NoSQL storage
   - Automatic item expiration
-- **Amazon Bedrock**
-  - Claude Haiku LLM inference
-  - Pay-per-token pricing model
 - **AWS CloudWatch**
   - Monitoring and logging
   - Cost tracking and alerts
@@ -387,7 +380,7 @@ This document provides a comprehensive reference of all technologies, frameworks
 - AWS Lambda with Function URLs
 - Amazon S3 with lifecycle policies
 - DynamoDB caching with 24-hour TTL
-- Bedrock Claude Haiku for LLM inference
+- Ollama self-hosted LLM inference (gemma3:1b primary, phi3:mini fallback)
 - Aggressive caching and cleanup automation
 
 ### Balanced Deployment ($15-35/month)

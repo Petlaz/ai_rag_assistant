@@ -472,10 +472,9 @@ class RAGSystemMonitor:
             MetricData=metrics
         )
     
-    def log_cost_metrics(self, bedrock_cost, lambda_cost, total_cost):
+    def log_cost_metrics(self, lambda_cost, total_cost):
         """Track per-query costs for ultra-budget optimization"""
         cost_metrics = [
-            {'MetricName': 'BedrockCostPerQuery', 'Value': bedrock_cost, 'Unit': 'None'},
             {'MetricName': 'LambdaCostPerQuery', 'Value': lambda_cost, 'Unit': 'None'},
             {'MetricName': 'TotalCostPerQuery', 'Value': total_cost, 'Unit': 'None'}
         ]
@@ -702,8 +701,7 @@ python scripts/comprehensive_validation.py \
 - Lambda (optimized): $3-8/month
 - S3 storage: $1-2/month  
 - DynamoDB (caching): $1-3/month
-- Bedrock (reduced by optimizations): $2-5/month
-- **Total**: $7-18/month (vs $8-18 baseline)
+- **Total**: $5-13/month (vs $8-18 baseline)
 
 ---
 
@@ -855,7 +853,7 @@ touch configs/performance_thresholds.yaml     # TODO: Performance thresholds
 - **Integration**: End-to-end AI system with multiple components
 
 ### **GenAI Engineer**
-- **LLM Integration**: Ollama/Bedrock integration for generative AI
+- **LLM Integration**: Ollama integration for generative AI
 - **RAG Pipeline**: Modern GenAI architecture for knowledge-grounded generation
 - **Prompt Engineering**: Research-focused prompts with safety guardrails
 - **Vector Search**: Core GenAI technology for retrieval-augmented generation

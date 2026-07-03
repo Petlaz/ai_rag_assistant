@@ -67,7 +67,6 @@ cost_monitoring:
   
   # Service cost tracking
   services:
-    - bedrock
     - lambda
     - s3
     - dynamodb

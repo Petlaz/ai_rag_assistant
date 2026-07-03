@@ -209,5 +209,5 @@ Note: Gradio does not use `.launch()` in Lambda, so we return HTML through our o
 - `.github/workflows/cicd-03-aws-deployment.yml` — CI/CD workflow
 - `deployment/aws/docker/` — Docker files for Lambda images
 - `lambda_app_handler.py` — Lambda entrypoint
-- `documentation/PRODUCTION_DEPLOYMENT_ROADMAP.md` — deployment planning guide
-- `documentation/LESSONS_LEARNED.md` — troubleshooting notes
+- `docs/PRODUCTION_DEPLOYMENT_ROADMAP.md` — deployment planning guide
+- `docs/LESSONS_LEARNED.md` — troubleshooting notes

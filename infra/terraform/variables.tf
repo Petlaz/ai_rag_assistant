@@ -100,8 +100,8 @@ variable "ollama_model" {
 variable "ollama_fallback_model" {
   description = "Fallback Ollama model name"
   type        = string
-  # Keep a lightweight fallback; adjust in terraform vars for production if needed
-  default     = "mistral"
+  # Default changed to phi3:mini to match local development and README
+  default     = "phi3:mini"
 }
 
 variable "embedding_model_name" {

@@ -34,7 +34,7 @@ opensearch_password = ""  # TODO: Set your OpenSearch password
 # ============================================================================
 
 ollama_model          = "gemma3:1b"
-ollama_fallback_model = "mistral"
+ollama_fallback_model = "phi3:mini"
 
 embedding_model_name = "all-MiniLM-L6-v2"
 

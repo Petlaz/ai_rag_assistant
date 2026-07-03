@@ -424,7 +424,7 @@ Before using in production, verify:
 
 ## Related Documentation
 
-- [PRE_DEPLOYMENT_TESTING_PLAN.md](../../documentation/PRE_DEPLOYMENT_TESTING_PLAN.md) - Complete testing strategy
+- [PRE_DEPLOYMENT_TESTING_PLAN.md](../../docs/PRE_DEPLOYMENT_TESTING_PLAN.md) - Complete testing strategy
 - [A/B Testing Scripts](../ab_testing/README.md) - Statistical A/B testing framework
 - [Deployment Guide](../../deployment/README.md) - Production deployment procedures
 

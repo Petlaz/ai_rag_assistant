@@ -19,8 +19,8 @@ Usage:
     # Create adapter from environment
     adapter = OllamaChatAdapter.from_env(
         base_url="http://localhost:11434",
-        model="llama3:8b",
-        fallback_model="gemma3:1b"
+        model="gemma3:1b",
+        fallback_model="phi3:mini"
     )
     
     # Send chat messages
@@ -88,7 +88,7 @@ class OllamaChatAdapter:
         fallback = (
             fallback_model
             if fallback_model is not None
-            else os.getenv("OLLAMA_FALLBACK_MODEL", "gemma3:1b") or None
+            else os.getenv("OLLAMA_FALLBACK_MODEL", "phi3:mini") or None
         )
         config = OllamaConfig(
             base_url=base_url,

@@ -8,6 +8,7 @@ PaddleOCR) are selected and validated.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -17,6 +18,12 @@ try:
     from pypdf import PdfReader
 except ImportError:  # pragma: no cover - optional dependency during scaffolding
     PdfReader = None
+
+# Chunking defaults, overridable via CHUNK_SIZE/CHUNK_OVERLAP env vars.
+# Keep these in sync with configs/app_settings.yaml's rag.chunk_size/chunk_overlap
+# (that file is reference/documentation only - it is not loaded at runtime).
+DEFAULT_CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "512"))
+DEFAULT_CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "128"))
 
 
 @dataclass
@@ -66,7 +73,7 @@ def normalize_text(text: str) -> str:
     return normalized
 
 
-def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
+def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE, overlap: int = DEFAULT_CHUNK_OVERLAP) -> List[str]:
     """Split large passages into overlapping chunks suitable for embeddings."""
 
     tokens: List[str] = text.split()
@@ -88,8 +95,8 @@ def build_document_chunks(
     source_path: Path,
     title: str,
     page_text: List[str],
-    chunk_size: int = 1000,
-    overlap: int = 200,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    overlap: int = DEFAULT_CHUNK_OVERLAP,
     metadata: Optional[dict] = None,
 ) -> List[DocumentChunk]:
     """Produce chunk objects with metadata ready for embedding + indexing."""

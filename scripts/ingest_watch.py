@@ -38,6 +38,7 @@ from typing import Set
 from dotenv import load_dotenv
 
 from rag_pipeline.embeddings.sentence_transformer import (
+    DEFAULT_EMBEDDING_MODEL,
     SentenceTransformerEmbeddings,
 )
 from rag_pipeline.indexing.opensearch_client import (
@@ -78,7 +79,7 @@ def ingest_directory(
     sleep_interval: int,
 ) -> None:
     seen: Set[Path] = set()
-    embedder_name = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+    embedder_name = os.getenv("EMBEDDING_MODEL_NAME", DEFAULT_EMBEDDING_MODEL)
     embedder = SentenceTransformerEmbeddings(model_name=embedder_name)
     client = ensure_opensearch(index_name)
 

@@ -30,11 +30,6 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_access" {
   role       = aws_iam_role.lambda_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_bedrock_access" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
-  role       = aws_iam_role.lambda_role.name
-}
-
 # ECR permissions for Lambda container image access
 resource "aws_iam_role_policy" "lambda_ecr_access" {
   name = "${local.name_prefix}-lambda-ecr-policy"
@@ -75,7 +70,7 @@ resource "aws_lambda_function" "app" {
       OLLAMA_BASE_URL          = var.ollama_base_url
       OLLAMA_MODEL             = var.ollama_model
       OLLAMA_FALLBACK_MODEL    = var.ollama_fallback_model
-      OLLAMA_TIMEOUT           = "60"
+      OLLAMA_TIMEOUT           = "150"  # Kept under the 180s Lambda function timeout (see aws_lambda_function.app timeout)
       OPENSEARCH_HOST          = var.opensearch_host
       OPENSEARCH_USERNAME      = var.opensearch_username
       OPENSEARCH_PASSWORD      = var.opensearch_password

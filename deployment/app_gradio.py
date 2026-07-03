@@ -67,7 +67,8 @@ if str(ROOT_DIR) not in sys.path:
 
 from rag_pipeline.ingestion.pipeline import ingest_and_index_document
 from rag_pipeline.retrieval.retriever import HybridRetriever
-from rag_pipeline.retrieval.reranker import PassThroughReranker
+from rag_pipeline.retrieval.reranker import CrossEncoderReranker, PassThroughReranker
+from rag_pipeline.embeddings.sentence_transformer import DEFAULT_EMBEDDING_MODEL
 from rag_pipeline.indexing.opensearch_client import OpenSearchConfig, create_client, ensure_index
 from rag_pipeline.security import SecurityMiddleware, get_client_ip
 from llm_ollama.adapters import OllamaChatAdapter
@@ -1091,7 +1092,7 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                                 minimum=30,
                                 maximum=240,
                                 step=10,
-                                value=float(os.getenv("OLLAMA_TIMEOUT", "120")),
+                                value=float(os.getenv("OLLAMA_TIMEOUT", "240")),
                                 label="Request Timeout (seconds)",
                                 info="Maximum time to wait for model response"
                             )
@@ -1105,9 +1106,9 @@ def build_interface(state: AssistantState) -> gr.Blocks:
                             llm_status = gr.Markdown(
                                 value=(
                                     f"**Current Configuration:**\n"
-                                    f"- Primary Model: `{os.getenv('OLLAMA_MODEL','mistral')}`\n"
-                                    f"- Fallback Model: `{os.getenv('OLLAMA_FALLBACK_MODEL','gemma3:1b') or 'disabled'}`\n"
-                                    f"- Timeout: `{os.getenv('OLLAMA_TIMEOUT','120')} seconds`"
+                                    f"- Primary Model: `{os.getenv('OLLAMA_MODEL','gemma3:1b')}`\n"
+                                    f"- Fallback Model: `{os.getenv('OLLAMA_FALLBACK_MODEL','phi3:mini') or 'disabled'}`\n"
+                                    f"- Timeout: `{os.getenv('OLLAMA_TIMEOUT','240')} seconds`"
                                 )
                             )
 
@@ -1234,6 +1235,26 @@ def attach_status_endpoint(starlette_app: Any, state: AssistantState) -> None:
     logger.info("Status endpoint attached to Gradio app")
 
 
+def build_reranker() -> Any:
+    """Build the configured reranker strategy from environment variables.
+
+    Defaults to PassThroughReranker (no behavior change) unless
+    RERANKER_STRATEGY=cross_encoder is explicitly set.
+    """
+
+    strategy = os.getenv("RERANKER_STRATEGY", "passthrough").strip().lower()
+    if strategy == "cross_encoder":
+        model_name = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+        try:
+            return CrossEncoderReranker(model_name=model_name)
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            logger.warning(
+                "Failed to initialize CrossEncoderReranker (%s); falling back to PassThroughReranker.",
+                exc,
+            )
+    return PassThroughReranker()
+
+
 def load_dependencies() -> AssistantDependencies:
     """
     Initialize and configure all external service dependencies.
@@ -1255,6 +1276,8 @@ def load_dependencies() -> AssistantDependencies:
     - OLLAMA_BASE_URL: Ollama server URL
     - OLLAMA_MODEL: Primary model name
     - OLLAMA_FALLBACK_MODEL: Backup model name
+    - RERANKER_STRATEGY: "passthrough" (default) or "cross_encoder"
+    - RERANKER_MODEL: Cross-encoder model name (used when RERANKER_STRATEGY=cross_encoder)
     
     Returns:
         AssistantDependencies with all configured services
@@ -1313,7 +1336,7 @@ def load_dependencies() -> AssistantDependencies:
 
             return _Indices()
 
-    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME", DEFAULT_EMBEDDING_MODEL)
     index_name = os.getenv("OPENSEARCH_INDEX", "quest-research")
     opensearch_host = os.getenv("OPENSEARCH_HOST")
     opensearch_username = os.getenv("OPENSEARCH_USERNAME", "")
@@ -1352,7 +1375,7 @@ def load_dependencies() -> AssistantDependencies:
             chat_adapter: Any = OllamaChatAdapter.from_env(
                 base_url=ollama_base_url,
                 model=ollama_model,
-                timeout=float(os.getenv("OLLAMA_TIMEOUT", "30")),
+                timeout=float(os.getenv("OLLAMA_TIMEOUT", "240")),
                 fallback_model=ollama_fallback,
             )
         else:
@@ -1450,7 +1473,7 @@ def load_dependencies() -> AssistantDependencies:
         client=client,
         index_name=index_name,
         query_embedder=query_embedder,
-        reranker=PassThroughReranker(),
+        reranker=build_reranker(),
     )
 
     return AssistantDependencies(
@@ -1493,7 +1516,7 @@ def update_llm_settings(
     current_primary = (
         getattr(getattr(state.deps.chat_adapter, "client", None), "config", None).model
         if hasattr(state.deps.chat_adapter, "client")
-        else os.getenv("OLLAMA_MODEL", "mistral")
+        else os.getenv("OLLAMA_MODEL", "gemma3:1b")
     )
 
     target_primary = primary or current_primary

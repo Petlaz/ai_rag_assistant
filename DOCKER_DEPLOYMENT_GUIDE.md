@@ -299,8 +299,8 @@ opensearch_host      = "my-domain.us-east-1.es.amazonaws.com:9200"
 opensearch_username  = "admin"
 opensearch_password  = "SecurePassword123!"
 
-ollama_model          = "llama2"
-ollama_fallback_model = "mistral"
+ollama_model          = "gemma3:1b"
+ollama_fallback_model = "phi3:mini"
 embedding_model_name  = "all-MiniLM-L6-v2"
 enable_analytics      = true
 security_enabled      = true
@@ -390,7 +390,7 @@ terraform destroy -var-file=terraform.tfvars
 | `ENVIRONMENT` | Yes | `production` | Enables strict validation |
 | `OLLAMA_BASE_URL` | Yes | `https://ollama.company.com` | LLM service endpoint |
 | `OPENSEARCH_HOST` | Yes | `domain.us-east-1.es.amazonaws.com:9200` | Vector DB endpoint |
-| `OLLAMA_MODEL` | Yes | `llama2` | Primary model |
+| `OLLAMA_MODEL` | Yes | `gemma3:1b` | Primary model |
 | `EMBEDDING_MODEL_NAME` | No | `all-MiniLM-L6-v2` | Embeddings model |
 | `SECURITY_ENABLED` | No | `true` | Enable rate limiting |
 | `ENABLE_ANALYTICS` | No | `true` | Track usage |

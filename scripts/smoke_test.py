@@ -45,6 +45,7 @@ if str(PROJECT_ROOT) not in sys.path:
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 from rag_pipeline.embeddings.sentence_transformer import (
+    DEFAULT_EMBEDDING_MODEL,
     SentenceTransformerEmbeddings,
 )
 from rag_pipeline.indexing.opensearch_client import (
@@ -98,7 +99,7 @@ def ensure_chat_adapter(
     model = model_override or os.getenv("OLLAMA_MODEL")
     if not base_url or not model:
         raise RuntimeError("OLLAMA_BASE_URL and OLLAMA_MODEL must be configured.")
-    timeout = timeout_override or float(os.getenv("OLLAMA_TIMEOUT", "30"))
+    timeout = timeout_override or float(os.getenv("OLLAMA_TIMEOUT", "240"))
     fallback = fallback_override or os.getenv("OLLAMA_FALLBACK_MODEL")
     return OllamaChatAdapter.from_env(
         base_url=base_url,
@@ -118,7 +119,7 @@ def smoke_test(
 ) -> None:
     """Run ingestion + retrieval + LLM generation to validate dependencies."""
 
-    embedding_name = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+    embedding_name = os.getenv("EMBEDDING_MODEL_NAME", DEFAULT_EMBEDDING_MODEL)
     embedder = SentenceTransformerEmbeddings(model_name=embedding_name)
 
     opensearch_client = ensure_opensearch(index_name)

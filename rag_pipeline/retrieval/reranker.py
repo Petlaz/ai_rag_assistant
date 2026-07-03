@@ -91,18 +91,50 @@ class KeywordOverlapReranker:
 
 
 class CrossEncoderReranker:
-    """Placeholder for a future cross-encoder (e.g. sentence-transformers)."""
+    """Cross-encoder reranker using sentence-transformers CrossEncoder models.
 
-    def __init__(self, model_name: str) -> None:
-        """Store model details; actual loading happens once we pick a backend."""
+    Scores each (query, document) pair directly with a cross-encoder model,
+    which is typically more accurate than bi-encoder similarity but slower
+    since it can't be precomputed/cached per document.
+    """
+
+    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
+        """Store model details; the model itself is loaded lazily on first use."""
 
         self.model_name = model_name
+        self._model = None
+
+    def _load_model(self):
+        """Lazily import and instantiate the CrossEncoder model."""
+
+        if self._model is None:
+            try:
+                from sentence_transformers import CrossEncoder
+            except ImportError as exc:  # pragma: no cover - handled at runtime
+                raise RuntimeError(
+                    "sentence-transformers is required for CrossEncoderReranker. "
+                    "Install it via `pip install sentence-transformers`."
+                ) from exc
+
+            self._model = CrossEncoder(self.model_name)
+
+        return self._model
 
     def rerank(
         self, query: str, documents: Sequence[RetrievedDocument], top_k: int = 5
     ) -> List[RetrievedDocument]:
-        """Stub that reminds us to implement cross-encoder scoring."""
+        """Score every document against the query and return the top_k by score."""
 
-        raise NotImplementedError(
-            "Cross-encoder reranking requires model integration."
-        )
+        if not documents:
+            return []
+
+        model = self._load_model()
+        pairs = [(query, doc.text) for doc in documents]
+        scores = model.predict(pairs)
+
+        scored = [
+            RetrievedDocument(text=doc.text, score=float(score), metadata=doc.metadata)
+            for doc, score in zip(documents, scores)
+        ]
+        scored.sort(key=lambda item: item.score, reverse=True)
+        return scored[:top_k]

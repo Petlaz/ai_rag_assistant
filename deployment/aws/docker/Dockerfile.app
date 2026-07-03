@@ -24,6 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ARG DEV=0
 COPY requirements.txt requirements-lambda.txt requirements.local.txt ./
+# Install CPU-only torch first so sentence-transformers (pulled in below) reuses it
+# instead of resolving PyPI's default CUDA-enabled build (which pulls several GB of
+# unused nvidia-* packages in this CPU-only container).
+RUN if [ "$DEV" != "1" ]; then \
+            pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch ; \
+        fi
 RUN if [ "$DEV" = "1" ]; then \
             pip install --no-cache-dir -r requirements.local.txt -r requirements-lambda.txt ; \
         else \

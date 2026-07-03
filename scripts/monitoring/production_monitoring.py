@@ -276,7 +276,6 @@ class CloudWatchDashboard:
                     "properties": {
                         "metrics": [
                             ["RAGAssistant/Costs", "TotalCostPerQuery", {"stat": "Average"}],
-                            ["RAGAssistant/Costs", "BedrockCostPerQuery", {"stat": "Average"}],
                             ["RAGAssistant/Costs", "LambdaCostPerQuery", {"stat": "Average"}]
                         ],
                         "period": 300,
@@ -360,7 +359,6 @@ class CloudWatchDashboard:
                         "metrics": [
                             ["RAGAssistant/Costs", "LambdaCost", {"stat": "Sum"}],
                             ["RAGAssistant/Costs", "S3Cost", {"stat": "Sum"}],
-                            ["RAGAssistant/Costs", "BedrockCost", {"stat": "Sum"}],
                             ["RAGAssistant/Costs", "DynamoDBCost", {"stat": "Sum"}]
                         ],
                         "period": 86400,

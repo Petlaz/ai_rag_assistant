@@ -60,7 +60,7 @@ See the **[Deployment Scripts Documentation](../../scripts/deployment/README.md)
 - **SQLite**: Vector storage (bundled with Lambda)
 - **DynamoDB**: Response caching with TTL
 - **Function URLs**: Direct HTTPS endpoints
-- **Bedrock Claude Haiku**: Cost-effective LLM inference
+- **Ollama**: Self-hosted LLM inference (gemma3:1b primary, phi3:mini fallback)
 
 ### Balanced Mode ($15-35/month)
 **Perfect for:** Small production apps, internship projects, portfolio showcases
@@ -149,8 +149,7 @@ Create IAM user with necessary permissions:
         "dynamodb:*",
         "cloudformation:*",
         "iam:*",
-        "logs:*",
-        "bedrock:*"
+        "logs:*"
       ],
       "Resource": "*"
     }
@@ -545,7 +544,7 @@ aws ce get-cost-and-usage \
   --group-by Type=DIMENSION,Key=SERVICE
 
 # Common culprits and fixes:
-# 1. Bedrock usage: Implement aggressive caching
+# 1. Ollama inference host: right-size instance or implement aggressive caching
 # 2. Lambda invocations: Optimize caching strategy  
 # 3. S3 storage: Enable lifecycle policies
 ```
