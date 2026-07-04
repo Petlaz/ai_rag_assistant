@@ -758,6 +758,7 @@ python scripts/deployment/rollback_system.py --help
 
 ### Deployment & Operations
 - **[AWS Deployment](deployment/aws/AWS_DEPLOYMENT_GUIDE.md)**: Three cost-optimized deployment modes
+- **[AWS OIDC Setup](docs/AWS_OIDC_SETUP.md)**: GitHub Actions → AWS keyless authentication (no static credentials)
 - **[Deployment Scripts](scripts/deployment/README.md)**: Complete automation framework for production deployment
 - **[Testing Plan](docs/PRE_DEPLOYMENT_TESTING_PLAN.md)**: Optimization methodology
 - **[Monitoring Documentation](scripts/monitoring/README.md)**: Production monitoring infrastructure guide
